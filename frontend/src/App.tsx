@@ -14,7 +14,7 @@ import { EquipmentPage } from './features/equipment/EquipmentPage';
 import { BookingsPage } from './features/bookings/BookingsPage';
 import { MembershipsPage } from './features/memberships/MembershipsPage';
 import { SettingsPage } from './features/settings/SettingsPage';
-import { LoginPage } from './features/auth/LoginPage';
+import { LoginPage, SignupPage, ForgotPasswordPage } from './features/auth';
 import { NotFoundPage } from './features/errors/NotFoundPage';
 
 export const App: React.FC = () => {
@@ -31,6 +31,8 @@ export const App: React.FC = () => {
           {/* Public Auth Routes */}
           <Route element={<PublicLayout />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           </Route>
 
           {/* Main AppShell Layout Routes */}

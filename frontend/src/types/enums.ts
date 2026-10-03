@@ -9,10 +9,19 @@ export enum SportType {
 }
 
 export enum MembershipTier {
+  GOLD = 'Gold',
+  SILVER = 'Silver',
   JUNIOR = 'Junior',
   STANDARD = 'Standard',
   PREMIUM = 'Premium',
   VIP = 'VIP',
+}
+
+export enum PaymentMethod {
+  CASH = 'cash',
+  CARD = 'card',
+  UPI = 'upi',
+  PLAN = 'plan',
 }
 
 export enum MemberStatus {
