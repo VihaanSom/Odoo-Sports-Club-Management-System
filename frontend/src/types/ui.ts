@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type AppTheme = 'dark' | 'light' | 'emerald' | 'cupcake' | 'synthwave' | 'corporate';
+export type AppTheme = 'corporate' | 'black';
 
 export interface NavItem {
   label: string;
