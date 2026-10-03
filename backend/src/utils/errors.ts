@@ -27,3 +27,15 @@ export class NotFoundError extends AppError {
     super(message, 404, code);
   }
 }
+
+export class ConflictError extends AppError {
+  constructor(message = 'Resource conflict', code = 'CONFLICT') {
+    super(message, 409, code);
+  }
+}
+
+export class UnprocessableError extends AppError {
+  constructor(message = 'Unprocessable entity', code = 'UNPROCESSABLE_ENTITY') {
+    super(message, 422, code);
+  }
+}
