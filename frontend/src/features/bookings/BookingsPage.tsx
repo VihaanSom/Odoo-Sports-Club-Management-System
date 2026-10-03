@@ -75,9 +75,13 @@ export const BookingsPage = () => {
       await bookingService.cancelBooking(cancellingId, { reason });
       toast.success('Reservation cancelled');
       setCancellingId(null);
-      await loadData();
-    } catch {
-      toast.error('Failed to cancel reservation');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to cancel reservation';
+      toast.error(msg);
     }
   };
 

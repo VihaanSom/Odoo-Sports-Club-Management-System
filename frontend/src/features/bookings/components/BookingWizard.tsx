@@ -136,8 +136,13 @@ export const BookingWizard = ({
         toast.success('Social group booking confirmed');
         navigate(`/bookings/${res.id}`);
       }
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Booking failed');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Booking failed';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
