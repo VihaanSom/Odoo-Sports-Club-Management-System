@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { FaPlus, FaUsers } from 'react-icons/fa6';
+import { FaPlus, FaUsers, FaSun, FaMoon } from 'react-icons/fa6';
+import { useThemeStore } from '@/stores/themeStore';
 import {
   KpiStatsGrid,
   SystemPulseCard,
@@ -11,6 +12,10 @@ import {
 } from './components';
 
 export const DashboardPage: React.FC = () => {
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const isDark = theme === 'black';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -29,6 +34,26 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Dashboard Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="btn btn-outline btn-sm sm:btn-md gap-2"
+            aria-label="Toggle light and dark mode"
+            title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          >
+            {isDark ? (
+              <>
+                <FaSun className="size-4 text-warning" />
+                <span className="text-xs sm:text-sm font-semibold">Light</span>
+              </>
+            ) : (
+              <>
+                <FaMoon className="size-4 text-primary" />
+                <span className="text-xs sm:text-sm font-semibold">Dark</span>
+              </>
+            )}
+          </button>
           <Link to="/facilities" className="btn btn-primary btn-sm sm:btn-md gap-2 shadow-sm">
             <FaPlus className="size-3.5" /> Book Court
           </Link>

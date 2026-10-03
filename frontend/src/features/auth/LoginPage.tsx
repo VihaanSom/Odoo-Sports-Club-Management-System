@@ -4,14 +4,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'motion/react';
 import {
-  FaTrophy,
   FaArrowRightToBracket,
   FaEye,
   FaEyeSlash,
   FaUserPlus,
   FaKey,
 } from 'react-icons/fa6';
-import { Card, CardBody, Button } from '@/components/ui';
+import { Card, CardBody, Button, Logo } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
 import { loginSchema, type LoginDto } from '@/types';
@@ -76,8 +75,8 @@ export const LoginPage: React.FC = () => {
     >
       {/* Brand Header with Trophy Logo */}
       <div className="text-center mb-6">
-        <div className="size-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm mx-auto mb-3">
-          <FaTrophy className="size-7" />
+        <div className="size-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm mx-auto mb-3">
+          <Logo className="size-8" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-base-content">
           Champions Club
@@ -97,7 +96,7 @@ export const LoginPage: React.FC = () => {
               </label>
               <input
                 type="email"
-                placeholder="name@championsclub.com"
+                placeholder="myemail@example.com"
                 autoComplete="email"
                 className={cn(
                   'input input-bordered w-full text-sm',
