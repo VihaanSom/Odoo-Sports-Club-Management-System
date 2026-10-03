@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { FaTrophy, FaBoxesStacked, FaPlus } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/stores/authStore';
 import { canManageEquipment, isMemberRole } from '@/lib/permissions';
 import type { Equipment } from '@/types';
 import type { CreateEquipmentPayload, UpdateEquipmentPayload } from '@/types/equipment';
@@ -12,7 +12,7 @@ import { equipmentService } from '@/services/equipmentService';
 import { EquipmentTable, EquipmentCategoryTabs, EquipmentFormModal } from './components';
 
 export const EquipmentPage = () => {
-  const { user } = useAuth();
+  const user = useAuthStore((s) => s.user);
   const canManage = canManageEquipment(user?.role);
   const isMember = isMemberRole(user?.role);
 
