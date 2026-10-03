@@ -138,6 +138,7 @@ model Member {
   phone           String?          @db.VarChar(20)
   dateOfBirth     DateTime?        @map("date_of_birth") @db.Date
   tier            MembershipTier
+  planId          Int?             @map("plan_id")
   membershipStart DateTime         @default(now()) @map("membership_start") @db.Date
   membershipEnd   DateTime         @map("membership_end") @db.Date
   status          MembershipStatus @default(active)
@@ -145,6 +146,7 @@ model Member {
   createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  plan         MembershipPlan?      @relation(fields: [planId], references: [id])
   addresses    MemberAddress[]
   bookings     Booking[]
   participants BookingParticipant[]
@@ -155,6 +157,7 @@ model Member {
   @@index([email])
   @@index([phone])
   @@index([tier])
+  @@index([planId])
   @@index([status])
   @@map("members")
 }
@@ -191,6 +194,8 @@ model MembershipPlan {
   shopDiscountPct Int            @default(0) @map("shop_discount_pct")
   barDiscountPct  Int            @default(0) @map("bar_discount_pct")
   isActive        Boolean        @default(true) @map("is_active")
+
+  members Member[]
 
   @@unique([tier, durationMonths])
   @@map("membership_plans")

@@ -9,22 +9,54 @@ import type {
 export const courtService = {
   /**
    * CO-01: List all courts with optional sport and isActive filters.
+   * If member role gets 403 (CO-01 is staff-only), gracefully falls back to /public/courts or /courts/availability.
    */
   getCourts: async (params?: { sport?: string; isActive?: boolean }): Promise<Court[]> => {
-    const response = await apiClient.get<{ success: boolean; data: Court[] }>('/courts', {
-      params,
-    });
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{ success: boolean; data: Court[] }>('/courts', {
+        params,
+      });
+      return response.data.data;
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        try {
+          const pub = await apiClient.get<{ success: boolean; data: any[] }>('/public/courts');
+          return pub.data.data.map((c: any) => ({
+            ...c,
+            sportType: c.sport,
+            surfaceType: 'Standard',
+            hourlyRatePaise: 0,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })) as Court[];
+        } catch {
+          const today = new Date().toISOString().split('T')[0];
+          const avail = await courtService.getAvailability(today, params?.sport);
+          return avail.map((a) => ({
+            id: a.courtId,
+            name: a.courtName,
+            sport: a.sportType || 'Tennis',
+            sportType: a.sportType || 'Tennis',
+            surfaceType: 'Standard',
+            hourlyRatePaise: 0,
+            openTime: '06:00',
+            closeTime: '22:00',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })) as unknown as Court[];
+        }
+      }
+      throw err;
+    }
   },
 
   /**
    * Alias for getCourts matching the integration plan specification.
    */
   getAll: async (params?: { sport?: string; isActive?: boolean }): Promise<Court[]> => {
-    const response = await apiClient.get<{ success: boolean; data: Court[] }>('/courts', {
-      params,
-    });
-    return response.data.data;
+    return courtService.getCourts(params);
   },
 
   /**

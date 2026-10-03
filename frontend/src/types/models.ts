@@ -18,6 +18,7 @@ export interface User {
   name?: string;
   role: UserRole | 'admin' | 'front_desk' | 'bar' | 'shop' | 'member';
   tier?: string | null;
+  planId?: number;
   status?: string;
   phone?: string;
   avatarUrl?: string;

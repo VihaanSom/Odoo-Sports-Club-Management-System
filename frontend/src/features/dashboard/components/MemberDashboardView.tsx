@@ -37,11 +37,19 @@ export const MemberDashboardView = () => {
       setLoading(true);
       try {
         const [bookingsRes, courtsRes] = await Promise.all([
-          bookingService.getBookings({
-            memberId: user?.id,
-            status: 'confirmed',
+          bookingService
+            .getBookings({
+              memberId: user?.id,
+              status: 'confirmed',
+            })
+            .catch((err) => {
+              console.warn('Could not load member bookings:', err);
+              return { data: [] };
+            }),
+          courtService.getCourts().catch((err) => {
+            console.warn('Could not load courts:', err);
+            return [];
           }),
-          courtService.getCourts(),
         ]);
         setMyBookings(bookingsRes.data || []);
         setCourts(courtsRes || []);

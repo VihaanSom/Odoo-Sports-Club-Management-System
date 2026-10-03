@@ -55,6 +55,22 @@ export class MembersController {
     const history = await membersService.getMemberHistory(id, req.query as any);
     return sendSuccess(res, history);
   }
+
+  /**
+   * ME-07: POST /api/v1/members/:id/plan
+   */
+  async changePlan(req: Request, res: Response): Promise<Response> {
+    const id = parseInt(req.params.id as string, 10);
+    const planId = parseInt(req.body.planId as string, 10);
+    if (!planId || isNaN(planId)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_INPUT', message: 'Valid planId is required' },
+      });
+    }
+    const result = await membersService.changePlan(id, planId);
+    return sendSuccess(res, result, 'Membership plan updated successfully');
+  }
 }
 
 export const membersController = new MembersController();

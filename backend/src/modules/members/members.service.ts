@@ -194,6 +194,7 @@ export class MembersService {
           phone: input.phone ?? null,
           dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
           tier: input.tier,
+          planId: plan.id,
           membershipStart,
           membershipEnd,
           status: MembershipStatus.active,
@@ -259,6 +260,7 @@ export class MembersService {
       where: { id },
       include: {
         addresses: true,
+        plan: true,
       },
     });
 
@@ -286,6 +288,8 @@ export class MembersService {
       phone: member.phone,
       dateOfBirth: member.dateOfBirth ? formatDateOnly(member.dateOfBirth) : null,
       tier: member.tier,
+      planId: member.planId,
+      plan: member.plan,
       membershipStart: formatDateOnly(member.membershipStart),
       membershipEnd: formatDateOnly(member.membershipEnd),
       status: member.status,
@@ -562,6 +566,63 @@ export class MembersService {
       barTabs: formattedBarTabs,
       totalSpentPaise,
     };
+  }
+
+  /**
+   * ME-07: Change or subscribe member to a plan.
+   * Updates member's planId, tier, and extends membership period.
+   */
+  async changePlan(id: number, planId: number) {
+    const member = await prisma.member.findUnique({ where: { id } });
+    if (!member) {
+      throw new NotFoundError('MEMBER_NOT_FOUND', `Member with ID ${id} not found.`);
+    }
+
+    const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
+    if (!plan || !plan.isActive) {
+      throw new NotFoundError('PLAN_NOT_FOUND', `Membership plan with ID ${planId} not found or inactive.`);
+    }
+
+    // New membership_end = MAX(membership_end, CURRENT_DATE) + durationMonths
+    const now = new Date();
+    const baseDate = member.membershipEnd > now ? new Date(member.membershipEnd) : now;
+    const newEnd = addMonths(baseDate, plan.durationMonths);
+
+    return await prisma.$transaction(async (tx) => {
+      const updatedMember = await tx.member.update({
+        where: { id },
+        data: {
+          planId: plan.id,
+          tier: plan.tier,
+          membershipEnd: newEnd,
+          status: MembershipStatus.active,
+        },
+        include: {
+          plan: true,
+        },
+      });
+
+      // Record payment for membership plan
+      const payment = await tx.payment.create({
+        data: {
+          memberId: id,
+          amount: plan.price,
+          paymentMethod: PaymentMethod.plan,
+          notes: `Plan selected: ${plan.tier} (${plan.durationMonths} months)`,
+        },
+      });
+
+      return {
+        id: updatedMember.id,
+        tier: updatedMember.tier,
+        planId: updatedMember.planId,
+        plan: updatedMember.plan,
+        membershipStart: formatDateOnly(updatedMember.membershipStart),
+        membershipEnd: formatDateOnly(updatedMember.membershipEnd),
+        status: updatedMember.status,
+        paymentId: payment.id,
+      };
+    });
   }
 }
 
