@@ -1,9 +1,10 @@
-import {  useEffect  } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { FaTrophy, FaXmark } from 'react-icons/fa6';
-import { mockMembers } from '@/mock/members';
+import { memberService } from '@/services/memberService';
+import type { MemberDetail } from '@/types/members';
 import type { BarTable, CreateBarTabPayload } from '@/types/bar';
 
 const openTabSchema = z.object({
@@ -29,6 +30,7 @@ export const OpenTabModal = ({
   onClose,
   onSubmit,
 }: OpenTabModalProps) => {
+  const [members, setMembers] = useState<MemberDetail[]>([]);
   const availableTables = tables.filter((t) => t.isActive && !t.activeTab);
 
   const {
@@ -53,8 +55,15 @@ export const OpenTabModal = ({
         memberId: '',
         notes: '',
       });
+      memberService
+        .getAll({ status: 'active', pageSize: 100 })
+        .then((res) => {
+          setMembers(res.data || (Array.isArray(res) ? res : []));
+        })
+        .catch(() => {});
     }
   }, [isOpen, preselectedTableId, reset]);
+
 
   if (!isOpen) return null;
 
@@ -124,14 +133,14 @@ export const OpenTabModal = ({
               {...register('memberId')}
             >
               <option value="">Walk-in Guest (No Member Discount)</option>
-              {mockMembers.map((m) => (
-                <option key={m.id} value={m.id.replace(/\D/g, '') || m.id}>
-                  {m.name} ({m.membershipPlan} Member)
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.tier || m.membershipPlan || 'Gold'} Member)
                 </option>
               ))}
             </select>
             <span className="text-base-content/60 text-xs mt-1">
-              VIP members receive 10% discount; Premium receives 5%.
+              Gold members receive 15% discount; Silver 10%; Junior 5%.
             </span>
           </div>
 

@@ -8,6 +8,8 @@ import {
   openTabSchema,
   addTabItemsSchema,
   settleTabSchema,
+  itemParamsSchema,
+  updateItemQtySchema,
 } from './tabs.validator';
 
 const router = Router();
@@ -79,4 +81,19 @@ router.put(
   (req, res) => barTabsController.settleTab(req, res)
 );
 
+/**
+ * TB-06: Update item quantity in tab
+ * PATCH /api/v1/bar/tabs/:id/items/:itemId
+ * Auth: admin, bar
+ */
+router.patch(
+  '/:id/items/:itemId',
+  verifyToken,
+  requireRole('admin', 'bar'),
+  validate(itemParamsSchema, 'params'),
+  validate(updateItemQtySchema, 'body'),
+  (req, res) => barTabsController.updateItemQty(req, res)
+);
+
 export default router;
+

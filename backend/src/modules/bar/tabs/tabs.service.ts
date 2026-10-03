@@ -447,6 +447,89 @@ export class BarTabsService {
 
     return result;
   }
+
+  /**
+   * TB-06: Increment or decrement quantity of an item on an open tab.
+   * Atomically adjusts MenuItem stock and recalculates line subtotal.
+   */
+  async updateItemQty(tabId: number, itemId: number, delta: number): Promise<TabDetailResponse> {
+    const updatedTab = await prisma.$transaction(async (tx) => {
+      const tab = await tx.barTab.findUnique({
+        where: { id: tabId },
+        include: { table: true },
+      });
+
+      if (!tab) {
+        throw new NotFoundError('TAB_NOT_FOUND', `Bar tab with ID ${tabId} not found.`);
+      }
+
+      if (tab.status !== TabStatus.open) {
+        throw new UnprocessableError('TAB_NOT_OPEN', 'Cannot update items on a settled tab.');
+      }
+
+      const item = await tx.barTabItem.findFirst({
+        where: { id: itemId, tabId },
+        include: { menuItem: true },
+      });
+
+      if (!item) {
+        throw new NotFoundError('ITEM_NOT_FOUND', `Item with ID ${itemId} not found on tab ${tabId}.`);
+      }
+
+      const newQty = item.qty + delta;
+
+      if (newQty < 1) {
+        // Remove item and restore stock
+        await tx.barTabItem.delete({ where: { id: item.id } });
+        await tx.menuItem.update({
+          where: { id: item.menuItemId },
+          data: { stockQty: { increment: item.qty } },
+        });
+      } else {
+        if (delta > 0) {
+          if (item.menuItem.stockQty < delta) {
+            throw new ConflictError(
+              'INSUFFICIENT_STOCK',
+              `Insufficient stock for '${item.menuItem.name}'. Available: ${item.menuItem.stockQty}`
+            );
+          }
+          await tx.menuItem.update({
+            where: { id: item.menuItemId },
+            data: { stockQty: { decrement: delta } },
+          });
+        } else if (delta < 0) {
+          await tx.menuItem.update({
+            where: { id: item.menuItemId },
+            data: { stockQty: { increment: Math.abs(delta) } },
+          });
+        }
+
+        await tx.barTabItem.update({
+          where: { id: item.id },
+          data: {
+            qty: newQty,
+            subtotal: item.unitPrice.mul(newQty),
+          },
+        });
+      }
+
+      return tx.barTab.findUniqueOrThrow({
+        where: { id: tabId },
+        include: {
+          table: true,
+          member: true,
+          staff: true,
+          items: {
+            include: { menuItem: true },
+            orderBy: { id: 'asc' },
+          },
+        },
+      });
+    });
+
+    return formatTabDetail(updatedTab);
+  }
 }
 
 export const barTabsService = new BarTabsService();
+

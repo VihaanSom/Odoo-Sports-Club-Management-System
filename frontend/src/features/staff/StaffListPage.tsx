@@ -26,8 +26,8 @@ export const StaffListPage = () => {
         role: roleFilter as StaffRole | 'all',
       });
       setStaffList(res.data);
-    } catch {
-      toast.error('Failed to load staff list');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load staff list');
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,8 @@ export const StaffListPage = () => {
       }
       setSelectedStaffForEdit(null);
       fetchStaff();
-    } catch {
-      toast.error('Operation failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Operation failed');
     }
   };
 

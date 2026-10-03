@@ -70,31 +70,73 @@ export const shiftParamsSchema = z.object({
   shiftId: z.coerce.number().int().positive('Invalid shift ID'),
 });
 
-const isDateNotBeforeToday = (dateStr: string): boolean => {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  return target >= today;
-};
+export const assignShiftSchema = z.object({
+  staffId: z.coerce.number().int().positive('staffId is required'),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format'),
+  startTime: z.string().regex(/^\d{1,2}:\d{2}$/, 'startTime must be in HH:mm format'),
+  endTime: z.string().regex(/^\d{1,2}:\d{2}$/, 'endTime must be in HH:mm format'),
+  notes: z.string().trim().max(500).optional().nullable(),
+});
+
+export type AssignShiftInput = z.infer<typeof assignShiftSchema>;
+
+export const clockShiftSchema = z.object({
+  shiftId: z.coerce.number().int().positive('shiftId must be a positive integer'),
+  action: z.enum(['clock_in', 'clock_out']),
+  timestamp: z.string().optional(),
+});
+
+export type ClockShiftInput = z.infer<typeof clockShiftSchema>;
+
+export const listShiftsQuerySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  staffId: z.coerce.number().int().positive().optional(),
+  role: z.nativeEnum(StaffRole).optional(),
+});
+
+export type ListShiftsQuery = z.infer<typeof listShiftsQuerySchema>;
 
 export const createLeaveSchema = z
   .object({
+    staffId: z.coerce.number().int().positive().optional(),
     fromDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'fromDate must be in YYYY-MM-DD format')
-      .refine(isDateNotBeforeToday, 'fromDate cannot be in the past'),
+      .optional(),
+    startDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be in YYYY-MM-DD format')
+      .optional(),
     toDate: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'toDate must be in YYYY-MM-DD format'),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'toDate must be in YYYY-MM-DD format')
+      .optional(),
+    endDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be in YYYY-MM-DD format')
+      .optional(),
+    leaveType: z.string().optional(),
     reason: z.string().trim().max(500).optional().nullable(),
   })
-  .refine((data) => new Date(data.toDate) >= new Date(data.fromDate), {
-    message: 'toDate must be greater than or equal to fromDate',
+  .refine((data) => Boolean(data.fromDate || data.startDate), {
+    message: 'fromDate or startDate is required',
+    path: ['fromDate'],
+  })
+  .refine((data) => Boolean(data.toDate || data.endDate), {
+    message: 'toDate or endDate is required',
     path: ['toDate'],
-  });
+  })
+  .refine(
+    (data) => {
+      const from = data.fromDate || data.startDate!;
+      const to = data.toDate || data.endDate!;
+      return new Date(to) >= new Date(from);
+    },
+    {
+      message: 'toDate must be greater than or equal to fromDate',
+      path: ['toDate'],
+    }
+  );
 
 export type CreateLeaveInput = z.infer<typeof createLeaveSchema>;
 
@@ -110,6 +152,7 @@ export const reviewLeaveSchema = z.object({
   status: z.enum([LeaveStatus.approved, LeaveStatus.rejected], {
     message: "status must be either 'approved' or 'rejected'",
   }),
+  remarks: z.string().trim().max(500).optional().nullable(),
 });
 
 export type ReviewLeaveInput = z.infer<typeof reviewLeaveSchema>;
@@ -117,3 +160,4 @@ export type ReviewLeaveInput = z.infer<typeof reviewLeaveSchema>;
 export const leaveIdParamSchema = z.object({
   id: z.coerce.number().int().positive('Invalid leave request ID'),
 });
+

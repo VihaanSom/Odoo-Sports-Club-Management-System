@@ -14,7 +14,7 @@ import type {
 export const formatLegacyEquipment = (item: EquipmentItem): Equipment => ({
   id: item.id,
   name: item.name,
-  category: item.category,
+  category: item.category as any,
   quantityTotal: item.stockQty,
   quantityAvailable: item.stockQty,
   stockQty: item.stockQty,

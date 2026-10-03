@@ -44,14 +44,26 @@ export const addTabItemsSchema = z.object({
 });
 
 export const settleTabSchema = z.object({
-  paymentMethod: z.enum([PaymentMethod.cash, PaymentMethod.card, PaymentMethod.upi], {
-    message: 'paymentMethod must be one of: cash, card, upi',
+  paymentMethod: z.enum([PaymentMethod.cash, PaymentMethod.card, PaymentMethod.upi, PaymentMethod.plan], {
+    message: 'paymentMethod must be one of: cash, card, upi, plan',
   }),
   referenceNo: z.string().max(100, 'referenceNo cannot exceed 100 characters').nullable().optional(),
 });
 
+export const itemParamsSchema = z.object({
+  id: z.coerce.number().int().positive('id must be a positive integer'),
+  itemId: z.coerce.number().int().positive('itemId must be a positive integer'),
+});
+
+export const updateItemQtySchema = z.object({
+  delta: z.number().int().refine((d) => d !== 0, 'delta must be non-zero'),
+});
+
 export type TabIdParam = z.infer<typeof tabIdParamSchema>;
+export type ItemParams = z.infer<typeof itemParamsSchema>;
+export type UpdateItemQtyInput = z.infer<typeof updateItemQtySchema>;
 export type ListTabsQuery = z.infer<typeof listTabsQuerySchema>;
 export type OpenTabInput = z.infer<typeof openTabSchema>;
 export type AddTabItemsInput = z.infer<typeof addTabItemsSchema>;
 export type SettleTabInput = z.infer<typeof settleTabSchema>;
+

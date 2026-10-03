@@ -22,12 +22,24 @@ const shiftSchema = z.object({
 
 type ShiftFormData = z.infer<typeof shiftSchema>;
 
+const cleanShiftNotes = (notes?: string) => {
+  if (!notes) return '—';
+  const cleaned = notes
+    .replace(/\[?\bClocked (?:In|Out)\b\]?/gi, '')
+    .replace(/\|\s*\|/g, '|')
+    .trim()
+    .replace(/^\|\s*|\s*\|$/g, '')
+    .trim();
+  return cleaned || '—';
+};
+
 export const ShiftsPage = () => {
   const navigate = useNavigate();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string>('2026-10-03');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
@@ -42,7 +54,7 @@ export const ShiftsPage = () => {
     mode: 'onTouched',
     defaultValues: {
       staffId: '',
-      date: '2026-10-03',
+      date: todayStr,
       startTime: '08:00',
       endTime: '16:00',
       notes: '',
@@ -61,8 +73,8 @@ export const ShiftsPage = () => {
       ]);
       setShifts(shiftsRes);
       setStaffList(staffRes.data);
-    } catch {
-      toast.error('Failed to load shifts');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load shifts');
     } finally {
       setLoading(false);
     }
@@ -77,8 +89,8 @@ export const ShiftsPage = () => {
       await staffService.clockInOut({ shiftId, action });
       toast.success(action === 'clock_in' ? 'Clock In recorded' : 'Clock Out recorded');
       loadData();
-    } catch {
-      toast.error('Clock action failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Clock action failed');
     }
   };
 
@@ -94,10 +106,16 @@ export const ShiftsPage = () => {
       await staffService.assignShift(payload);
       toast.success('Shift assigned');
       setIsAssignModalOpen(false);
-      reset();
+      reset({
+        staffId: '',
+        date: todayStr,
+        startTime: '08:00',
+        endTime: '16:00',
+        notes: '',
+      });
       loadData();
-    } catch {
-      toast.error('Shift assignment failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Shift assignment failed');
     }
   };
 
@@ -260,8 +278,8 @@ export const ShiftsPage = () => {
                       <span className="text-base-content/70"> | Out: {s.clockOutTime}</span>
                     ) : null}
                   </td>
-                  <td className="text-xs text-base-content/70 max-w-xs truncate">
-                    {s.notes || '—'}
+                  <td className="text-xs text-base-content/70 max-w-xs truncate" title={cleanShiftNotes(s.notes)}>
+                    {cleanShiftNotes(s.notes)}
                   </td>
                   <td className="text-center">
                     {s.status === 'in_progress' && (
@@ -305,7 +323,9 @@ export const ShiftsPage = () => {
                       </button>
                     )}
                     {s.status === 'completed' && (
-                      <span className="badge badge-neutral badge-xs font-semibold">Done</span>
+                      <span className="btn btn-xs btn-ghost border border-base-300 text-base-content/60 font-medium px-3 whitespace-nowrap min-w-[76px] pointer-events-none select-none">
+                        Done
+                      </span>
                     )}
                   </td>
                 </tr>

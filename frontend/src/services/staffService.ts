@@ -1,183 +1,298 @@
 import { apiClient } from './apiClient';
-import { mockStaffMembers, mockLeaveRequests } from '@/mock/staff';
-import { mockShifts } from '@/mock/shifts';
+import type { ApiResponse } from '@/types/api';
 import type {
   StaffMember,
+  StaffRole,
+  StaffStatus,
   StaffQueryParams,
   CreateStaffPayload,
   UpdateStaffPayload,
   Shift,
+  ShiftStatus,
   AssignShiftPayload,
   ClockInOutPayload,
   LeaveRequest,
+  LeaveType,
+  LeaveStatus,
   CreateLeavePayload,
   ReviewLeavePayload,
 } from '@/types/staff';
 
-let staffStore = [...mockStaffMembers];
-let shiftsStore = [...mockShifts];
-let leavesStore = [...mockLeaveRequests];
+/**
+ * Normalizes backend staff response into frontend StaffMember interface.
+ */
+export function normalizeStaffMember(s: any): StaffMember {
+  if (!s) {
+    throw new Error('Invalid staff response');
+  }
+
+  const firstName = s.firstName || '';
+  const lastName = s.lastName || '';
+  const fullName = s.name || `${firstName} ${lastName}`.trim() || 'Staff Member';
+  const role: StaffRole = s.role || 'front_desk';
+  const status: StaffStatus = s.status || (s.isActive === false ? 'inactive' : 'active');
+  const hourlyRatePaise =
+    s.hourlyRatePaise ??
+    s.salaryPaise ??
+    (s.salary !== undefined && s.salary !== null ? Math.round(Number(s.salary) * 100) : 0);
+  const joinedDate = s.joinedDate || (s.createdAt ? s.createdAt.split('T')[0] : '');
+
+  return {
+    id: String(s.id),
+    firstName,
+    lastName,
+    name: fullName,
+    email: s.email || '',
+    phone: s.phone || '',
+    role,
+    status,
+    hourlyRatePaise,
+    joinedDate,
+    notes: s.notes,
+    avatarUrl: s.avatarUrl,
+  };
+}
+
+/**
+ * Normalizes backend shift response into frontend Shift interface.
+ */
+export function normalizeShift(s: any): Shift {
+  if (!s) {
+    throw new Error('Invalid shift response');
+  }
+
+  const dateStr = s.date || (s.shiftDate ? s.shiftDate.split('T')[0] : '');
+  const startTime =
+    s.startTime ||
+    (s.shiftStart ? new Date(s.shiftStart).toISOString().slice(11, 16) : '08:00');
+  const endTime =
+    s.endTime ||
+    (s.shiftEnd ? new Date(s.shiftEnd).toISOString().slice(11, 16) : '17:00');
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const notes = s.notes || '';
+  const isClockedIn = notes.includes('[Clocked In]');
+  const isClockedOut = notes.includes('[Clocked Out]');
+
+  let status: ShiftStatus = s.status;
+  if (!status) {
+    if (isClockedOut) {
+      status = 'completed';
+    } else if (s.shiftEnd === null || isClockedIn) {
+      status = 'in_progress';
+    } else if (dateStr > todayStr || (s.shiftStart && new Date(s.shiftStart).getTime() > now.getTime())) {
+      status = 'scheduled';
+    } else if (dateStr === todayStr) {
+      status = 'scheduled';
+    } else {
+      status = 'completed';
+    }
+  }
+
+  let clockInTime = s.clockInTime;
+  let clockOutTime = s.clockOutTime;
+
+  if (status === 'scheduled') {
+    clockInTime = undefined;
+    clockOutTime = undefined;
+  } else if (status === 'in_progress') {
+    clockOutTime = undefined;
+    if (!clockInTime && s.shiftStart) {
+      clockInTime = new Date(s.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+
+  const cleanNotes = (notes || '')
+    .replace(/\[?\bClocked (?:In|Out)\b\]?/gi, '')
+    .replace(/\|\s*\|/g, '|')
+    .trim()
+    .replace(/^\|\s*|\s*\|$/g, '')
+    .trim();
+
+  return {
+    id: String(s.id),
+    staffId: String(s.staffId),
+    staffName:
+      s.staffName ||
+      (s.staff ? `${s.staff.firstName} ${s.staff.lastName}`.trim() : `Staff #${s.staffId}`),
+    role: (s.role || s.staff?.role || 'front_desk') as StaffRole,
+    date: dateStr,
+    startTime,
+    endTime,
+    status,
+    clockInTime,
+    clockOutTime,
+    facility: s.facility,
+    notes: cleanNotes || undefined,
+  };
+}
+
+/**
+ * Normalizes backend leave response into frontend LeaveRequest interface.
+ */
+export function normalizeLeaveRequest(l: any): LeaveRequest {
+  if (!l) {
+    throw new Error('Invalid leave request response');
+  }
+
+  const startDate = l.startDate || (l.fromDate ? l.fromDate.split('T')[0] : '');
+  const endDate = l.endDate || (l.toDate ? l.toDate.split('T')[0] : '');
+  const daysCount =
+    l.daysCount ??
+    Math.max(
+      1,
+      Math.round(
+        (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)
+      ) + 1
+    );
+
+  return {
+    id: String(l.id),
+    staffId: String(l.staffId),
+    staffName:
+      l.staffName ||
+      (l.staff ? `${l.staff.firstName} ${l.staff.lastName}`.trim() : `Staff #${l.staffId}`),
+    role: (l.role || l.staff?.role || 'front_desk') as StaffRole,
+    leaveType: (l.leaveType || 'casual') as LeaveType,
+    startDate,
+    endDate,
+    daysCount,
+    reason: l.reason || '',
+    status: (l.status || 'pending') as LeaveStatus,
+    appliedOn: l.appliedOn || (l.createdAt ? l.createdAt.split('T')[0] : ''),
+    reviewedBy: l.reviewedBy
+      ? String(l.reviewedBy)
+      : l.reviewer
+      ? `${l.reviewer.firstName} ${l.reviewer.lastName}`.trim()
+      : undefined,
+    reviewRemarks: l.reviewRemarks || l.remarks || undefined,
+  };
+}
 
 export const staffService = {
   // ST-01: List staff members with filter & search
   getStaffMembers: async (
     params?: StaffQueryParams
   ): Promise<{ data: StaffMember[]; total: number }> => {
-    try {
-      const response = await apiClient.get<{ data: StaffMember[]; total: number }>('/staff', {
-        params,
-      });
-      return response.data;
-    } catch {
-      let filtered = [...staffStore];
-      if (params?.search) {
-        const q = params.search.toLowerCase();
-        filtered = filtered.filter(
-          (s) =>
-            s.name.toLowerCase().includes(q) ||
-            s.firstName.toLowerCase().includes(q) ||
-            s.lastName.toLowerCase().includes(q) ||
-            s.email.toLowerCase().includes(q) ||
-            s.phone.includes(q)
-        );
-      }
-      if (params?.role && params.role !== 'all') {
-        filtered = filtered.filter((s) => s.role === params.role);
-      }
-      if (params?.status && params.status !== 'all') {
-        filtered = filtered.filter((s) => s.status === params.status);
-      }
-      return { data: filtered, total: filtered.length };
+    const cleanParams: Record<string, any> = {
+      pageSize: params?.limit || 100,
+    };
+    if (params?.page) cleanParams.page = params.page;
+    if (params?.search && params.search.trim()) cleanParams.search = params.search.trim();
+    if (params?.role && params.role !== 'all') cleanParams.role = params.role;
+    if (params?.status && params.status !== 'all') {
+      cleanParams.isActive = params.status === 'active';
     }
+
+    const response = await apiClient.get<ApiResponse<any[]>>('/staff', {
+      params: cleanParams,
+    });
+    const rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
+    const normalized = rawList.map(normalizeStaffMember);
+    const pagination = (response.data as any)?.pagination;
+
+    return {
+      data: normalized,
+      total: pagination?.total ?? normalized.length,
+    };
   },
 
   // ST-02: Get staff details by ID
   getStaffById: async (id: string): Promise<StaffMember | null> => {
-    try {
-      const response = await apiClient.get<StaffMember>(`/staff/${id}`);
-      return response.data;
-    } catch {
-      const found = staffStore.find((s) => s.id === id);
-      return found || null;
-    }
+    const response = await apiClient.get<ApiResponse<any>>(`/staff/${id}`);
+    const rawData = response.data?.data || response.data;
+    if (!rawData) return null;
+    return normalizeStaffMember(rawData);
   },
 
   // ST-03: Create staff member
   createStaff: async (payload: CreateStaffPayload): Promise<StaffMember> => {
-    try {
-      const response = await apiClient.post<StaffMember>('/staff', payload);
-      return response.data;
-    } catch {
-      const newStaff: StaffMember = {
-        ...payload,
-        name: `${payload.firstName} ${payload.lastName}`.trim(),
-        id: `STF-${String(staffStore.length + 1).padStart(3, '0')}`,
-        status: 'active',
-        joinedDate: new Date().toISOString().split('T')[0],
-      };
-      staffStore.unshift(newStaff);
-      return newStaff;
-    }
+    const cleanPayload = {
+      firstName: payload.firstName.trim(),
+      lastName: payload.lastName.trim(),
+      email: payload.email.trim(),
+      password: (payload as any).password || 'Champions@2026',
+      role: payload.role,
+      phone: payload.phone.trim() || undefined,
+      salary: Number(payload.hourlyRatePaise),
+    };
+    const response = await apiClient.post<ApiResponse<any>>('/staff', cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeStaffMember(rawData);
   },
 
   // ST-04: Update staff member
   updateStaff: async (id: string, payload: UpdateStaffPayload): Promise<StaffMember> => {
-    try {
-      const response = await apiClient.put<StaffMember>(`/staff/${id}`, payload);
-      return response.data;
-    } catch {
-      const index = staffStore.findIndex((s) => s.id === id);
-      if (index === -1) {
-        throw new Error('Staff member not found');
-      }
-      const existing = staffStore[index];
-      const firstName = payload.firstName ?? existing.firstName;
-      const lastName = payload.lastName ?? existing.lastName;
-      staffStore[index] = {
-        ...existing,
-        ...payload,
-        name: `${firstName} ${lastName}`.trim(),
-      };
-      return staffStore[index];
+    const cleanPayload: Record<string, any> = {};
+    if (payload.firstName !== undefined) cleanPayload.firstName = payload.firstName.trim();
+    if (payload.lastName !== undefined) cleanPayload.lastName = payload.lastName.trim();
+    if (payload.phone !== undefined) cleanPayload.phone = payload.phone.trim();
+    if (payload.role !== undefined) cleanPayload.role = payload.role;
+    if (payload.hourlyRatePaise !== undefined) {
+      cleanPayload.salary = Number(payload.hourlyRatePaise);
     }
+    if (payload.status !== undefined) {
+      cleanPayload.isActive = payload.status === 'active';
+    }
+    if ((payload as any).password) {
+      cleanPayload.password = (payload as any).password;
+    }
+
+    const response = await apiClient.put<ApiResponse<any>>(`/staff/${id}`, cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeStaffMember(rawData);
   },
 
-  // SH-01: List shifts
+  // SH-01: List shifts (individual staff or club-wide)
   getShifts: async (params?: {
     date?: string;
     staffId?: string;
     role?: string;
   }): Promise<Shift[]> => {
-    try {
-      const response = await apiClient.get<Shift[]>('/staff/shifts', { params });
-      return response.data;
-    } catch {
-      let filtered = [...shiftsStore];
-      if (params?.date) {
-        filtered = filtered.filter((s) => s.date === params.date);
-      }
-      if (params?.staffId && params.staffId !== 'all') {
-        filtered = filtered.filter((s) => s.staffId === params.staffId);
-      }
-      if (params?.role && params.role !== 'all') {
-        filtered = filtered.filter((s) => s.role === params.role);
-      }
-      return filtered;
+    let rawList: any[] = [];
+
+    if (params?.staffId && params.staffId !== 'all') {
+      const response = await apiClient.get<ApiResponse<any[]>>(`/staff/${params.staffId}/shifts`);
+      rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
+    } else {
+      const queryParams: Record<string, any> = {};
+      if (params?.date) queryParams.date = params.date;
+      if (params?.role && params.role !== 'all') queryParams.role = params.role;
+
+      const response = await apiClient.get<ApiResponse<any[]>>('/staff/shifts', {
+        params: queryParams,
+      });
+      rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
     }
+
+    return rawList.map(normalizeShift);
   },
 
   // SH-02: Clock In / Clock Out
   clockInOut: async (payload: ClockInOutPayload): Promise<Shift> => {
-    try {
-      const response = await apiClient.post<Shift>('/staff/shifts/clock', payload);
-      return response.data;
-    } catch {
-      const index = shiftsStore.findIndex((s) => s.id === payload.shiftId);
-      if (index === -1) {
-        throw new Error('Shift not found');
-      }
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const shift = shiftsStore[index];
-
-      if (payload.action === 'clock_in') {
-        shiftsStore[index] = {
-          ...shift,
-          status: 'in_progress',
-          clockInTime: timeStr,
-        };
-      } else {
-        shiftsStore[index] = {
-          ...shift,
-          status: 'completed',
-          clockOutTime: timeStr,
-        };
-      }
-      return shiftsStore[index];
-    }
+    const cleanPayload = {
+      shiftId: Number(payload.shiftId),
+      action: payload.action,
+      timestamp: payload.timestamp,
+    };
+    const response = await apiClient.post<ApiResponse<any>>('/staff/shifts/clock', cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeShift(rawData);
   },
 
-  // Assign shift (without facility)
+  // Assign / schedule shift
   assignShift: async (payload: AssignShiftPayload): Promise<Shift> => {
-    try {
-      const response = await apiClient.post<Shift>('/staff/shifts', payload);
-      return response.data;
-    } catch {
-      const staff = staffStore.find((s) => s.id === payload.staffId);
-      const newShift: Shift = {
-        id: `SH-${shiftsStore.length + 201}`,
-        staffId: payload.staffId,
-        staffName: staff?.name || 'Assigned Staff',
-        role: staff?.role || 'front_desk',
-        date: payload.date,
-        startTime: payload.startTime,
-        endTime: payload.endTime,
-        status: 'scheduled',
-        notes: payload.notes,
-      };
-      shiftsStore.unshift(newShift);
-      return newShift;
-    }
+    const cleanPayload = {
+      staffId: Number(payload.staffId),
+      date: payload.date,
+      startTime: payload.startTime,
+      endTime: payload.endTime,
+      notes: payload.notes?.trim() || undefined,
+    };
+    const response = await apiClient.post<ApiResponse<any>>('/staff/shifts', cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeShift(rawData);
   },
 
   // LV-01: List leave requests
@@ -185,69 +300,55 @@ export const staffService = {
     status?: string;
     staffId?: string;
   }): Promise<LeaveRequest[]> => {
-    try {
-      const response = await apiClient.get<LeaveRequest[]>('/staff/leaves', { params });
-      return response.data;
-    } catch {
-      let filtered = [...leavesStore];
-      if (params?.status && params.status !== 'all') {
-        filtered = filtered.filter((l) => l.status === params.status);
-      }
-      if (params?.staffId && params.staffId !== 'all') {
-        filtered = filtered.filter((l) => l.staffId === params.staffId);
-      }
-      return filtered;
+    let rawList: any[] = [];
+
+    if (params?.staffId && params.staffId !== 'all') {
+      const queryParams: Record<string, any> = {};
+      if (params.status && params.status !== 'all') queryParams.status = params.status;
+      const response = await apiClient.get<ApiResponse<any[]>>(`/staff/${params.staffId}/leave`, {
+        params: queryParams,
+      });
+      rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
+    } else {
+      const queryParams: Record<string, any> = {};
+      if (params?.status && params.status !== 'all') queryParams.status = params.status;
+      const response = await apiClient.get<ApiResponse<any[]>>('/leave', {
+        params: queryParams,
+      });
+      rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
     }
+
+    return rawList.map(normalizeLeaveRequest);
   },
 
   // LV-02: Submit leave request
   submitLeaveRequest: async (payload: CreateLeavePayload): Promise<LeaveRequest> => {
-    try {
-      const response = await apiClient.post<LeaveRequest>('/staff/leaves', payload);
-      return response.data;
-    } catch {
-      const staff = staffStore.find((s) => s.id === payload.staffId);
-      const start = new Date(payload.startDate);
-      const end = new Date(payload.endDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const daysCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-      const newLeave: LeaveRequest = {
-        id: `LV-${leavesStore.length + 101}`,
-        staffId: payload.staffId,
-        staffName: staff?.name || 'Staff Member',
-        role: staff?.role || 'front_desk',
-        leaveType: payload.leaveType || 'casual',
-        startDate: payload.startDate,
-        endDate: payload.endDate,
-        daysCount,
-        reason: payload.reason,
-        status: 'pending',
-        appliedOn: new Date().toISOString().split('T')[0],
-      };
-      leavesStore.unshift(newLeave);
-      return newLeave;
-    }
+    const cleanPayload = {
+      staffId: Number(payload.staffId),
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+      fromDate: payload.startDate,
+      toDate: payload.endDate,
+      reason: payload.reason?.trim() || undefined,
+      leaveType: payload.leaveType || 'casual',
+    };
+    const response = await apiClient.post<ApiResponse<any>>('/leave', cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeLeaveRequest(rawData);
   },
 
   // LV-03: Approve / Reject leave
   reviewLeaveRequest: async (payload: ReviewLeavePayload): Promise<LeaveRequest> => {
-    try {
-      const response = await apiClient.put<LeaveRequest>(`/staff/leaves/${payload.leaveId}`, payload);
-      return response.data;
-    } catch {
-      const index = leavesStore.findIndex((l) => l.id === payload.leaveId);
-      if (index === -1) {
-        throw new Error('Leave request not found');
-      }
-      leavesStore[index] = {
-        ...leavesStore[index],
-        status: payload.status,
-        reviewedBy: 'Rajesh Patel (Admin)',
-        reviewRemarks: payload.remarks || `${payload.status === 'approved' ? 'Approved' : 'Rejected'} by management`,
-      };
-      return leavesStore[index];
-    }
+    const cleanPayload = {
+      status: payload.status,
+      remarks: payload.remarks || undefined,
+    };
+    const response = await apiClient.put<ApiResponse<any>>(
+      `/leave/${payload.leaveId}`,
+      cleanPayload
+    );
+    const rawData = response.data?.data || response.data;
+    return normalizeLeaveRequest(rawData);
   },
 };
 
