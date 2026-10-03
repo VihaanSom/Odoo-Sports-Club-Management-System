@@ -12,6 +12,7 @@ export interface TokenPayload {
 
 export interface AuthUser {
   id: number;
+  sub?: number;
   email: string;
   role: UserRole;
   tier?: MembershipTier | null;
@@ -25,10 +26,25 @@ declare global {
   }
 }
 
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ApiErrorPayload {
+  code: string;
+  message: string;
+  details?: any;
+  requestId?: string;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   code?: string;
   data?: T;
-  errors?: any;
+  pagination?: PaginationMeta;
+  error?: ApiErrorPayload;
 }
