@@ -2,20 +2,37 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { FaPenToSquare, FaCircleCheck } from 'react-icons/fa6';
-import { Modal, Button, Input, Avatar } from '@/components/ui';
+import { Modal, Button, Input, Avatar, Badge } from '@/components/ui';
 import { DatePicker } from '@/components/ui/DatePicker';
 import type { MemberDetail, MemberUpdatePayload } from '@/types/members';
 
-const memberEditSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
-  photoUrl: z.string().url('Please enter a valid image URL').or(z.literal('')).optional(),
-  dateOfBirth: z.string().optional(),
-  tier: z.enum(['Standard', 'Premium', 'VIP', 'Junior']),
-  status: z.enum(['active', 'suspended', 'expired']),
-});
+const memberEditSchema = z
+  .object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Please enter a valid email address'),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
+    photoUrl: z.string().url('Please enter a valid image URL').or(z.literal('')).optional(),
+    dateOfBirth: z.string().optional(),
+    tier: z.enum(['Gold', 'Silver', 'Junior']),
+  })
+  .refine(
+    (data) => {
+      if (data.tier === 'Junior') {
+        if (!data.dateOfBirth) return false;
+        const dob = new Date(data.dateOfBirth);
+        const ageDifMs = Date.now() - dob.getTime();
+        const ageDate = new Date(ageDifMs);
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        return age < 18;
+      }
+      return true;
+    },
+    {
+      message: 'Junior members must be under 18 years of age. Please select a valid birthdate.',
+      path: ['dateOfBirth'],
+    }
+  );
 
 type MemberEditFormData = z.infer<typeof memberEditSchema>;
 
@@ -37,8 +54,12 @@ export const MemberEditModal = ({
   const initialFirstName = member.firstName || nameParts[0] || '';
   const initialLastName = member.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
 
-  // Forms: React Hook Form + Zod (mode: 'onTouched').
-  // Strict rule: Phone 10 digits regex (^\d{10}$), numbers only
+  // Map legacy tier to valid enum
+  let currentTier: 'Gold' | 'Silver' | 'Junior' = 'Gold';
+  if (member.tier === 'Silver' || member.tier === 'Standard') currentTier = 'Silver';
+  else if (member.tier === 'Junior') currentTier = 'Junior';
+  else currentTier = 'Gold';
+
   const {
     register,
     handleSubmit,
@@ -55,8 +76,7 @@ export const MemberEditModal = ({
       phone: member.phone?.replace(/\D/g, '').slice(-10) || '',
       photoUrl: member.photoUrl || member.avatarUrl || '',
       dateOfBirth: member.dateOfBirth || '',
-      tier: (member.tier as any) || 'Standard',
-      status: (member.status as any) || 'active',
+      tier: currentTier,
     },
   });
 
@@ -65,17 +85,15 @@ export const MemberEditModal = ({
   const watchedLastName = watch('lastName');
 
   const handleFormSubmit = async (data: MemberEditFormData) => {
-    const fullName = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
+    // Only pass mutable fields permitted by backend ME-04 validator
     await onSubmit({
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
-      name: fullName,
       email: data.email.trim(),
       phone: data.phone.trim(),
       photoUrl: data.photoUrl?.trim() || undefined,
       dateOfBirth: data.dateOfBirth || undefined,
       tier: data.tier,
-      status: data.status,
     });
   };
 
@@ -181,10 +199,9 @@ export const MemberEditModal = ({
               Membership Tier
             </label>
             <select {...register('tier')} className="select select-bordered w-full text-sm">
-              <option value="Standard">Standard Tier</option>
-              <option value="Premium">Premium Tier</option>
-              <option value="VIP">VIP All-Access</option>
-              <option value="Junior">Junior Tier</option>
+              <option value="Gold">Gold Tier (₹5,000/mo - 15% discount)</option>
+              <option value="Silver">Silver Tier (₹3,000/mo - 10% discount)</option>
+              <option value="Junior">Junior Tier (&lt;18 yrs - ₹2,000/mo)</option>
             </select>
             {errors.tier && (
               <span className="text-error text-xs mt-1">{errors.tier.message}</span>
@@ -192,19 +209,25 @@ export const MemberEditModal = ({
           </div>
         </div>
 
-        {/* Status */}
-        <div className="fieldset">
-          <label className="fieldset-label font-medium text-xs text-base-content/80">
-            Account Status
-          </label>
-          <select {...register('status')} className="select select-bordered w-full text-sm">
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-            <option value="expired">Expired</option>
-          </select>
-          {errors.status && (
-            <span className="text-error text-xs mt-1">{errors.status.message}</span>
-          )}
+        {/* Account Status (read-only display as backend status is immutable) */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-base-200/50 border border-base-300">
+          <div className="text-xs">
+            <span className="font-bold text-base-content block">Account Status</span>
+            <span className="text-base-content/60">Managed by system & renewals</span>
+          </div>
+          <Badge
+            size="sm"
+            variant={
+              member.status === 'active'
+                ? 'success'
+                : member.status === 'suspended'
+                ? 'warning'
+                : 'error'
+            }
+            className="capitalize"
+          >
+            {member.status}
+          </Badge>
         </div>
 
         {/* Footer */}
@@ -218,7 +241,7 @@ export const MemberEditModal = ({
             isLoading={isSubmitting}
             leftIcon={<FaCircleCheck className="size-4" />}
           >
-            Save
+            Save Changes
           </Button>
         </div>
       </form>

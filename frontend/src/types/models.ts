@@ -98,6 +98,9 @@ export interface MembershipPlan {
   tier: MembershipTier | string;
   durationMonths: number;
   pricePaise: number;
+  courtRatePaise?: number;
+  shopDiscountPct?: number;
+  barDiscountPct?: number;
   /** @deprecated Use pricePaise */
   price?: string;
   /** @deprecated Use durationMonths */
