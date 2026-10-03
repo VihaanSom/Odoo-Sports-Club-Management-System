@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -18,7 +18,7 @@ import { formatPaise } from '@/lib/utils';
 import type { Order, OrderStatus } from '@/types/orders';
 import { OrderStatusUpdate } from './components';
 
-export const OrderDetailPage: React.FC = () => {
+export const OrderDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

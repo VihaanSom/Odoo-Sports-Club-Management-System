@@ -1,9 +1,8 @@
-import React from 'react';
 import { FaServer } from 'react-icons/fa6';
 import { Card, Input } from '@/components/ui';
 import { ODOO_DEFAULT_URL, ODOO_DEFAULT_DB } from '@/config/constants';
 
-export const ErpSettingsSection: React.FC = () => {
+export const ErpSettingsSection = () => {
   return (
     <Card className="p-6 space-y-4">
       <h2 className="text-lg font-bold flex items-center gap-2">

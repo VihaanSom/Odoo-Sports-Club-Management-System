@@ -1,7 +1,7 @@
 import { FaHeart } from 'react-icons/fa6';
 import { Logo } from '@/components/ui';
 
-export const Footer: React.FC = () => {
+export const Footer = () => {
   return (
     <footer className="footer sm:footer-horizontal bg-base-200 text-base-content border-t border-base-300 p-6 items-center">
       <aside className="grid-flow-col items-center gap-2">

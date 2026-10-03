@@ -33,7 +33,7 @@ interface PaymentMethodSectionProps {
   onSimulateUpiSuccess?: () => void;
 }
 
-export const PaymentMethodSection: React.FC<PaymentMethodSectionProps> = ({
+export const PaymentMethodSection = ({
   selectedMethod,
   onSelectMethod,
   selectedTier,
@@ -47,7 +47,7 @@ export const PaymentMethodSection: React.FC<PaymentMethodSectionProps> = ({
   onCardCvvChange,
   cardErrors = {},
   onSimulateUpiSuccess,
-}) => {
+}: PaymentMethodSectionProps) => {
   const [upiTimer, setUpiTimer] = useState(300); // 5 minutes in seconds
   const [isUpiPaid, setIsUpiPaid] = useState(false);
 

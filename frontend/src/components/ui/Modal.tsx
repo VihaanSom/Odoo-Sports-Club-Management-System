@@ -10,13 +10,13 @@ export interface ModalProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
-export const Modal: React.FC<ModalProps> = ({
+export const Modal = ({
   isOpen,
   onClose,
   title,
   children,
   maxWidth = 'md',
-}) => {
+}: ModalProps) => {
   if (!isOpen) return null;
 
   const maxWidthClass = {

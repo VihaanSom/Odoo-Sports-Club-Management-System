@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaMagnifyingGlass, FaXmark } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 
@@ -9,12 +8,12 @@ export interface SearchBarProps {
   className?: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+export const SearchBar = ({
   value,
   onChange,
   placeholder = 'Search...',
   className,
-}) => {
+}: SearchBarProps) => {
   return (
     <div className={cn('relative w-full', className)}>
       <FaMagnifyingGlass className="size-4 text-base-content/50 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

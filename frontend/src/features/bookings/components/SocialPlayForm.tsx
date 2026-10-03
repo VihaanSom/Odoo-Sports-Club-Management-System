@@ -8,11 +8,11 @@ interface SocialPlayFormProps {
   onRemoveParticipant: (index: number) => void;
 }
 
-export const SocialPlayForm: React.FC<SocialPlayFormProps> = ({
+export const SocialPlayForm = ({
   participants,
   onAddParticipant,
   onRemoveParticipant,
-}) => {
+}: SocialPlayFormProps) => {
   const [type, setType] = useState<'member' | 'guest'>('guest');
   const [name, setName] = useState('');
   const [memberId, setMemberId] = useState('');

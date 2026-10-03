@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -39,12 +39,12 @@ interface EquipmentFormModalProps {
   onSubmit: (payload: CreateEquipmentPayload | UpdateEquipmentPayload) => Promise<void>;
 }
 
-export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
+export const EquipmentFormModal = ({
   isOpen,
   item,
   onClose,
   onSubmit,
-}) => {
+}: EquipmentFormModalProps) => {
   const isEdit = Boolean(item);
 
   const {

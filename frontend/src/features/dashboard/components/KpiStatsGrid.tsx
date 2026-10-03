@@ -1,7 +1,6 @@
-import React from 'react';
 import { FaUsers, FaCalendarCheck, FaDumbbell, FaDollarSign, FaArrowTrendUp } from 'react-icons/fa6';
 
-export const KpiStatsGrid: React.FC = () => {
+export const KpiStatsGrid = () => {
   const stats = [
     {
       title: 'Total Active Members',

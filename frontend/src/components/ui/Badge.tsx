@@ -6,13 +6,13 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-export const Badge: React.FC<BadgeProps> = ({
+export const Badge = ({
   children,
   className,
   variant = 'neutral',
   size = 'md',
   ...props
-}) => {
+}: BadgeProps) => {
   const variantClass = {
     primary: 'badge-primary',
     secondary: 'badge-secondary',

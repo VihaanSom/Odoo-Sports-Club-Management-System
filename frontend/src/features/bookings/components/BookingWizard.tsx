@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FaCheck } from 'react-icons/fa6';
@@ -21,11 +21,11 @@ interface BookingWizardProps {
   initialSlotEnd?: string;
 }
 
-export const BookingWizard: React.FC<BookingWizardProps> = ({
+export const BookingWizard = ({
   initialCourtId,
   initialSlotStart,
   initialSlotEnd,
-}) => {
+}: BookingWizardProps) => {
   const navigate = useNavigate();
   const todayStr = new Date().toISOString().split('T')[0];
 

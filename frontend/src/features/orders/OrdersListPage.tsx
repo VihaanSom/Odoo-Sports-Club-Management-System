@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -16,7 +16,7 @@ import { orderService } from '@/services/orderService';
 import { formatPaise } from '@/lib/utils';
 import type { Order, OrderType, OrderStatus } from '@/types/orders';
 
-export const OrdersListPage: React.FC = () => {
+export const OrdersListPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<string>('all');

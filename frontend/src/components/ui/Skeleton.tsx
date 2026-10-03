@@ -7,14 +7,14 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   height?: string | number;
 }
 
-export const Skeleton: React.FC<SkeletonProps> = ({
+export const Skeleton = ({
   className,
   variant = 'rectangular',
   width,
   height,
   style,
   ...props
-}) => {
+}: SkeletonProps) => {
   const variantClass = {
     rectangular: 'rounded-xl',
     circular: 'rounded-full',

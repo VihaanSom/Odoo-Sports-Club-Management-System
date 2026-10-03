@@ -1,8 +1,7 @@
-import React from 'react';
 import { FaMoon, FaSun } from 'react-icons/fa6';
 import { useThemeStore } from '@/stores/themeStore';
 
-export const ThemeToggle: React.FC = () => {
+export const ThemeToggle = () => {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const isDark = theme === 'black';

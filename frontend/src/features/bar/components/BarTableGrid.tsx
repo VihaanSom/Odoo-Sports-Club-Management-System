@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaUsers,
@@ -18,12 +17,12 @@ interface BarTableGridProps {
   onSettle: (tab: BarTab) => void;
 }
 
-export const BarTableGrid: React.FC<BarTableGridProps> = ({
+export const BarTableGrid = ({
   tables,
   onOpenTab,
   onAddItem,
   onSettle,
-}) => {
+}: BarTableGridProps) => {
   const navigate = useNavigate();
 
   return (

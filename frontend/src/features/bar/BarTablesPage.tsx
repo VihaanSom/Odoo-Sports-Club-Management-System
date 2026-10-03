@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { FaTrophy, FaPlus, FaFolderOpen, FaRotate } from 'react-icons/fa6';
@@ -14,7 +14,7 @@ import {
   SettleTabModal,
 } from './components';
 
-export const BarTablesPage: React.FC = () => {
+export const BarTablesPage = () => {
   const [tables, setTables] = useState<BarTable[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'available' | 'occupied'>('all');

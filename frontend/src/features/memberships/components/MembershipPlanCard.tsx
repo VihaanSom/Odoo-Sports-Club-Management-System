@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaCheck, FaCrown } from 'react-icons/fa6';
 import { Card, Badge, Button } from '@/components/ui';
 import type { MembershipPlan } from '@/types';
@@ -8,10 +7,10 @@ interface MembershipPlanCardProps {
   onSelect: (plan: MembershipPlan) => void;
 }
 
-export const MembershipPlanCard: React.FC<MembershipPlanCardProps> = ({
+export const MembershipPlanCard = ({
   plan,
   onSelect,
-}) => {
+}: MembershipPlanCardProps) => {
   return (
     <Card
       className={`p-6 flex flex-col justify-between ${

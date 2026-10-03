@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaFilter } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 
@@ -15,13 +14,13 @@ export interface FilterToolbarProps {
   className?: string;
 }
 
-export const FilterToolbar: React.FC<FilterToolbarProps> = ({
+export const FilterToolbar = ({
   options,
   selectedValue,
   onSelect,
   label = 'Filter',
   className,
-}) => {
+}: FilterToolbarProps) => {
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <FaFilter className="size-3.5 text-base-content/50" />

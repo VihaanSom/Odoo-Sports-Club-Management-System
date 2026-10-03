@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { FaClock, FaCheck } from 'react-icons/fa6';
 
 interface CourtHoursEditorProps {
@@ -8,12 +8,12 @@ interface CourtHoursEditorProps {
   onCancel: () => void;
 }
 
-export const CourtHoursEditor: React.FC<CourtHoursEditorProps> = ({
+export const CourtHoursEditor = ({
   initialOpen,
   initialClose,
   onSave,
   onCancel,
-}) => {
+}: CourtHoursEditorProps) => {
   const [openTime, setOpenTime] = useState(initialOpen);
   const [closeTime, setCloseTime] = useState(initialClose);
   const [saving, setSaving] = useState(false);

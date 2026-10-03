@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   FaCalendarDays,
@@ -19,7 +18,7 @@ interface BookingsTableProps {
   onCancel?: (id: number) => void;
 }
 
-export const BookingsTable: React.FC<BookingsTableProps> = ({ bookings, onCancel }) => {
+export const BookingsTable = ({ bookings, onCancel }: BookingsTableProps) => {
   return (
     <div className="card bg-base-100 border border-base-300 shadow-xs overflow-hidden rounded-2xl">
       <div className="overflow-x-auto">

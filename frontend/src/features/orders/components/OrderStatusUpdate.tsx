@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import toast from 'react-hot-toast';
 import { orderService } from '@/services/orderService';
 import type { OrderStatus } from '@/types/orders';
@@ -9,11 +9,11 @@ interface OrderStatusUpdateProps {
   onStatusUpdated: () => Promise<void>;
 }
 
-export const OrderStatusUpdate: React.FC<OrderStatusUpdateProps> = ({
+export const OrderStatusUpdate = ({
   orderId,
   currentStatus,
   onStatusUpdated,
-}) => {
+}: OrderStatusUpdateProps) => {
   const [status, setStatus] = useState<OrderStatus>(currentStatus);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);

@@ -1,10 +1,9 @@
-import React from 'react';
 import { FaPalette } from 'react-icons/fa6';
 import { useThemeStore } from '@/stores/themeStore';
 import { AVAILABLE_THEMES } from '@/config/theme';
 import { Card } from '@/components/ui';
 
-export const ThemeSettingsSection: React.FC = () => {
+export const ThemeSettingsSection = () => {
   const currentTheme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
 

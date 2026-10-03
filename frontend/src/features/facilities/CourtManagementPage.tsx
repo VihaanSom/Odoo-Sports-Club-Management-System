@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { motion } from 'motion/react';
 import {
   FaTrophy,
@@ -15,7 +15,7 @@ import { courtService } from '@/services/courtService';
 import type { Court, CreateCourtPayload, UpdateCourtPayload } from '@/types/courts';
 import { CourtFormModal, CourtHoursEditor } from './components';
 
-export const CourtManagementPage: React.FC = () => {
+export const CourtManagementPage = () => {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
