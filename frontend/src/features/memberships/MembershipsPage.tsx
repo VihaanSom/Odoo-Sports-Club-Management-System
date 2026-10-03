@@ -3,11 +3,17 @@ import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaIdCard, FaPlus, FaRotate } from 'react-icons/fa6';
 import { Button, Skeleton, Modal, Input } from '@/components/ui';
+import { useAuthStore } from '@/stores/authStore';
+import { canManagePlans, isMemberRole } from '@/lib/permissions';
 import { membershipPlanService } from '@/services/memberService';
 import type { MembershipPlan } from '@/types';
 import { MembershipPlanCard } from './components';
 
 export const MembershipsPage = () => {
+  const user = useAuthStore((s) => s.user);
+  const canManage = canManagePlans(user?.role);
+  const isMember = isMemberRole(user?.role);
+
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -129,7 +135,9 @@ export const MembershipsPage = () => {
             <FaIdCard className="size-7 text-primary" /> Membership Plans & Tiers
           </h1>
           <p className="text-sm text-base-content/70 mt-1">
-            Club subscription tiers, court reservation discounts, and pro-shop benefits.
+            {isMember
+              ? 'Explore club subscription tiers, court reservation discounts, and member benefits.'
+              : 'Club subscription tiers, court reservation discounts, and pro-shop benefits.'}
           </p>
         </div>
 
@@ -143,14 +151,16 @@ export const MembershipsPage = () => {
             Refresh
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<FaPlus className="size-3.5" />}
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Create Plan
-          </Button>
+          {canManage && (
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<FaPlus className="size-3.5" />}
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Create Plan
+            </Button>
+          )}
         </div>
       </div>
 
@@ -167,8 +177,8 @@ export const MembershipsPage = () => {
               key={plan.id}
               plan={plan}
               onSelect={handleSelectPlan}
-              onEdit={handleOpenEdit}
-              isAdmin={true}
+              onEdit={canManage ? handleOpenEdit : undefined}
+              isAdmin={canManage}
             />
           ))}
 
@@ -181,7 +191,7 @@ export const MembershipsPage = () => {
       )}
 
       {/* Create Plan Modal */}
-      {isCreateModalOpen && (
+      {canManage && isCreateModalOpen && (
         <Modal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
@@ -274,7 +284,7 @@ export const MembershipsPage = () => {
       )}
 
       {/* Edit Plan Modal */}
-      {editingPlan && (
+      {canManage && editingPlan && (
         <Modal
           isOpen={!!editingPlan}
           onClose={() => setEditingPlan(null)}

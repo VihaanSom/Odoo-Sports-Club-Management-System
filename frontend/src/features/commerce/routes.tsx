@@ -58,17 +58,29 @@ export const commerceRoutes: RouteObject[] = [
   },
 ];
 
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+
 // JSX fragment export for router compatibility
 export const commerceJsxRoutes = (
   <React.Fragment key="agent-2-commerce-routes">
-    <Route path="bar" element={<BarTablesPage />} />
-    <Route path="bar/tabs" element={<OpenTabsPage />} />
-    <Route path="bar/tabs/:id" element={<TabDetailPage />} />
+    {/* Bar Staff & Admin only */}
+    <Route element={<ProtectedRoute allowedRoles={['admin', 'bar']} />}>
+      <Route path="bar" element={<BarTablesPage />} />
+      <Route path="bar/tabs" element={<OpenTabsPage />} />
+      <Route path="bar/tabs/:id" element={<TabDetailPage />} />
+    </Route>
+
+    {/* Menu & Catalog shared */}
     <Route path="menu" element={<MenuItemsPage />} />
     <Route path="menu/:id" element={<MenuItemDetailPage />} />
-    <Route path="orders" element={<OrdersListPage />} />
-    <Route path="orders/new" element={<NewOrderPage />} />
-    <Route path="orders/:id" element={<OrderDetailPage />} />
+
+    {/* POS Orders: Admin, Front Desk, Shop */}
+    <Route element={<ProtectedRoute allowedRoles={['admin', 'front_desk', 'shop']} />}>
+      <Route path="orders" element={<OrdersListPage />} />
+      <Route path="orders/new" element={<NewOrderPage />} />
+      <Route path="orders/:id" element={<OrderDetailPage />} />
+    </Route>
+
     <Route path="equipment/:id" element={<EquipmentDetailPage />} />
   </React.Fragment>
 );

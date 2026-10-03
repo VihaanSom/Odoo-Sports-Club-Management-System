@@ -65,10 +65,16 @@ export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 <span className="font-bold text-sm">
                   {user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Club Member'}
                 </span>
-                <span className="text-xs text-base-content/60">{user?.email || 'member@odoosports.club'}</span>
-                <span className="badge badge-sm badge-primary mt-1 self-start capitalize">
-                  {user?.role || 'member'}
-                </span>
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <span className="badge badge-sm badge-primary self-start capitalize font-semibold">
+                    {user?.role || 'member'}
+                  </span>
+                  {user?.tier && (
+                    <span className="badge badge-sm badge-outline self-start font-semibold text-amber-600 border-amber-300 bg-amber-50">
+                      {user.tier} Tier
+                    </span>
+                  )}
+                </div>
               </div>
             </li>
             <li className="mt-1">

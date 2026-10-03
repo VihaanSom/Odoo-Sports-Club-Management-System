@@ -4,6 +4,7 @@ import { BookingsPage } from './BookingsPage';
 import { BookingCalendarPage } from './BookingCalendarPage';
 import { NewBookingPage } from './NewBookingPage';
 import { BookingDetailPage } from './BookingDetailPage';
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { CourtManagementPage } from '../facilities/CourtManagementPage';
 
 export const bookingRoutes = (
@@ -12,6 +13,8 @@ export const bookingRoutes = (
     <Route path="bookings/calendar" element={<BookingCalendarPage />} />
     <Route path="bookings/new" element={<NewBookingPage />} />
     <Route path="bookings/:id" element={<BookingDetailPage />} />
-    <Route path="facilities/manage" element={<CourtManagementPage />} />
+    <Route element={<ProtectedRoute allowedRoles={['admin', 'front_desk']} />}>
+      <Route path="facilities/manage" element={<CourtManagementPage />} />
+    </Route>
   </React.Fragment>
 );

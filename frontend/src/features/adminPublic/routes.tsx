@@ -92,15 +92,19 @@ export const adminPublicRoutes: RouteObject[] = [
   },
 ];
 
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+
 // Admin routes for AppShell layout
 export const adminJsxRoutes = (
   <React.Fragment key="agent-4-admin-routes">
-    <Route path="staff" element={<StaffListPage />} />
-    <Route path="staff/:id" element={<StaffDetailPage />} />
-    <Route path="staff/shifts" element={<ShiftsPage />} />
-    <Route path="staff/leave" element={<LeavePage />} />
-    <Route path="reports" element={<ReportsHubPage />} />
-    <Route path="payments" element={<PaymentsPage />} />
+    <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+      <Route path="staff" element={<StaffListPage />} />
+      <Route path="staff/:id" element={<StaffDetailPage />} />
+      <Route path="staff/shifts" element={<ShiftsPage />} />
+      <Route path="staff/leave" element={<LeavePage />} />
+      <Route path="reports" element={<ReportsHubPage />} />
+      <Route path="payments" element={<PaymentsPage />} />
+    </Route>
   </React.Fragment>
 );
 

@@ -1,4 +1,4 @@
-import {  useState  } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FaCheck } from 'react-icons/fa6';
@@ -9,6 +9,8 @@ import type {
   BookingPaymentMethod,
   BookingParticipant,
 } from '@/types/bookings';
+import { useAuthStore } from '@/stores/authStore';
+import { isMemberRole } from '@/lib/permissions';
 import { SlotPicker } from './SlotPicker';
 import { MemberLookup } from './MemberLookup';
 import { GuestInfoForm } from './GuestInfoForm';
@@ -27,6 +29,11 @@ export const BookingWizard = ({
   initialSlotEnd,
 }: BookingWizardProps) => {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isMember = isMemberRole(user?.role);
+  const currentMemberName =
+    user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '';
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [step, setStep] = useState<number>(1);
@@ -42,12 +49,21 @@ export const BookingWizard = ({
 
   // Step 2: Type & Participants
   const [bookingType, setBookingType] = useState<BookingType>('member');
-  const [memberId, setMemberId] = useState<number | null>(null);
-  const [memberName, setMemberName] = useState<string>('');
+  const [memberId, setMemberId] = useState<number | null>(isMember ? user?.id || null : null);
+  const [memberName, setMemberName] = useState<string>(isMember ? currentMemberName : '');
   const [guestName, setGuestName] = useState<string>('');
   const [guestPhone, setGuestPhone] = useState<string>('');
   const [participants, setParticipants] = useState<BookingParticipant[]>([]);
   const [step2Errors, setStep2Errors] = useState<{ guestName?: string; guestPhone?: string }>({});
+
+  // Ensure member is set if user state loads
+  useEffect(() => {
+    if (isMember && user?.id) {
+      setMemberId(user.id);
+      setMemberName(currentMemberName);
+      setBookingType('member');
+    }
+  }, [isMember, user?.id, currentMemberName]);
 
   // Step 3: Payment & Notes
   const [paymentMethod, setPaymentMethod] = useState<BookingPaymentMethod>('plan');
@@ -178,77 +194,103 @@ export const BookingWizard = ({
       {/* Step 2: Booking Type & Party */}
       {step === 2 && (
         <div className="space-y-5">
-          <div className="form-control">
-            <label className="label py-1">
-              <span className="label-text text-xs font-semibold uppercase tracking-wide">
-                Booking Type <span className="text-error">*</span>
-              </span>
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => setBookingType('member')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all ${
-                  bookingType === 'member'
-                    ? 'border-primary bg-primary/10 text-primary shadow-2xs'
-                    : 'border-base-300 hover:bg-base-200/50'
-                }`}
-              >
-                Club Member
-              </button>
-              <button
-                type="button"
-                onClick={() => setBookingType('walk_in')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all ${
-                  bookingType === 'walk_in'
-                    ? 'border-primary bg-primary/10 text-primary shadow-2xs'
-                    : 'border-base-300 hover:bg-base-200/50'
-                }`}
-              >
-                WALK IN
-              </button>
-              <button
-                type="button"
-                onClick={() => setBookingType('social')}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all ${
-                  bookingType === 'social'
-                    ? 'border-primary bg-primary/10 text-primary shadow-2xs'
-                    : 'border-base-300 hover:bg-base-200/50'
-                }`}
-              >
-                Social Play Group
-              </button>
+          {isMember ? (
+            <div className="card bg-base-200/50 border border-base-300 p-5 rounded-2xl space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                  Account Details
+                </span>
+                <span className="badge badge-primary font-bold">
+                  {user?.tier || 'Member'} Tier
+                </span>
+              </div>
+              <div className="space-y-1">
+                <div className="text-base font-bold text-base-content">
+                  {memberName}
+                </div>
+                <div className="text-xs text-base-content/60 font-mono">
+                  {user?.email} &bull; Member #{memberId}
+                </div>
+              </div>
+              <div className="p-3 bg-base-100 rounded-xl border border-base-300 text-xs text-base-content/70">
+                This court reservation will be registered under your club membership account.
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="form-control">
+                <label className="label py-1">
+                  <span className="label-text text-xs font-semibold uppercase tracking-wide">
+                    Booking Type <span className="text-error">*</span>
+                  </span>
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setBookingType('member')}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                      bookingType === 'member'
+                        ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                        : 'border-base-300 hover:bg-base-200/50'
+                    }`}
+                  >
+                    Club Member
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingType('walk_in')}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                      bookingType === 'walk_in'
+                        ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                        : 'border-base-300 hover:bg-base-200/50'
+                    }`}
+                  >
+                    WALK IN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingType('social')}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                      bookingType === 'social'
+                        ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                        : 'border-base-300 hover:bg-base-200/50'
+                    }`}
+                  >
+                    Social Play Group
+                  </button>
+                </div>
+              </div>
 
-          {bookingType === 'member' && (
-            <MemberLookup
-              selectedMemberId={memberId}
-              onSelectMember={(mId, mName) => {
-                setMemberId(mId);
-                setMemberName(mName);
-              }}
-            />
-          )}
+              {bookingType === 'member' && (
+                <MemberLookup
+                  selectedMemberId={memberId}
+                  onSelectMember={(mId, mName) => {
+                    setMemberId(mId);
+                    setMemberName(mName);
+                  }}
+                />
+              )}
 
-          {bookingType === 'walk_in' && (
-            <GuestInfoForm
-              guestName={guestName}
-              guestPhone={guestPhone}
-              onChangeName={setGuestName}
-              onChangePhone={setGuestPhone}
-              errors={step2Errors}
-            />
-          )}
+              {bookingType === 'walk_in' && (
+                <GuestInfoForm
+                  guestName={guestName}
+                  guestPhone={guestPhone}
+                  onChangeName={setGuestName}
+                  onChangePhone={setGuestPhone}
+                  errors={step2Errors}
+                />
+              )}
 
-          {bookingType === 'social' && (
-            <SocialPlayForm
-              participants={participants}
-              onAddParticipant={(p) => setParticipants([...participants, p])}
-              onRemoveParticipant={(idx) =>
-                setParticipants(participants.filter((_, i) => i !== idx))
-              }
-            />
+              {bookingType === 'social' && (
+                <SocialPlayForm
+                  participants={participants}
+                  onAddParticipant={(p) => setParticipants([...participants, p])}
+                  onRemoveParticipant={(idx) =>
+                    setParticipants(participants.filter((_, i) => i !== idx))
+                  }
+                />
+              )}
+            </>
           )}
         </div>
       )}

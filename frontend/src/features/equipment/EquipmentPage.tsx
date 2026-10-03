@@ -4,12 +4,18 @@ import toast from 'react-hot-toast';
 import { FaTrophy, FaBoxesStacked, FaPlus } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui';
+import { useAuth } from '@/context/AuthContext';
+import { canManageEquipment, isMemberRole } from '@/lib/permissions';
 import type { Equipment } from '@/types';
 import type { CreateEquipmentPayload, UpdateEquipmentPayload } from '@/types/equipment';
 import { equipmentService } from '@/services/equipmentService';
 import { EquipmentTable, EquipmentCategoryTabs, EquipmentFormModal } from './components';
 
 export const EquipmentPage = () => {
+  const { user } = useAuth();
+  const canManage = canManageEquipment(user?.role);
+  const isMember = isMemberRole(user?.role);
+
   const [items, setItems] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -85,26 +91,30 @@ export const EquipmentPage = () => {
             </h1>
           </div>
           <p className="text-sm text-base-content/70 mt-1">
-            Track sports gear, monitor condition status, and record checkouts and returns.
+            {isMember
+              ? 'Browse sports gear catalog, equipment condition status, and available items.'
+              : 'Track sports gear, monitor condition status, and record checkouts and returns.'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            leftIcon={<FaBoxesStacked className="size-4" />}
-            onClick={() => toast('Odoo inventory sync triggered')}
-          >
-            Sync Inventory
-          </Button>
-          <Button
-            variant="primary"
-            leftIcon={<FaPlus className="size-4" />}
-            onClick={() => setIsModalOpen(true)}
-          >
-            New Equipment
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              leftIcon={<FaBoxesStacked className="size-4" />}
+              onClick={() => toast('Odoo inventory sync triggered')}
+            >
+              Sync Inventory
+            </Button>
+            <Button
+              variant="primary"
+              leftIcon={<FaPlus className="size-4" />}
+              onClick={() => setIsModalOpen(true)}
+            >
+              New Equipment
+            </Button>
+          </div>
+        )}
       </div>
 
       <EquipmentCategoryTabs
@@ -120,16 +130,19 @@ export const EquipmentPage = () => {
       ) : (
         <EquipmentTable
           items={filtered}
+          canManage={canManage}
           onRent={handleRent}
           onReturn={handleReturn}
         />
       )}
 
-      <EquipmentFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateEquipment}
-      />
+      {canManage && (
+        <EquipmentFormModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreateEquipment}
+        />
+      )}
     </motion.div>
   );
 };

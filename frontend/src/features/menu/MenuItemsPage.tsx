@@ -11,11 +11,17 @@ import {
 } from 'react-icons/fa6';
 
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/stores/authStore';
+import { canManageMenu, isMemberRole } from '@/lib/permissions';
 import { menuService } from '@/services/menuService';
 import type { MenuItem, CreateMenuItemPayload, UpdateMenuItemPayload } from '@/types/menu';
 import { MenuItemsTable, MenuItemFormModal } from './components';
 
 export const MenuItemsPage = () => {
+  const user = useAuthStore((s) => s.user);
+  const canEdit = canManageMenu(user?.role);
+  const isMember = isMemberRole(user?.role);
+
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -102,21 +108,25 @@ export const MenuItemsPage = () => {
             </h1>
           </div>
           <p className="text-sm text-base-content/70 mt-1">
-            Manage cafeteria, courtside cafe and bar offerings, pricing, and portion stocks.
+            {isMember
+              ? 'Browse cafeteria, courtside cafe and bar offerings and pricing.'
+              : 'Manage cafeteria, courtside cafe and bar offerings, pricing, and portion stocks.'}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className="btn btn-primary btn-sm gap-2"
-        >
-          <FaPlus className="size-4" /> New Menu Item
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={handleOpenCreateModal}
+            className="btn btn-primary btn-sm gap-2"
+          >
+            <FaPlus className="size-4" /> New Menu Item
+          </button>
+        )}
       </div>
 
       {/* Snapshot Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-2 ${isMember ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
         <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
           <span className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
             Total Catalog
@@ -127,19 +137,21 @@ export const MenuItemsPage = () => {
 
         <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
           <span className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
-            Active in POS
+            {isMember ? 'Available Today' : 'Active in POS'}
           </span>
           <div className="text-2xl font-extrabold text-success mt-1">{activeCount}</div>
           <span className="text-[11px] text-success/80 mt-1">Available for order</span>
         </div>
 
-        <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
-          <span className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
-            Low Stock Alerts
-          </span>
-          <div className="text-2xl font-extrabold text-error mt-1">{lowStockCount}</div>
-          <span className="text-[11px] text-error/80 mt-1">Below threshold level</span>
-        </div>
+        {!isMember && (
+          <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
+            <span className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
+              Low Stock Alerts
+            </span>
+            <div className="text-2xl font-extrabold text-error mt-1">{lowStockCount}</div>
+            <span className="text-[11px] text-error/80 mt-1">Below threshold level</span>
+          </div>
+        )}
 
         <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
           <span className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
@@ -218,18 +230,21 @@ export const MenuItemsPage = () => {
       ) : (
         <MenuItemsTable
           items={items}
+          canEdit={canEdit}
           onEdit={handleOpenEditModal}
           onToggleAvailability={handleToggleAvailability}
         />
       )}
 
       {/* Form Modal */}
-      <MenuItemFormModal
-        isOpen={isModalOpen}
-        item={editingItem}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateOrUpdate}
-      />
+      {canEdit && (
+        <MenuItemFormModal
+          isOpen={isModalOpen}
+          item={editingItem}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreateOrUpdate}
+        />
+      )}
     </motion.div>
   );
 };

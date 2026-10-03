@@ -10,3 +10,4 @@ export * from './LowStockAlerts';
 export * from './UpcomingRenewals';
 export * from './RecentLeadsWidget';
 export * from './BarEarningsSummary';
+export * from './MemberDashboardView';

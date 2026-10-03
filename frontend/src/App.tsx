@@ -45,7 +45,9 @@ export const App = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<AppShell />}>
               <Route index element={<DashboardPage />} />
-              <Route path="members" element={<MembersPage />} />
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'front_desk']} />}>
+                <Route path="members" element={<MembersPage />} />
+              </Route>
               <Route path="facilities" element={<FacilitiesPage />} />
               <Route path="equipment" element={<EquipmentPage />} />
               {bookingRoutes}

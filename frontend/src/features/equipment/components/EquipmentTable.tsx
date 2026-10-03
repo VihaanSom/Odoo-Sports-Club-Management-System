@@ -12,12 +12,14 @@ import type { Equipment } from '@/types';
 
 interface EquipmentTableProps {
   items: Equipment[];
+  canManage?: boolean;
   onRent: (id: string | number, name: string) => void;
   onReturn: (id: string | number, name: string) => void;
 }
 
 export const EquipmentTable = ({
   items,
+  canManage = true,
   onRent,
   onReturn,
 }: EquipmentTableProps) => {
@@ -104,26 +106,30 @@ export const EquipmentTable = ({
                       >
                         View
                       </Link>
-                      <Button
-                        size="xs"
-                        variant="primary"
-                        disabled={qtyAvail <= 0}
-                        onClick={() => onRent(item.id, item.name)}
-                        leftIcon={<FaHandHoldingHand className="size-3" />}
-                        title="Issue to member"
-                      >
-                        Rent
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        disabled={qtyAvail >= qtyTotal}
-                        onClick={() => onReturn(item.id, item.name)}
-                        leftIcon={<FaRotateLeft className="size-3" />}
-                        title="Return to stock"
-                      >
-                        Return
-                      </Button>
+                      {canManage && (
+                        <>
+                          <Button
+                            size="xs"
+                            variant="primary"
+                            disabled={qtyAvail <= 0}
+                            onClick={() => onRent(item.id, item.name)}
+                            leftIcon={<FaHandHoldingHand className="size-3" />}
+                            title="Issue to member"
+                          >
+                            Rent
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            disabled={qtyAvail >= qtyTotal}
+                            onClick={() => onReturn(item.id, item.name)}
+                            leftIcon={<FaRotateLeft className="size-3" />}
+                            title="Return to stock"
+                          >
+                            Return
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -31,13 +31,17 @@ export const crmRoutes: RouteObject[] = [
   },
 ];
 
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+
 // JSX fragment export for router compatibility if needed
 export const crmJsxRoutes = (
   <React.Fragment key="agent-3-crm-routes">
-    <Route path="members/:id" element={<MemberDetailPage />} />
-    <Route path="leads" element={<LeadsListPage />} />
-    <Route path="leads/:id" element={<LeadDetailPage />} />
-    <Route path="invoices" element={<RenewalInvoicesPage />} />
+    <Route element={<ProtectedRoute allowedRoles={['admin', 'front_desk']} />}>
+      <Route path="members/:id" element={<MemberDetailPage />} />
+      <Route path="leads" element={<LeadsListPage />} />
+      <Route path="leads/:id" element={<LeadDetailPage />} />
+      <Route path="invoices" element={<RenewalInvoicesPage />} />
+    </Route>
   </React.Fragment>
 );
 
