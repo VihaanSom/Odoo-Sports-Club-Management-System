@@ -82,14 +82,18 @@ export const SignupPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Profile photo must be less than 5MB');
+    // Size validation: 1 MB limit
+    const MAX_SIZE_BYTES = 1 * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      toast.error('Image size must be under 1 MB');
+      e.target.value = '';
       return;
     }
 
     const validMimes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validMimes.includes(file.type)) {
       toast.error('Only JPG, PNG, or WebP images are allowed');
+      e.target.value = '';
       return;
     }
 
@@ -100,13 +104,14 @@ export const SignupPage = () => {
     try {
       const uploadedUrl = await authService.uploadProfilePicture(file);
       setValue('photoUrl', uploadedUrl, { shouldValidate: true });
-      toast.success('Profile photo uploaded!');
+      toast.success('Photo uploaded');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to upload photo. Please try again.');
       setPhotoPreview(null);
       setValue('photoUrl', '');
     } finally {
       setIsUploadingPhoto(false);
+      e.target.value = '';
     }
   };
 
@@ -245,66 +250,59 @@ export const SignupPage = () => {
                   transition={{ duration: 0.2 }}
                   className="space-y-4"
                 >
-                  {/* Profile Picture Upload Section */}
-                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-base-200/50 rounded-2xl border border-base-300">
-                    <div className="relative shrink-0">
-                      <div className="size-20 rounded-full overflow-hidden border-2 border-primary/30 bg-base-300 flex items-center justify-center shadow-inner">
+                  {/* Minimal Profile Photo Upload */}
+                  <div className="flex flex-col items-center justify-center pt-1 pb-2">
+                    <label className="relative group cursor-pointer block">
+                      <div className="size-20 rounded-full overflow-hidden border-2 border-dashed border-base-content/25 group-hover:border-primary transition-all bg-base-200/60 flex items-center justify-center shadow-inner">
                         {photoPreview || photoUrlValue ? (
                           <img
                             src={photoPreview || photoUrlValue}
-                            alt="Profile Preview"
+                            alt="Profile"
                             className="size-full object-cover"
                           />
                         ) : (
-                          <FaUser className="size-8 text-base-content/40" />
+                          <FaUser className="size-8 text-base-content/30 group-hover:text-primary/70 transition-colors" />
                         )}
                       </div>
-                      {isUploadingPhoto && (
-                        <div className="absolute inset-0 bg-base-900/60 rounded-full flex items-center justify-center">
-                          <span className="loading loading-spinner loading-sm text-primary" />
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="flex-1 text-center sm:text-left space-y-1">
-                      <div className="flex items-center justify-center sm:justify-start gap-2">
-                        <label className="text-xs font-bold text-base-content">
-                          Profile Picture
-                        </label>
-                        <span className="badge badge-xs badge-neutral text-[10px]">Optional</span>
-                      </div>
-                      <p className="text-[11px] text-base-content/60">
-                        Upload a photo for your digital member badge (JPG, PNG, WebP up to 5MB).
-                      </p>
-                      <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
-                        <label
-                          className={cn(
-                            'btn btn-xs btn-primary gap-1.5 cursor-pointer',
-                            isUploadingPhoto && 'btn-disabled opacity-50'
-                          )}
-                        >
+                      {/* Camera icon badge */}
+                      <div
+                        className={cn(
+                          'absolute bottom-0 right-0 size-7 rounded-full bg-primary text-primary-content flex items-center justify-center shadow-md group-hover:scale-105 active:scale-95 transition-all border-2 border-base-100',
+                          isUploadingPhoto && 'pointer-events-none opacity-50'
+                        )}
+                      >
+                        {isUploadingPhoto ? (
+                          <span className="loading loading-spinner loading-xs" />
+                        ) : (
                           <FaCamera className="size-3" />
-                          {photoUrlValue || photoPreview ? 'Change Photo' : 'Upload Photo'}
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            className="hidden"
-                            onChange={handlePhotoUpload}
-                            disabled={isUploadingPhoto}
-                          />
-                        </label>
-                        {(photoUrlValue || photoPreview) && (
+                        )}
+                      </div>
+
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={isUploadingPhoto}
+                      />
+                    </label>
+
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[11px] font-medium text-base-content/50">Max 1 MB</span>
+                      {(photoUrlValue || photoPreview) && (
+                        <>
+                          <span className="text-base-content/30">•</span>
                           <button
                             type="button"
                             onClick={handleRemovePhoto}
                             disabled={isUploadingPhoto}
-                            className="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                            className="text-[11px] font-medium text-error hover:underline cursor-pointer"
                           >
-                            <FaTrash className="size-3" />
                             Remove
                           </button>
-                        )}
-                      </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
