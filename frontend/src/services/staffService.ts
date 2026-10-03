@@ -217,7 +217,7 @@ export const staffService = {
         staffId: payload.staffId,
         staffName: staff?.name || 'Staff Member',
         role: staff?.role || 'front_desk',
-        leaveType: payload.leaveType,
+        leaveType: payload.leaveType || 'casual',
         startDate: payload.startDate,
         endDate: payload.endDate,
         daysCount,

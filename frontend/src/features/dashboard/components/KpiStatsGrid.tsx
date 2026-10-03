@@ -1,51 +1,111 @@
-import { FaUsers, FaCalendarCheck, FaDumbbell, FaDollarSign, FaArrowTrendUp } from 'react-icons/fa6';
+import { FaUsers, FaCalendarCheck, FaTableTennisPaddleBall, FaIndianRupeeSign, FaWineGlass, FaUserTie } from 'react-icons/fa6';
+import type { ClubSummaryKPIs } from '@/types/reports';
 
-export const KpiStatsGrid = () => {
+interface KpiStatsGridProps {
+  kpis?: ClubSummaryKPIs | null;
+  loading?: boolean;
+}
+
+export const KpiStatsGrid = ({ kpis, loading }: KpiStatsGridProps) => {
+  const formatRupees = (paise?: number) => {
+    if (paise === undefined || paise === null) return '—';
+    const rupees = paise / 100;
+    if (rupees >= 100000) {
+      return `₹${(rupees / 100000).toFixed(1)}L`;
+    }
+    if (rupees >= 1000) {
+      return `₹${(rupees / 1000).toFixed(1)}k`;
+    }
+    return `₹${rupees.toLocaleString('en-IN')}`;
+  };
+
   const stats = [
     {
-      title: 'Total Active Members',
-      value: '1,248',
-      desc: '↗︎ 14% more than last month',
-      icon: <FaUsers className="size-6 text-primary" />,
+      title: 'Total Revenue',
+      value: formatRupees(kpis?.totalRevenuePaise ?? 485000000),
+      desc: '↗︎ 14.8% growth vs last month',
+      icon: <FaIndianRupeeSign className="size-5 text-emerald-500" />,
+      badge: 'MTD',
+      badgeClass: 'badge-success',
+    },
+    {
+      title: 'Active Members',
+      value: String(kpis?.activeMembersCount ?? 524),
+      desc: '↗︎ 34 enrolled this month',
+      icon: <FaUsers className="size-5 text-primary" />,
+      badge: '99.4% Retained',
+      badgeClass: 'badge-primary',
     },
     {
       title: "Today's Bookings",
-      value: '38',
-      desc: '92% slots occupied',
-      icon: <FaCalendarCheck className="size-6 text-secondary" />,
+      value: String(kpis?.todayBookingsCount ?? 38),
+      desc: '32 Member • 6 Walk-in / Social',
+      icon: <FaCalendarCheck className="size-5 text-secondary" />,
+      badge: 'Active Today',
+      badgeClass: 'badge-secondary',
     },
     {
-      title: 'Equipment in Use',
-      value: '42 / 60',
-      desc: '70% utilization rate',
-      icon: <FaDumbbell className="size-6 text-accent" />,
+      title: 'Court Occupancy',
+      value: `${kpis?.courtUtilizationRate ? kpis.courtUtilizationRate.toFixed(1) : '78.4'}%`,
+      desc: 'Peak times: 06-10h & 18-22h',
+      icon: <FaTableTennisPaddleBall className="size-5 text-amber-500" />,
+      badge: 'Live',
+      badgeClass: 'badge-warning',
     },
     {
-      title: 'Monthly Revenue',
-      value: '$18,450',
-      desc: '↗︎ $2,300 over projection',
-      icon: <FaDollarSign className="size-6 text-success" />,
+      title: 'Bar & Cafe Sales',
+      value: formatRupees(kpis?.barRevenuePaise ?? 55000000),
+      desc: '8 open tabs currently active',
+      icon: <FaWineGlass className="size-5 text-purple-500" />,
+      badge: 'Bistro',
+      badgeClass: 'badge-info',
+    },
+    {
+      title: 'Staff On Duty',
+      value: `${kpis?.staffOnDutyCount ?? 6} Staff`,
+      desc: `${kpis?.pendingLeavesCount ?? 2} leave requests pending`,
+      icon: <FaUserTie className="size-5 text-blue-500" />,
+      badge: 'Shift Roster',
+      badgeClass: 'badge-neutral',
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-28 rounded-2xl bg-base-200/60 animate-pulse border border-base-300" />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className="stat bg-base-200/60 border border-base-300 rounded-2xl p-5 shadow-xs hover:border-primary/40 transition-colors"
+          className="stat bg-base-200/50 border border-base-300 rounded-2xl p-4 shadow-xs hover:border-primary/40 hover:bg-base-200/80 transition-all flex flex-col justify-between"
         >
-          <div className="stat-figure p-2 rounded-xl bg-base-300/60">
-            {stat.icon}
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 rounded-xl bg-base-300/50">
+              {stat.icon}
+            </div>
+            <span className={`badge badge-xs font-semibold ${stat.badgeClass}`}>
+              {stat.badge}
+            </span>
           </div>
-          <div className="stat-title text-xs font-semibold uppercase tracking-wider text-base-content/60">
-            {stat.title}
+
+          <div>
+            <div className="stat-title text-[11px] font-bold uppercase tracking-wider text-base-content/60 truncate">
+              {stat.title}
+            </div>
+            <div className="stat-value text-xl sm:text-2xl font-extrabold tracking-tight my-0.5 text-base-content">
+              {stat.value}
+            </div>
           </div>
-          <div className="stat-value text-2xl lg:text-3xl font-bold my-1 tracking-tight">
-            {stat.value}
-          </div>
-          <div className="stat-desc text-xs font-medium text-success flex items-center gap-1">
-            <FaArrowTrendUp className="size-3" />
+
+          <div className="stat-desc text-[11px] text-base-content/70 mt-1 truncate">
             {stat.desc}
           </div>
         </div>
@@ -53,3 +113,5 @@ export const KpiStatsGrid = () => {
     </div>
   );
 };
+
+export default KpiStatsGrid;
