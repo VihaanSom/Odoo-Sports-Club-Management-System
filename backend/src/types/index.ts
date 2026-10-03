@@ -5,10 +5,11 @@ export type UserType = 'member' | 'staff';
 
 export interface AuthUser {
   id: number;
+  sub?: number;
   email: string;
-  type: UserType;
-  role?: StaffRole;
-  tier?: MembershipTier;
+  type?: UserType;
+  role: string; // 'member' | 'admin' | 'front_desk' | 'bar' | 'shop'
+  tier?: MembershipTier | string | null;
 }
 
 declare global {
@@ -19,9 +20,24 @@ declare global {
   }
 }
 
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ApiErrorPayload {
+  code: string;
+  message: string;
+  details?: any;
+  requestId?: string;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
-  errors?: any;
+  pagination?: PaginationMeta;
+  error?: ApiErrorPayload;
 }

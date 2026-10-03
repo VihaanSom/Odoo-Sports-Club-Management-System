@@ -10,11 +10,13 @@ import barRoutes from '../modules/bar/bar.routes';
 import leadsRoutes from '../modules/leads/leads.routes';
 import staffRoutes from '../modules/staff/staff.routes';
 import paymentsRoutes from '../modules/payments/payments.routes';
+import plansRoutes from '../modules/plans/plans.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/members', membersRoutes);
+router.use('/membership-plans', plansRoutes);
 router.use('/courts', courtsRoutes);
 router.use('/bookings', bookingsRoutes);
 router.use('/equipment', equipmentRoutes);

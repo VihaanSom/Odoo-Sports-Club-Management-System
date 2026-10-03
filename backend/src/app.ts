@@ -36,7 +36,7 @@ export const createApp = (): Application => {
 
   // 404 handler
   app.use((_req: Request, res: Response) => {
-    sendError(res, 'Route not found', 404);
+    sendError(res, 'NOT_FOUND', 'Route not found', 404);
   });
 
   // Global Error Handler
