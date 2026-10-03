@@ -1,5 +1,5 @@
 import React from 'react';
-import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaPhone } from 'react-icons/fa6';
 import { Avatar, Badge } from '@/components/ui';
 import type { Member } from '@/types';
@@ -9,6 +9,8 @@ interface MembersTableProps {
 }
 
 export const MembersTable: React.FC<MembersTableProps> = ({ members }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="overflow-x-auto">
@@ -86,7 +88,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({ members }) => {
                   <button
                     type="button"
                     className="btn btn-ghost btn-xs text-primary"
-                    onClick={() => toast(`Viewing details for ${member.name}`)}
+                    onClick={() => navigate(`/members/${member.id}`)}
                   >
                     View
                   </button>

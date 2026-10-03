@@ -23,7 +23,7 @@ export interface Member {
   name: string;
   email: string;
   phone: string;
-  membershipPlan: MembershipTier | 'Standard' | 'Premium' | 'VIP' | 'Junior';
+  membershipPlan: MembershipTier | 'Standard' | 'Premium' | 'VIP' | 'Junior' | 'Gold' | 'Silver';
   status: MemberStatus | 'active' | 'suspended' | 'expired';
   joinedDate: string;
   avatarUrl?: string;
