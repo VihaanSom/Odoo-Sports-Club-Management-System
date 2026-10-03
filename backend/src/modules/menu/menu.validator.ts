@@ -1,78 +1,58 @@
 import { z } from 'zod';
 import { MenuCategory } from '@prisma/client';
 
-export const menuItemIdParamSchema = z.object({
-  id: z.coerce.number().int().positive('id must be a positive integer'),
-});
-
 export const listMenuItemsQuerySchema = z.object({
-  page: z.coerce.number().int().min(1, 'page must be at least 1').default(1),
-  pageSize: z.coerce.number().int().min(1).max(100, 'pageSize cannot exceed 100').default(20),
-  category: z
-    .enum([MenuCategory.food, MenuCategory.beverage, MenuCategory.snack], {
-      message: 'category must be one of: food, beverage, snack',
-    })
-    .optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  category: z.nativeEnum(MenuCategory).optional(),
   isAvailable: z
     .preprocess((val) => {
-      if (val === 'true') return true;
-      if (val === 'false') return false;
+      if (typeof val === 'string') {
+        if (val.toLowerCase() === 'true') return true;
+        if (val.toLowerCase() === 'false') return false;
+      }
       return val;
-    }, z.boolean().optional())
-    .default(true),
-  search: z.string().max(100, 'search cannot exceed 100 characters').optional(),
-  sortBy: z.enum(['name', 'price', 'created_at']).default('name'),
+    }, z.boolean())
+    .optional(),
+  search: z.string().trim().max(100).optional(),
+  sortBy: z.enum(['name', 'category', 'price', 'stockQty', 'createdAt']).default('name'),
   sortOrder: z.enum(['asc', 'desc']).default('asc'),
 });
 
-export const createMenuItemSchema = z.object({
-  name: z
-    .string({ message: 'name is required' })
-    .min(1, 'name cannot be empty')
-    .max(200, 'name cannot exceed 200 characters'),
-  category: z.enum([MenuCategory.food, MenuCategory.beverage, MenuCategory.snack], {
-    message: 'category must be one of: food, beverage, snack',
-  }),
-  description: z.string().max(500, 'description cannot exceed 500 characters').nullable().optional(),
-  pricePaise: z
-    .number({ message: 'pricePaise is required' })
-    .int('pricePaise must be an integer')
-    .min(0, 'pricePaise cannot be negative'),
-  stockQty: z
-    .number({ message: 'stockQty is required' })
-    .int('stockQty must be an integer')
-    .min(0, 'stockQty cannot be negative'),
-  lowStockThreshold: z
-    .number()
-    .int('lowStockThreshold must be an integer')
-    .min(0, 'lowStockThreshold cannot be negative')
-    .default(5),
-  imageUrl: z.string().max(500, 'imageUrl cannot exceed 500 characters').nullable().optional(),
-});
+export type ListMenuItemsQuery = z.infer<typeof listMenuItemsQuerySchema>;
+
+export const createMenuItemSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required').max(200),
+    category: z.nativeEnum(MenuCategory),
+    description: z.string().trim().max(500).optional().nullable(),
+    pricePaise: z.number().int().min(0, 'pricePaise must be non-negative integer'),
+    stockQty: z.number().int().min(0, 'stockQty must be non-negative integer'),
+    lowStockThreshold: z.number().int().min(0).default(5),
+    imageUrl: z.string().trim().url('Invalid image URL').max(500).optional().nullable(),
+  })
+  .strict();
+
+export type CreateMenuItemInput = z.infer<typeof createMenuItemSchema>;
 
 export const updateMenuItemSchema = z
   .object({
-    name: z.string().min(1).max(200).optional(),
-    category: z.enum([MenuCategory.food, MenuCategory.beverage, MenuCategory.snack]).optional(),
-    description: z.string().max(500).nullable().optional(),
-    pricePaise: z.number().int().min(0, 'pricePaise cannot be negative').optional(),
-    stockQty: z.number().int().min(0, 'stockQty cannot be negative').optional(),
+    name: z.string().trim().min(1).max(200).optional(),
+    category: z.nativeEnum(MenuCategory).optional(),
+    description: z.string().trim().max(500).optional().nullable(),
+    pricePaise: z.number().int().min(0).optional(),
+    stockQty: z.number().int().min(0).optional(),
     lowStockThreshold: z.number().int().min(0).optional(),
     isAvailable: z.boolean().optional(),
-    imageUrl: z.string().max(500).nullable().optional(),
-
-    // Immutable fields rejected if provided
-    id: z.never({ message: 'id is immutable' }).optional(),
-    createdAt: z.never({ message: 'createdAt is immutable' }).optional(),
+    imageUrl: z.string().trim().url('Invalid image URL').max(500).optional().nullable(),
   })
-  .refine(
-    (data) => {
-      const keys = Object.keys(data).filter((k) => (data as any)[k] !== undefined);
-      return keys.length > 0;
-    },
-    { message: 'At least one field must be provided to update' }
-  );
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided for update',
+  });
 
-export type ListMenuItemsQuery = z.infer<typeof listMenuItemsQuerySchema>;
-export type CreateMenuItemInput = z.infer<typeof createMenuItemSchema>;
 export type UpdateMenuItemInput = z.infer<typeof updateMenuItemSchema>;
+
+export const menuItemIdParamSchema = z.object({
+  id: z.coerce.number().int().positive('Invalid menu item ID'),
+});
