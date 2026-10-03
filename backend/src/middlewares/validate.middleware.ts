@@ -1,19 +1,32 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodTypeAny } from 'zod';
+import { ZodSchema } from 'zod';
 
-/**
- * Middleware factory for request validation using Zod.
- * Validates req.body, req.query, or req.params and attaches sanitized data back to req.
- * If validation fails, ZodError is passed to the next() error handler.
- */
-export const validate = (
-  schema: ZodTypeAny,
-  source: 'body' | 'query' | 'params' = 'body'
-) => {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+export const validateBody = (schema: ZodSchema) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const parsed = schema.parse(req[source]);
-      req[source] = parsed;
+      req.body = await schema.parseAsync(req.body);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+export const validateQuery = (schema: ZodSchema) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      req.query = (await schema.parseAsync(req.query)) as any;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+export const validateParams = (schema: ZodSchema) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      req.params = (await schema.parseAsync(req.params)) as any;
       next();
     } catch (error) {
       next(error);

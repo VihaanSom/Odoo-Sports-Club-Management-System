@@ -1,86 +1,69 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
-import { UnauthorizedError, ForbiddenError } from '../utils/errors';
-import { AuthUser } from '../types';
+import { verifyAccessToken } from '../utils/token';
+import { sendError } from '../utils/response';
+import { UserRole } from '../types';
 
-export interface DecodedJwtToken {
-  sub: number;
-  email: string;
-  role: string;
-  tier?: string | null;
-  iat?: number;
-  exp?: number;
-}
-
-export const verifyToken = (
+export const authenticate = (
   req: Request,
-  _res: Response,
+  res: Response,
   next: NextFunction
 ): void => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Missing or malformed Authorization header', 'UNAUTHENTICATED');
+    sendError(res, 'Authentication required: missing or invalid Bearer token', 401);
+    return;
   }
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET) as unknown as DecodedJwtToken;
+    const decoded = verifyAccessToken(token);
     req.user = {
       id: decoded.sub,
-      sub: decoded.sub,
       email: decoded.email,
       role: decoded.role,
-      tier: decoded.tier as any,
-      type: decoded.role === 'member' ? 'member' : 'staff',
+      tier: decoded.tier,
     };
     next();
-  } catch (error: any) {
-    if (error.name === 'TokenExpiredError') {
-      throw new UnauthorizedError('Access token has expired', 'UNAUTHENTICATED');
-    }
-    throw new UnauthorizedError('Invalid access token', 'UNAUTHENTICATED');
+  } catch (error) {
+    sendError(res, 'Invalid or expired access token', 401);
   }
 };
 
-export const requireRole = (...allowedRoles: string[]) => {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+export const requireRoles = (...roles: UserRole[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      throw new UnauthorizedError('User authentication context not found', 'UNAUTHENTICATED');
+      sendError(res, 'Authentication required', 401);
+      return;
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      throw new ForbiddenError(
-        `Access denied. Role '${req.user.role}' is not authorized for this resource.`,
-        'FORBIDDEN'
-      );
+    if (!roles.includes(req.user.role)) {
+      sendError(res, `Access forbidden: requires one of [${roles.join(', ')}]`, 403);
+      return;
     }
-
     next();
   };
 };
 
-export const requireSelfOrRole = (...allowedRoles: string[]) => {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      throw new UnauthorizedError('User authentication context not found', 'UNAUTHENTICATED');
-    }
+export const requireStaff = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || req.user.role === 'member') {
+    sendError(res, 'Access forbidden: staff role required', 403);
+    return;
+  }
+  next();
+};
 
-    // Check if user has an elevated staff role
-    if (allowedRoles.includes(req.user.role)) {
-      return next();
-    }
-
-    // Check if the user is a member acting on their own ID
-    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const targetId = parseInt(rawId, 10);
-    if (req.user.role === 'member' && req.user.id === targetId) {
-      return next();
-    }
-
-    throw new ForbiddenError(
-      'Access denied. You can only view or modify your own profile.',
-      'FORBIDDEN'
-    );
-  };
+export const requireMember = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || req.user.role !== 'member') {
+    sendError(res, 'Access forbidden: member role required', 403);
+    return;
+  }
+  next();
 };

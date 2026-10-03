@@ -22,15 +22,14 @@ export const sendError = (
   code: string,
   message: string,
   statusCode = 400,
-  details?: any
+  errors?: any,
+  code?: string
 ): Response => {
   const payload: ApiResponse = {
     success: false,
-    error: {
-      code,
-      message,
-      ...(details !== undefined ? { details } : {}),
-    },
+    message,
+    ...(code && { code }),
+    ...(errors !== undefined && { errors }),
   };
   return res.status(statusCode).json(payload);
 };

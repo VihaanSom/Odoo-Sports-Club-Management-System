@@ -1,68 +1,61 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
-import { AppError } from '../utils/errors';
 import { sendError } from '../utils/response';
+import { AppError } from '../utils/errors';
+import { env } from '../config/env';
 
 export const errorHandler = (
   err: any,
-  _req: Request,
+  req: Request,
   res: Response,
-  _next: NextFunction
+  next: NextFunction
 ): void => {
-  // 1. Known AppError
+  console.error('❌ Error caught by global handler:', err);
+
+  // Handle Domain AppError
   if (err instanceof AppError) {
-    sendError(res, err.code, err.message, err.statusCode, err.details);
+    sendError(res, err.message, err.statusCode, undefined, err.code);
     return;
   }
 
-  // 2. Zod Validation Error
-  if (err instanceof ZodError) {
-    const fields: Record<string, string> = {};
-    for (const issue of err.issues) {
-      const fieldPath = issue.path.join('.');
-      fields[fieldPath || 'root'] = issue.message;
-    }
-    sendError(
-      res,
-      'VALIDATION_ERROR',
-      'Invalid input. Check the details.',
-      400,
-      { fields }
-    );
+  // Handle Zod Validation Errors
+  if (err instanceof ZodError || err.name === 'ZodError') {
+    const rawIssues: any[] = (err as any).issues || (err as any).errors || [];
+    const formattedErrors = rawIssues.map((e: any) => ({
+      field: Array.isArray(e.path) ? e.path.join('.') : String(e.path),
+      message: e.message,
+    }));
+    sendError(res, 'Validation failed', 400, formattedErrors, 'VALIDATION_ERROR');
     return;
   }
 
-  // 3. Prisma Known Request Errors
+  // Handle Prisma Known Request Errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2002') {
-      const target = Array.isArray(err.meta?.target) ? err.meta?.target.join(', ') : 'field';
-      sendError(
-        res,
-        'DUPLICATE_ENTRY',
-        `Unique constraint violation on: ${target}`,
-        409
-      );
+      const target = (err.meta?.target as string[]) || ['Field'];
+      sendError(res, `Unique constraint violation on: ${target.join(', ')}`, 409, undefined, 'CONFLICT');
       return;
     }
     if (err.code === 'P2025') {
-      sendError(res, 'NOT_FOUND', 'The requested record was not found', 404);
+      sendError(res, 'Record not found', 404, undefined, 'NOT_FOUND');
+      return;
+    }
+    if (err.code === 'P2003') {
+      sendError(res, 'Foreign key constraint violation', 400, undefined, 'FOREIGN_KEY_VIOLATION');
       return;
     }
   }
 
-  // 4. JSON body parsing error
-  if (err instanceof SyntaxError && 'status' in err && (err as any).status === 400 && 'body' in err) {
-    sendError(res, 'VALIDATION_ERROR', 'Malformed JSON in request body', 400);
-    return;
-  }
+  // Handle General Errors
+  const statusCode = err.statusCode || err.status || 500;
+  const message = err.message || 'Internal Server Error';
 
-  // 5. Unhandled unexpected errors
-  console.error('Unhandled server error:', err);
   sendError(
     res,
-    'INTERNAL_ERROR',
-    'An unexpected internal server error occurred',
-    500
+    message,
+    statusCode,
+    env.NODE_ENV === 'development' ? { stack: err.stack } : undefined,
+    'INTERNAL_SERVER_ERROR'
   );
 };

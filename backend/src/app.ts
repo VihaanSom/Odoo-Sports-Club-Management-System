@@ -1,5 +1,6 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { env } from './config/env';
 import apiRouter from './routes/api.router';
@@ -16,6 +17,7 @@ export const createApp = (): Application => {
       credentials: true,
     })
   );
+  app.use(cookieParser());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
