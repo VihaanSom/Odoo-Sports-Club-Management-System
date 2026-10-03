@@ -1,4 +1,4 @@
-import { PrismaClient, MembershipTier, SportType, StaffRole, EquipmentCategory, MenuCategory } from '@prisma/client';
+import { PrismaClient, MembershipTier, MembershipStatus, SportType, StaffRole, EquipmentCategory, MenuCategory } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -67,8 +67,11 @@ async function main() {
   }
   console.log('✅ Seeded bar tables');
 
-  // 4. Admin Staff
+  // 4. Staff Accounts
+  const defaultStaffPassword = await bcrypt.hash('Staff@12345', 10);
   const adminPassword = await bcrypt.hash('Admin@12345', 10);
+
+  // 4a. Admin Staff
   await prisma.staff.upsert({
     where: { email: 'admin@championsclub.com' },
     update: {},
@@ -80,9 +83,110 @@ async function main() {
       role: StaffRole.admin,
       phone: '9876543210',
       salary: 75000,
+      isActive: true,
     },
   });
-  console.log('✅ Seeded default admin staff (admin@championsclub.com / Admin@12345)');
+
+  // 4b. Front Desk Staff
+  await prisma.staff.upsert({
+    where: { email: 'frontdesk@championsclub.com' },
+    update: {},
+    create: {
+      firstName: 'Aarav',
+      lastName: 'Verma',
+      email: 'frontdesk@championsclub.com',
+      passwordHash: defaultStaffPassword,
+      role: StaffRole.front_desk,
+      phone: '9876543211',
+      salary: 35000,
+      isActive: true,
+    },
+  });
+
+  // 4c. Inactive Staff (for testing 403 ACCOUNT_INACTIVE)
+  await prisma.staff.upsert({
+    where: { email: 'inactive.staff@championsclub.com' },
+    update: { isActive: false },
+    create: {
+      firstName: 'Vikram',
+      lastName: 'Singh',
+      email: 'inactive.staff@championsclub.com',
+      passwordHash: defaultStaffPassword,
+      role: StaffRole.bar,
+      phone: '9876543212',
+      salary: 30000,
+      isActive: false,
+    },
+  });
+  console.log('✅ Seeded staff accounts (Admin, Front Desk, Inactive)');
+
+  // 5. Member Accounts
+  const memberPassword = await bcrypt.hash('Member@12345', 10);
+  const oneYearFromNow = new Date();
+  oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+  const pastDate = new Date();
+  pastDate.setFullYear(pastDate.getFullYear() - 1);
+
+  // 5a. Active Gold Member
+  await prisma.member.upsert({
+    where: { email: 'rahul.gold@championsclub.com' },
+    update: {},
+    create: {
+      firstName: 'Rahul',
+      lastName: 'Sharma',
+      email: 'rahul.gold@championsclub.com',
+      passwordHash: memberPassword,
+      phone: '9820012345',
+      tier: MembershipTier.Gold,
+      status: MembershipStatus.active,
+      membershipStart: new Date(),
+      membershipEnd: oneYearFromNow,
+      addresses: {
+        create: {
+          addrLine1: 'Flat 402, Sunshine Heights',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          pincode: '400001',
+        },
+      },
+    },
+  });
+
+  // 5b. Active Silver Member
+  await prisma.member.upsert({
+    where: { email: 'priya.silver@championsclub.com' },
+    update: {},
+    create: {
+      firstName: 'Priya',
+      lastName: 'Patel',
+      email: 'priya.silver@championsclub.com',
+      passwordHash: memberPassword,
+      phone: '9820054321',
+      tier: MembershipTier.Silver,
+      status: MembershipStatus.active,
+      membershipStart: new Date(),
+      membershipEnd: oneYearFromNow,
+    },
+  });
+
+  // 5c. Expired Member (for testing 403 ACCOUNT_INACTIVE)
+  await prisma.member.upsert({
+    where: { email: 'expired.member@championsclub.com' },
+    update: { status: MembershipStatus.expired },
+    create: {
+      firstName: 'Rohan',
+      lastName: 'Gupta',
+      email: 'expired.member@championsclub.com',
+      passwordHash: memberPassword,
+      phone: '9820099999',
+      tier: MembershipTier.Junior,
+      status: MembershipStatus.expired,
+      membershipStart: pastDate,
+      membershipEnd: pastDate,
+    },
+  });
+  console.log('✅ Seeded member accounts (Rahul Gold, Priya Silver, Rohan Expired)');
 
   // 5. Initial Equipment Items
   const sampleEquipment = [
