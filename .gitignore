@@ -3,3 +3,9 @@ db.sql
 implementation_plan.md
 instructions
 node_modules
+dist
+.env
+uploads/*
+!uploads/.gitkeep
+api_contracts.md
+backend_work_division.md
