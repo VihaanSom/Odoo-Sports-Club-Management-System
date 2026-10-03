@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { FaPenToSquare, FaCircleCheck } from 'react-icons/fa6';
-import { Modal, Button, Input, Avatar, Badge } from '@/components/ui';
+import { FaPenToSquare, FaCircleCheck, FaCamera, FaUser } from 'react-icons/fa6';
+import { Modal, Button, Input, Badge } from '@/components/ui';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { authService } from '@/services/authService';
+import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
 import type { MemberDetail, MemberUpdatePayload } from '@/types/members';
 
 const memberEditSchema = z
@@ -12,7 +16,7 @@ const memberEditSchema = z
     lastName: z.string().min(1, 'Last name is required'),
     email: z.string().email('Please enter a valid email address'),
     phone: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
-    photoUrl: z.string().url('Please enter a valid image URL').or(z.literal('')).optional(),
+    photoUrl: z.string().optional().nullable(),
     dateOfBirth: z.string().optional(),
     tier: z.enum(['Gold', 'Silver', 'Junior']),
   })
@@ -60,11 +64,15 @@ export const MemberEditModal = ({
   else if (member.tier === 'Junior') currentTier = 'Junior';
   else currentTier = 'Gold';
 
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<MemberEditFormData>({
     resolver: zodResolver(memberEditSchema),
@@ -81,8 +89,48 @@ export const MemberEditModal = ({
   });
 
   const watchedPhotoUrl = watch('photoUrl');
-  const watchedFirstName = watch('firstName');
-  const watchedLastName = watch('lastName');
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Size validation: 1 MB limit
+    const MAX_SIZE_BYTES = 1 * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      toast.error('Image size must be under 1 MB');
+      e.target.value = '';
+      return;
+    }
+
+    const validMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validMimes.includes(file.type)) {
+      toast.error('Only JPG, PNG, or WebP images are allowed');
+      e.target.value = '';
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setPhotoPreview(localPreview);
+    setIsUploadingPhoto(true);
+
+    try {
+      const uploadedUrl = await authService.uploadProfilePicture(file);
+      setValue('photoUrl', uploadedUrl, { shouldValidate: true });
+      toast.success('Photo uploaded');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to upload photo. Please try again.');
+      setPhotoPreview(null);
+      setValue('photoUrl', '');
+    } finally {
+      setIsUploadingPhoto(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setValue('photoUrl', '');
+  };
 
   const handleFormSubmit = async (data: MemberEditFormData) => {
     // Only pass mutable fields permitted by backend ME-04 validator
@@ -109,21 +157,59 @@ export const MemberEditModal = ({
       maxWidth="lg"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-        {/* Profile Picture & Preview */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-base-200/50 rounded-xl border border-base-300">
-          <Avatar
-            src={watchedPhotoUrl || member.photoUrl || member.avatarUrl}
-            fallbackText={`${watchedFirstName || ''} ${watchedLastName || ''}`}
-            size="lg"
-            className="ring-2 ring-primary/40 shrink-0"
-          />
-          <div className="flex-1 w-full">
-            <Input
-              label="Profile Picture URL"
-              placeholder="https://images.unsplash.com/photo-..."
-              {...register('photoUrl')}
-              error={errors.photoUrl?.message}
+        {/* Minimal Profile Photo Upload */}
+        <div className="flex flex-col items-center justify-center pt-1 pb-2">
+          <label className="relative group cursor-pointer block">
+            <div className="size-20 rounded-full overflow-hidden border-2 border-dashed border-base-content/25 group-hover:border-primary transition-all bg-base-200/60 flex items-center justify-center shadow-inner">
+              {photoPreview || watchedPhotoUrl ? (
+                <img
+                  src={photoPreview || watchedPhotoUrl}
+                  alt="Profile"
+                  className="size-full object-cover"
+                />
+              ) : (
+                <FaUser className="size-8 text-base-content/30 group-hover:text-primary/70 transition-colors" />
+              )}
+            </div>
+
+            {/* Camera icon badge */}
+            <div
+              className={cn(
+                'absolute bottom-0 right-0 size-7 rounded-full bg-primary text-primary-content flex items-center justify-center shadow-md group-hover:scale-105 active:scale-95 transition-all border-2 border-base-100',
+                isUploadingPhoto && 'pointer-events-none opacity-50'
+              )}
+            >
+              {isUploadingPhoto ? (
+                <span className="loading loading-spinner loading-xs" />
+              ) : (
+                <FaCamera className="size-3" />
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={isUploadingPhoto}
             />
+          </label>
+
+          <div className="flex items-center gap-2 mt-1.5">
+            <span className="text-[11px] font-medium text-base-content/50">Max 1 MB</span>
+            {(watchedPhotoUrl || photoPreview) && (
+              <>
+                <span className="text-base-content/30">•</span>
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  disabled={isUploadingPhoto}
+                  className="text-[11px] font-medium text-error hover:underline cursor-pointer"
+                >
+                  Remove
+                </button>
+              </>
+            )}
           </div>
         </div>
 

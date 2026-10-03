@@ -60,11 +60,8 @@ export const TierSelector = ({
                   />
                 </div>
 
-                <div className="flex items-center gap-1.5 mb-1">
+                <div className="mb-1">
                   <h4 className="font-bold text-sm tracking-tight text-base-content">{tier.name}</h4>
-                  <span className={cn('badge badge-xs text-[10px] font-semibold', tier.badgeColor)}>
-                    {tier.badge}
-                  </span>
                 </div>
 
                 <div className="mt-1 mb-2">

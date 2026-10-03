@@ -18,7 +18,7 @@ export interface TierInfo {
 export const MEMBERSHIP_TIERS: TierInfo[] = [
   {
     id: 'Gold',
-    name: 'Gold Member',
+    name: 'Gold',
     badge: 'Premium Access',
     badgeColor: 'badge-warning',
     pricePerMonth: 4999,
@@ -35,7 +35,7 @@ export const MEMBERSHIP_TIERS: TierInfo[] = [
   },
   {
     id: 'Silver',
-    name: 'Silver Member',
+    name: 'Silver',
     badge: 'Standard',
     badgeColor: 'badge-neutral',
     pricePerMonth: 2499,
@@ -50,7 +50,7 @@ export const MEMBERSHIP_TIERS: TierInfo[] = [
   },
   {
     id: 'Junior',
-    name: 'Junior Member',
+    name: 'Junior',
     badge: 'Under 18',
     badgeColor: 'badge-info',
     pricePerMonth: 1499,
@@ -101,6 +101,7 @@ export const signupSchema = z
     dob: z
       .string()
       .min(1, 'Date of birth is required'),
+    photoUrl: z.string().trim().optional().or(z.literal('')),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaPhone, FaTrophy, FaCalendarDays } from 'react-icons/fa6';
+import { FaEnvelope, FaPhone, FaCalendarDays } from 'react-icons/fa6';
 import { Avatar, Badge } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
 import type { Member, MemberDetail } from '@/types';
@@ -15,23 +15,20 @@ export const MembersTable = ({ members }: MembersTableProps) => {
     const tier = tierStr || 'Gold';
     if (tier === 'Gold' || tier === 'VIP') {
       return (
-        <Badge size="sm" variant="warning" className="gap-1 font-bold">
-          <FaTrophy className="size-3 text-amber-500" />
+        <Badge size="sm" variant="warning" className="font-bold">
           {tier}
         </Badge>
       );
     }
     if (tier === 'Silver' || tier === 'Premium') {
       return (
-        <Badge size="sm" variant="secondary" className="gap-1 font-bold">
-          <FaTrophy className="size-3 text-slate-400" />
+        <Badge size="sm" variant="secondary" className="font-bold">
           {tier}
         </Badge>
       );
     }
     return (
-      <Badge size="sm" variant="ghost" className="gap-1 font-bold border border-base-300">
-        <FaTrophy className="size-3 text-info" />
+      <Badge size="sm" variant="ghost" className="font-bold border border-base-300">
         {tier}
       </Badge>
     );

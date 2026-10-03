@@ -56,46 +56,90 @@ const upload = multer({
   fileFilter,
 });
 
+const publicUpload = multer({
+  storage,
+  limits: {
+    fileSize: 1 * 1024 * 1024, // 1 MB max limit for profile pictures
+  },
+  fileFilter,
+});
+
+const handleUpload = (req: Request, res: Response, _next: NextFunction) => {
+  upload.single('file')(req, res, (err: any) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return sendError(res, 'FILE_TOO_LARGE', 'File size exceeds maximum allowed limit of 5MB', 413);
+      }
+      return sendError(res, 'UPLOAD_ERROR', err.message || 'File upload failed', 400);
+    }
+
+    if (!req.file) {
+      return sendError(res, 'MISSING_FILE', 'No file was uploaded in request field "file"', 400);
+    }
+
+    const category = (req.body.category as string) || 'member';
+    const validCategory = ['member', 'equipment', 'menu_item'].includes(category)
+      ? category
+      : 'member';
+
+    const fileUrl = `/uploads/${validCategory}/${req.file.filename}`;
+
+    return sendSuccess(
+      res,
+      {
+        url: fileUrl,
+        filename: req.file.filename,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+      },
+      'File uploaded successfully',
+      201
+    );
+  });
+};
+
 /**
  * UP-01: POST /api/v1/uploads
- * Upload a photo file (multipart/form-data)
+ * Upload a photo file (multipart/form-data) - Authenticated (5MB limit)
  */
-router.post(
-  '/',
-  authenticate,
-  (req: Request, res: Response, next: NextFunction) => {
-    upload.single('file')(req, res, (err: any) => {
-      if (err) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return sendError(res, 'FILE_TOO_LARGE', 'File size exceeds maximum allowed limit of 5MB', 413);
-        }
-        return sendError(res, 'UPLOAD_ERROR', err.message || 'File upload failed', 400);
+router.post('/', authenticate, handleUpload);
+
+/**
+ * UP-PUBLIC: POST /api/v1/uploads/public
+ * Public photo upload for member self-registration (multipart/form-data) - 1MB limit
+ */
+router.post('/public', (req: Request, res: Response, _next: NextFunction) => {
+  publicUpload.single('file')(req, res, (err: any) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return sendError(res, 'FILE_TOO_LARGE', 'File size exceeds maximum allowed limit of 1MB', 413);
       }
+      return sendError(res, 'UPLOAD_ERROR', err.message || 'File upload failed', 400);
+    }
 
-      if (!req.file) {
-        return sendError(res, 'MISSING_FILE', 'No file was uploaded in request field "file"', 400);
-      }
+    if (!req.file) {
+      return sendError(res, 'MISSING_FILE', 'No file was uploaded in request field "file"', 400);
+    }
 
-      const category = (req.body.category as string) || 'member';
-      const validCategory = ['member', 'equipment', 'menu_item'].includes(category)
-        ? category
-        : 'member';
+    const category = (req.body.category as string) || 'member';
+    const validCategory = ['member', 'equipment', 'menu_item'].includes(category)
+      ? category
+      : 'member';
 
-      const fileUrl = `/uploads/${validCategory}/${req.file.filename}`;
+    const fileUrl = `/uploads/${validCategory}/${req.file.filename}`;
 
-      return sendSuccess(
-        res,
-        {
-          url: fileUrl,
-          filename: req.file.filename,
-          size: req.file.size,
-          mimeType: req.file.mimetype,
-        },
-        'File uploaded successfully',
-        201
-      );
-    });
-  }
-);
+    return sendSuccess(
+      res,
+      {
+        url: fileUrl,
+        filename: req.file.filename,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+      },
+      'File uploaded successfully',
+      201
+    );
+  });
+});
 
 export default router;

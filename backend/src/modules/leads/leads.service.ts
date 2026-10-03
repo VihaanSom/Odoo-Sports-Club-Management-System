@@ -504,13 +504,22 @@ export class LeadsService {
       throw new ConflictError('Email is already registered in the system', 'DUPLICATE_EMAIL');
     }
 
-    // 2. Plan validation
-    const plan = await prisma.membershipPlan.findUnique({
-      where: { id: input.planId },
-    });
+    // 2. Plan validation (with fallback to active plan for tier)
+    let plan = input.planId
+      ? await prisma.membershipPlan.findUnique({
+          where: { id: input.planId },
+        })
+      : null;
 
     if (!plan || !plan.isActive) {
-      throw new NotFoundError(`Membership plan with ID ${input.planId} not found or inactive`, 'PLAN_NOT_FOUND');
+      plan = await prisma.membershipPlan.findFirst({
+        where: { tier: input.tier, isActive: true },
+        orderBy: { durationMonths: 'asc' },
+      });
+    }
+
+    if (!plan || !plan.isActive) {
+      throw new NotFoundError(`Membership plan for tier '${input.tier}' not found or inactive`, 'PLAN_NOT_FOUND');
     }
 
     if (plan.tier !== input.tier) {
@@ -552,6 +561,7 @@ export class LeadsService {
           membershipStart,
           membershipEnd,
           status: 'active',
+          photoUrl: input.photoUrl ?? null,
         },
       });
 
@@ -602,6 +612,7 @@ export class LeadsService {
         membershipStart: result.membershipStart.toISOString().split('T')[0],
         membershipEnd: result.membershipEnd.toISOString().split('T')[0],
         status: result.status,
+        photoUrl: result.photoUrl,
       },
       accessToken,
       refreshToken,

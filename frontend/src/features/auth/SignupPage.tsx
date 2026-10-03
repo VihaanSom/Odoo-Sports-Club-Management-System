@@ -9,6 +9,8 @@ import {
   FaArrowRight,
   FaArrowLeft,
   FaArrowRightToBracket,
+  FaCamera,
+  FaUser,
 } from 'react-icons/fa6';
 import { Card, CardBody, Button, DatePicker, Logo } from '@/components/ui';
 import { TierSelector, PaymentMethodSection, PasswordStrength } from './components';
@@ -26,6 +28,8 @@ export const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
@@ -47,6 +51,7 @@ export const SignupPage = () => {
       email: '',
       phone: '',
       dob: '2000-01-01',
+      photoUrl: '',
       password: '',
       confirmPassword: '',
       addrLine1: '',
@@ -70,6 +75,49 @@ export const SignupPage = () => {
   const cardHolderValue = watch('cardHolder');
   const cardExpiryValue = watch('cardExpiry');
   const cardCvvValue = watch('cardCvv');
+  const photoUrlValue = watch('photoUrl');
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Size validation: 1 MB limit
+    const MAX_SIZE_BYTES = 1 * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      toast.error('Image size must be under 1 MB');
+      e.target.value = '';
+      return;
+    }
+
+    const validMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validMimes.includes(file.type)) {
+      toast.error('Only JPG, PNG, or WebP images are allowed');
+      e.target.value = '';
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setPhotoPreview(localPreview);
+    setIsUploadingPhoto(true);
+
+    try {
+      const uploadedUrl = await authService.uploadProfilePicture(file);
+      setValue('photoUrl', uploadedUrl, { shouldValidate: true });
+      toast.success('Photo uploaded');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to upload photo. Please try again.');
+      setPhotoPreview(null);
+      setValue('photoUrl', '');
+    } finally {
+      setIsUploadingPhoto(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setValue('photoUrl', '');
+  };
 
   const currentTierInfo = MEMBERSHIP_TIERS.find((t) => t.id === selectedTier) || MEMBERSHIP_TIERS[0];
 
@@ -201,6 +249,62 @@ export const SignupPage = () => {
                   transition={{ duration: 0.2 }}
                   className="space-y-4"
                 >
+                  {/* Minimal Profile Photo Upload */}
+                  <div className="flex flex-col items-center justify-center pt-1 pb-2">
+                    <label className="relative group cursor-pointer block">
+                      <div className="size-20 rounded-full overflow-hidden border-2 border-dashed border-base-content/25 group-hover:border-primary transition-all bg-base-200/60 flex items-center justify-center shadow-inner">
+                        {photoPreview || photoUrlValue ? (
+                          <img
+                            src={photoPreview || photoUrlValue}
+                            alt="Profile"
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <FaUser className="size-8 text-base-content/30 group-hover:text-primary/70 transition-colors" />
+                        )}
+                      </div>
+
+                      {/* Camera icon badge */}
+                      <div
+                        className={cn(
+                          'absolute bottom-0 right-0 size-7 rounded-full bg-primary text-primary-content flex items-center justify-center shadow-md group-hover:scale-105 active:scale-95 transition-all border-2 border-base-100',
+                          isUploadingPhoto && 'pointer-events-none opacity-50'
+                        )}
+                      >
+                        {isUploadingPhoto ? (
+                          <span className="loading loading-spinner loading-xs" />
+                        ) : (
+                          <FaCamera className="size-3" />
+                        )}
+                      </div>
+
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={isUploadingPhoto}
+                      />
+                    </label>
+
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[11px] font-medium text-base-content/50">Max 1 MB</span>
+                      {(photoUrlValue || photoPreview) && (
+                        <>
+                          <span className="text-base-content/30">•</span>
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            disabled={isUploadingPhoto}
+                            className="text-[11px] font-medium text-error hover:underline cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* First Name */}
                     <div className="fieldset w-full">
