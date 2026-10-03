@@ -9,3 +9,7 @@ uploads/*
 !uploads/.gitkeep
 api_contracts.md
 backend_work_division.md
+.agents
+.opencode
+.vscode
+orchestrator.config.json

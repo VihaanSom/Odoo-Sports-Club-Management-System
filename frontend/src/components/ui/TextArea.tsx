@@ -16,8 +16,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         <textarea
           ref={ref}
           className={cn(
-            'textarea textarea-bordered w-full text-sm',
-            error && 'textarea-error',
+            'textarea w-full min-w-full text-sm bg-base-100 border border-base-300 focus:border-primary focus:outline-primary rounded-xl',
+            error && 'textarea-error border-error',
             className
           )}
           {...props}

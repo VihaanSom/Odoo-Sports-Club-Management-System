@@ -41,7 +41,18 @@ const processQueue = (error: AxiosError | null) => {
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If Vite dev server returned HTML for missing API routes, reject so mock fallbacks trigger
+    if (
+      typeof response.data === 'string' &&
+      (response.data.trim().toLowerCase().startsWith('<!doctype html') ||
+        response.data.trim().toLowerCase().startsWith('<html'))
+    ) {
+      return Promise.reject(new Error('Backend API not running (HTML received instead of JSON)'));
+    }
+    return response;
+
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 

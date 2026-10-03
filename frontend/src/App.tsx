@@ -11,7 +11,8 @@ import { DashboardPage } from './features/dashboard/DashboardPage';
 import { MembersPage } from './features/members/MembersPage';
 import { FacilitiesPage } from './features/facilities/FacilitiesPage';
 import { EquipmentPage } from './features/equipment/EquipmentPage';
-import { BookingsPage } from './features/bookings/BookingsPage';
+import { bookingRoutes } from './features/bookings/routes';
+import { commerceJsxRoutes } from './features/commerce/routes';
 import { MembershipsPage } from './features/memberships/MembershipsPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { LoginPage, SignupPage, ForgotPasswordPage } from './features/auth';
@@ -41,7 +42,8 @@ export const App: React.FC = () => {
             <Route path="members" element={<MembersPage />} />
             <Route path="facilities" element={<FacilitiesPage />} />
             <Route path="equipment" element={<EquipmentPage />} />
-            <Route path="bookings" element={<BookingsPage />} />
+            {bookingRoutes}
+            {commerceJsxRoutes}
             <Route path="memberships" element={<MembershipsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="404" element={<NotFoundPage />} />
@@ -49,6 +51,7 @@ export const App: React.FC = () => {
           </Route>
         </Routes>
       </BrowserRouter>
+
 
       <Toaster
         position="top-right"

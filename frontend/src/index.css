@@ -1,8 +1,14 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: corporate, black;
+}
 
 @theme {
   --font-sans: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+html {
+  font-size: 16.5px;
 }
 
 html, body {
@@ -11,3 +17,41 @@ html, body {
   min-height: 100%;
   font-family: var(--font-sans);
 }
+
+/* Vanilla Calendar Pro Floating Popup Adjustments */
+[data-vc="calendar"][data-vc-input] {
+  z-index: 99999 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(140, 140, 140, 0.2) !important;
+}
+
+/* Fix Vanilla Calendar arrow borders (DaisyUI 5 / VanillaCalendarPro collision) */
+.vc .vc-arrow,
+.vc [data-vc-arrow] {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+}
+
+.vc .vc-arrow::before,
+.vc [data-vc-arrow]::before {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  inset-block-start: 0 !important;
+  inset-inline-start: 0 !important;
+}
+
+.vc .vc-arrow[data-vc-arrow="prev"]::before,
+.vc [data-vc-arrow="prev"]::before {
+  transform: rotate(90deg) !important;
+}
+
+.vc .vc-arrow[data-vc-arrow="next"]::before,
+.vc [data-vc-arrow="next"]::before {
+  transform: rotate(-90deg) !important;
+}
+

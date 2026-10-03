@@ -16,6 +16,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   tier?: MembershipTier | null;
+  type?: 'member' | 'staff';
 }
 
 declare global {

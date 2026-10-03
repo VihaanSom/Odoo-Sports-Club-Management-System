@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
-import { FaDumbbell, FaBoxesStacked } from 'react-icons/fa6';
+import { FaTrophy, FaBoxesStacked, FaPlus } from 'react-icons/fa6';
+
 import { Button } from '@/components/ui';
 import { mockEquipment } from '@/mock';
 import type { Equipment } from '@/types';
-import { EquipmentTable, EquipmentCategoryTabs } from './components';
+import type { CreateEquipmentPayload, UpdateEquipmentPayload } from '@/types/equipment';
+import { equipmentService } from '@/services/equipmentService';
+import { EquipmentTable, EquipmentCategoryTabs, EquipmentFormModal } from './components';
 
 export const EquipmentPage: React.FC = () => {
   const [items, setItems] = useState<Equipment[]>(mockEquipment);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categories = ['All', 'Rackets', 'Balls', 'Protective Gear', 'Gym Accessories', 'Court Accessories'];
 
@@ -41,6 +45,27 @@ export const EquipmentPage: React.FC = () => {
     toast.success(`Returned 1x ${name} to club stock.`);
   };
 
+  const handleCreateEquipment = async (
+    payload: CreateEquipmentPayload | UpdateEquipmentPayload
+  ) => {
+    try {
+      const created = await equipmentService.createEquipment(payload as CreateEquipmentPayload);
+      const newLegacyItem: Equipment = {
+        id: `EQ-0${items.length + 1}`,
+        name: created.name,
+        category: (created.category === 'racket' ? 'Rackets' : created.category === 'ball' ? 'Balls' : 'Gym Accessories') as any,
+        quantityTotal: created.stockQty,
+        quantityAvailable: created.stockQty,
+        condition: (created.condition || 'Excellent') as any,
+        rentalRate: Math.round((created.rentalRatePaise || 0) / 100),
+      };
+      setItems((prev) => [newLegacyItem, ...prev]);
+      toast.success('Equipment item created');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create equipment');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -50,21 +75,33 @@ export const EquipmentPage: React.FC = () => {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
-            <FaDumbbell className="size-7 text-primary" /> Equipment & Rentals
-          </h1>
+          <div className="flex items-center gap-2">
+            <FaTrophy className="size-6 text-amber-500" />
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+              Equipment & Rentals
+            </h1>
+          </div>
           <p className="text-sm text-base-content/70 mt-1">
             Track sports gear, monitor condition status, and record checkouts and returns.
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          leftIcon={<FaBoxesStacked className="size-4" />}
-          onClick={() => toast('Odoo inventory sync triggered')}
-        >
-          Sync Inventory
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            leftIcon={<FaBoxesStacked className="size-4" />}
+            onClick={() => toast('Odoo inventory sync triggered')}
+          >
+            Sync Inventory
+          </Button>
+          <Button
+            variant="primary"
+            leftIcon={<FaPlus className="size-4" />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            New Equipment
+          </Button>
+        </div>
       </div>
 
       <EquipmentCategoryTabs
@@ -78,8 +115,15 @@ export const EquipmentPage: React.FC = () => {
         onRent={handleRent}
         onReturn={handleReturn}
       />
+
+      <EquipmentFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateEquipment}
+      />
     </motion.div>
   );
 };
 
 export default EquipmentPage;
+

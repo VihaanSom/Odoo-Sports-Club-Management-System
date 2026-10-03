@@ -9,3 +9,6 @@ export * from './Skeleton';
 export * from './TextArea';
 export * from './GlobalLoader';
 export * from './ImageWithFallback';
+export * from './DatePicker';
+export * from './VanillaCalendar';
+export * from './Logo';

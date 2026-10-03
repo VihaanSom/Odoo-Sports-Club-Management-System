@@ -5,11 +5,11 @@ import {
   FaBell,
   FaMoon,
   FaSun,
-  FaVolleyball,
   FaUserGear,
   FaArrowRightFromBracket,
   FaCircleUser,
 } from 'react-icons/fa6';
+import { Logo } from '@/components/ui';
 import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -22,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const isDark = theme === 'black';
 
   return (
     <header className="navbar bg-base-200/80 backdrop-blur-md sticky top-0 z-30 border-b border-base-300 px-4 lg:px-6">
@@ -37,11 +38,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           </button>
         )}
         <Link to="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-primary">
-          <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
-            <FaVolleyball className="size-5" />
+          <div className="size-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shadow-sm">
+            <Logo className="size-5" />
           </div>
           <span className="hidden sm:inline bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Odoo Sports Club
+            Champions Club
           </span>
         </Link>
       </div>
@@ -60,9 +61,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           className="btn btn-ghost btn-circle"
           onClick={toggleTheme}
           aria-label="Toggle light and dark theme"
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
         >
-          {theme === 'dark' ? (
+          {isDark ? (
             <FaSun className="size-5 text-warning" />
           ) : (
             <FaMoon className="size-5 text-primary" />

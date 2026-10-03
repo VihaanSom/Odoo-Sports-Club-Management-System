@@ -4,17 +4,17 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  FaTrophy,
   FaEye,
   FaEyeSlash,
   FaArrowRight,
   FaArrowLeft,
   FaArrowRightToBracket,
 } from 'react-icons/fa6';
-import { Card, CardBody, Button } from '@/components/ui';
+import { Card, CardBody, Button, DatePicker, Logo } from '@/components/ui';
 import { TierSelector, PaymentMethodSection, PasswordStrength } from './components';
 import { signupSchema, type SignupDto, MEMBERSHIP_TIERS } from '@/types';
 import { authService } from '@/services/authService';
+import { INDIAN_STATES } from '@/config/indiaStates';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -51,9 +51,9 @@ export const SignupPage: React.FC = () => {
       confirmPassword: '',
       addrLine1: '',
       addrLine2: '',
-      city: 'Ahmedabad',
+      city: '',
       state: 'Gujarat',
-      pincode: '380015',
+      pincode: '',
       tier: 'Gold',
       paymentMethod: 'cash',
       cardNumber: '',
@@ -147,8 +147,8 @@ export const SignupPage: React.FC = () => {
     >
       {/* Brand Header with Trophy Logo */}
       <div className="text-center mb-6">
-        <div className="size-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm mx-auto mb-3">
-          <FaTrophy className="size-7" />
+        <div className="size-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm mx-auto mb-3">
+          <Logo className="size-8" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-base-content">
           Join Champions Club
@@ -204,7 +204,7 @@ export const SignupPage: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Vihaan"
+                        placeholder="e.g. John"
                         className={cn(
                           'input input-bordered w-full text-sm',
                           errors.firstName && 'input-error'
@@ -223,7 +223,7 @@ export const SignupPage: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Som"
+                        placeholder="e.g. Hackathon"
                         className={cn(
                           'input input-bordered w-full text-sm',
                           errors.lastName && 'input-error'
@@ -242,7 +242,7 @@ export const SignupPage: React.FC = () => {
                       </label>
                       <input
                         type="email"
-                        placeholder="vihaan@example.com"
+                        placeholder="myemail@example.com"
                         autoComplete="email"
                         className={cn(
                           'input input-bordered w-full text-sm',
@@ -274,23 +274,23 @@ export const SignupPage: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Date of Birth */}
-                    <div className="fieldset w-full sm:col-span-2">
-                      <label className="fieldset-label font-medium text-xs text-base-content/80">
-                        Date of Birth (DOB) <span className="text-error">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        className={cn(
-                          'input input-bordered w-full text-sm',
-                          errors.dob && 'input-error'
-                        )}
-                        {...register('dob')}
-                      />
-                      {errors.dob && (
-                        <span className="text-error text-xs mt-1">{errors.dob.message}</span>
+                    {/* Date of Birth with Modern DatePicker */}
+                    <Controller
+                      name="dob"
+                      control={control}
+                      render={({ field }) => (
+                        <DatePicker
+                          label="Date of Birth (DOB)"
+                          required
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select date of birth"
+                          maxDate={new Date().toISOString().split('T')[0]}
+                          error={errors.dob?.message}
+                          className="sm:col-span-2"
+                        />
                       )}
-                    </div>
+                    />
 
                     {/* Password */}
                     <div className="fieldset w-full">
@@ -370,7 +370,7 @@ export const SignupPage: React.FC = () => {
                       rightIcon={<FaArrowRight className="size-4" />}
                       className="font-bold"
                     >
-                      Next: Address Details
+                      Next
                     </Button>
                   </div>
                 </motion.div>
@@ -428,7 +428,7 @@ export const SignupPage: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Ahmedabad"
+                        placeholder="Enter city"
                         className={cn(
                           'input input-bordered w-full text-sm',
                           errors.city && 'input-error'
@@ -440,20 +440,24 @@ export const SignupPage: React.FC = () => {
                       )}
                     </div>
 
-                    {/* State */}
+                    {/* State Dropdown */}
                     <div className="fieldset w-full">
                       <label className="fieldset-label font-medium text-xs text-base-content/80">
-                        State <span className="text-error">*</span>
+                        State / UT <span className="text-error">*</span>
                       </label>
-                      <input
-                        type="text"
-                        placeholder="Gujarat"
+                      <select
                         className={cn(
-                          'input input-bordered w-full text-sm',
-                          errors.state && 'input-error'
+                          'select select-bordered w-full text-sm',
+                          errors.state && 'select-error'
                         )}
                         {...register('state')}
-                      />
+                      >
+                        {INDIAN_STATES.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
                       {errors.state && (
                         <span className="text-error text-xs mt-1">{errors.state.message}</span>
                       )}
@@ -466,7 +470,7 @@ export const SignupPage: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="380015"
+                        placeholder="6-digit pincode"
                         maxLength={6}
                         className={cn(
                           'input input-bordered w-full font-mono text-sm',
@@ -496,7 +500,7 @@ export const SignupPage: React.FC = () => {
                       rightIcon={<FaArrowRight className="size-4" />}
                       className="font-bold"
                     >
-                      Next: Membership & Payment
+                      Next
                     </Button>
                   </div>
                 </motion.div>

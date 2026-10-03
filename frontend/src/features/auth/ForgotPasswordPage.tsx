@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  FaTrophy,
   FaKey,
   FaEye,
   FaEyeSlash,
@@ -14,7 +13,7 @@ import {
   FaCircleExclamation,
   FaRotateRight,
 } from 'react-icons/fa6';
-import { Card, CardBody, Button } from '@/components/ui';
+import { Card, CardBody, Button, Logo } from '@/components/ui';
 import { OtpInput, PasswordStrength } from './components';
 import {
   forgotPasswordEmailSchema,
@@ -177,8 +176,8 @@ export const ForgotPasswordPage: React.FC = () => {
     >
       {/* Brand Header with Trophy Logo */}
       <div className="text-center mb-6">
-        <div className="size-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm mx-auto mb-3">
-          <FaTrophy className="size-7" />
+        <div className="size-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm mx-auto mb-3">
+          <Logo className="size-8" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-base-content">
           Reset Password
@@ -225,7 +224,7 @@ export const ForgotPasswordPage: React.FC = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder="e.g. member@championsclub.com"
+                      placeholder="myemail@example.com"
                       autoFocus
                       className={cn(
                         'input input-bordered w-full text-sm',

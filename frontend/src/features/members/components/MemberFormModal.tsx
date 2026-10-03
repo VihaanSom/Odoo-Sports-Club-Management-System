@@ -61,7 +61,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
         <Input
           label="Full Name"
-          placeholder="e.g. Carlos Alcaraz"
+          placeholder="e.g. John Hackathon"
           {...register('name')}
           error={errors.name?.message}
         />
@@ -70,14 +70,14 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
           <Input
             label="Email Address"
             type="email"
-            placeholder="name@example.com"
+            placeholder="myemail@example.com"
             {...register('email')}
             error={errors.email?.message}
           />
           <Input
             label="Phone Number"
             type="tel"
-            placeholder="+1 (555) 000-0000"
+            placeholder="9876543210"
             {...register('phone')}
             error={errors.phone?.message}
           />
