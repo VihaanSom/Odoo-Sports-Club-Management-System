@@ -1,4 +1,11 @@
+Sports_Club_Management_System.pdf
 db.sql
+implementation_plan.md
 instructions
 node_modules
-Sports_Club_Management_System.pdf
+dist
+.env
+uploads/*
+!uploads/.gitkeep
+api_contracts.md
+backend_work_division.md

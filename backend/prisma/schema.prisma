@@ -1,0 +1,555 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ========================
+// ENUMS
+// ========================
+
+enum MembershipTier {
+  Gold
+  Silver
+  Junior
+
+  @@map("membership_tier")
+}
+
+enum MembershipStatus {
+  active
+  expired
+
+  @@map("membership_status")
+}
+
+enum SportType {
+  tennis
+  cricket
+
+  @@map("sport_type")
+}
+
+enum BookingType {
+  member
+  walk_in
+  social
+
+  @@map("booking_type")
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+
+  @@map("booking_status")
+}
+
+enum PaymentMethod {
+  cash
+  card
+  upi
+  plan
+
+  @@map("payment_method")
+}
+
+enum OrderType {
+  in_store
+  online
+  bar
+
+  @@map("order_type")
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  fulfilled
+  cancelled
+
+  @@map("order_status")
+}
+
+enum EquipmentCategory {
+  racket
+  ball
+  shoe
+  accessory
+  apparel
+
+  @@map("equipment_category")
+}
+
+enum MenuCategory {
+  food
+  beverage
+  snack
+
+  @@map("menu_category")
+}
+
+enum TabStatus {
+  open
+  settled
+
+  @@map("tab_status")
+}
+
+enum LeadStatus {
+  new
+  contacted
+  converted
+  lost
+
+  @@map("lead_status")
+}
+
+enum StaffRole {
+  admin
+  front_desk
+  bar
+  shop
+
+  @@map("staff_role")
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+
+  @@map("leave_status")
+}
+
+// ========================
+// 1. MEMBERS
+// ========================
+
+model Member {
+  id              Int              @id @default(autoincrement())
+  firstName       String           @map("first_name") @db.VarChar(100)
+  lastName        String           @map("last_name") @db.VarChar(100)
+  email           String           @unique @db.VarChar(255)
+  passwordHash    String           @map("password_hash") @db.VarChar(255)
+  phone           String?          @db.VarChar(20)
+  dateOfBirth     DateTime?        @map("date_of_birth") @db.Date
+  tier            MembershipTier
+  membershipStart DateTime         @default(now()) @map("membership_start") @db.Date
+  membershipEnd   DateTime         @map("membership_end") @db.Date
+  status          MembershipStatus @default(active)
+  photoUrl        String?          @map("photo_url") @db.VarChar(500)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  addresses    MemberAddress[]
+  bookings     Booking[]
+  participants BookingParticipant[]
+  orders       Order[]
+  barTabs      BarTab[]
+  payments     Payment[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([tier])
+  @@index([status])
+  @@map("members")
+}
+
+// ========================
+// 1b. MEMBER ADDRESS
+// ========================
+
+model MemberAddress {
+  id        Int     @id @default(autoincrement())
+  memberId  Int     @map("member_id")
+  addrLine1 String  @map("addr_line1") @db.VarChar(255)
+  addrLine2 String? @map("addr_line2") @db.VarChar(255)
+  city      String? @db.VarChar(100)
+  state     String? @db.VarChar(100)
+  pincode   String  @db.VarChar(6)
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@map("member_address")
+}
+
+// ========================
+// 1c. MEMBERSHIP PLANS
+// ========================
+
+model MembershipPlan {
+  id              Int            @id @default(autoincrement())
+  tier            MembershipTier
+  durationMonths  Int            @map("duration_months")
+  price           Decimal        @db.Decimal(10, 2)
+  courtRate       Decimal        @default(0.00) @map("court_rate") @db.Decimal(10, 2)
+  shopDiscountPct Int            @default(0) @map("shop_discount_pct")
+  barDiscountPct  Int            @default(0) @map("bar_discount_pct")
+  isActive        Boolean        @default(true) @map("is_active")
+
+  @@unique([tier, durationMonths])
+  @@map("membership_plans")
+}
+
+// ========================
+// 2. COURTS
+// ========================
+
+model Court {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(50)
+  sport     SportType
+  openTime  String    @default("00:00") @map("open_time")
+  closeTime String    @default("23:30") @map("close_time")
+  isActive  Boolean   @default(true) @map("is_active")
+
+  bookings Booking[]
+
+  @@map("courts")
+}
+
+// ========================
+// 3. BOOKINGS
+// ========================
+
+model Booking {
+  id            Int            @id @default(autoincrement())
+  courtId       Int            @map("court_id")
+  memberId      Int?           @map("member_id")
+  guestName     String?        @map("guest_name") @db.VarChar(150)
+  guestPhone    String?        @map("guest_phone") @db.VarChar(20)
+  bookingType   BookingType    @default(member) @map("booking_type")
+  slotStart     DateTime       @map("slot_start") @db.Timestamptz
+  slotEnd       DateTime       @map("slot_end") @db.Timestamptz
+  status        BookingStatus  @default(confirmed)
+  amountPaid    Decimal        @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  paymentMethod PaymentMethod? @map("payment_method")
+  notes         String?        @db.VarChar(500)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  court        Court                @relation(fields: [courtId], references: [id])
+  member       Member?              @relation(fields: [memberId], references: [id])
+  participants BookingParticipant[]
+  payments     Payment[]
+
+  @@index([courtId])
+  @@index([memberId])
+  @@index([slotStart])
+  @@index([status])
+  @@map("bookings")
+}
+
+// ========================
+// 4. BOOKING PARTICIPANTS
+// ========================
+
+model BookingParticipant {
+  id        Int      @id @default(autoincrement())
+  bookingId Int      @map("booking_id")
+  memberId  Int?     @map("member_id")
+  guestName String?  @map("guest_name") @db.VarChar(150)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  member  Member? @relation(fields: [memberId], references: [id])
+
+  @@index([bookingId])
+  @@map("booking_participants")
+}
+
+// ========================
+// 5. EQUIPMENT
+// ========================
+
+model Equipment {
+  id                Int               @id @default(autoincrement())
+  name              String            @db.VarChar(200)
+  category          EquipmentCategory
+  brand             String?           @db.VarChar(100)
+  description       String?           @db.VarChar(1000)
+  price             Decimal           @db.Decimal(10, 2)
+  stockQty          Int               @default(0) @map("stock_qty")
+  lowStockThreshold Int               @default(5) @map("low_stock_threshold")
+  isActive          Boolean           @default(true) @map("is_active")
+  imageUrl          String?           @map("image_url") @db.VarChar(500)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  orderItems OrderItemEquipment[]
+
+  @@index([category])
+  @@map("equipment")
+}
+
+// ========================
+// 6. MENU ITEMS
+// ========================
+
+model MenuItem {
+  id                Int          @id @default(autoincrement())
+  name              String       @db.VarChar(200)
+  category          MenuCategory
+  description       String?      @db.VarChar(500)
+  price             Decimal      @db.Decimal(10, 2)
+  stockQty          Int          @default(0) @map("stock_qty")
+  lowStockThreshold Int          @default(5) @map("low_stock_threshold")
+  isAvailable       Boolean      @default(true) @map("is_available")
+  imageUrl          String?      @map("image_url") @db.VarChar(500)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  orderItems  OrderItemMenu[]
+  barTabItems BarTabItem[]
+
+  @@index([category])
+  @@map("menu_items")
+}
+
+// ========================
+// 7. ORDERS
+// ========================
+
+model Order {
+  id              Int            @id @default(autoincrement())
+  memberId        Int?           @map("member_id")
+  orderType       OrderType      @map("order_type")
+  status          OrderStatus    @default(pending)
+  paymentMethod   PaymentMethod? @map("payment_method")
+  subtotal        Decimal        @default(0.00) @db.Decimal(10, 2)
+  discountAmount  Decimal        @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  totalAmount     Decimal        @default(0.00) @map("total_amount") @db.Decimal(10, 2)
+  deliveryAddress String?        @map("delivery_address") @db.VarChar(500)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  member         Member?              @relation(fields: [memberId], references: [id])
+  equipmentItems OrderItemEquipment[]
+  menuItems      OrderItemMenu[]
+  payments       Payment[]
+
+  @@index([memberId])
+  @@index([orderType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// ========================
+// 8. ORDER ITEMS - EQUIPMENT
+// ========================
+
+model OrderItemEquipment {
+  id          Int     @id @default(autoincrement())
+  orderId     Int     @map("order_id")
+  equipmentId Int     @map("equipment_id")
+  qty         Int
+  unitPrice   Decimal @map("unit_price") @db.Decimal(10, 2)
+  subtotal    Decimal @db.Decimal(10, 2)
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items_equipment")
+}
+
+// ========================
+// 9. ORDER ITEMS - MENU
+// ========================
+
+model OrderItemMenu {
+  id         Int     @id @default(autoincrement())
+  orderId    Int     @map("order_id")
+  menuItemId Int     @map("menu_item_id")
+  qty        Int
+  unitPrice  Decimal @map("unit_price") @db.Decimal(10, 2)
+  subtotal   Decimal @db.Decimal(10, 2)
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items_menu")
+}
+
+// ========================
+// 10. BAR TABLES
+// ========================
+
+model BarTable {
+  id       Int     @id @default(autoincrement())
+  tableNo  String  @unique @map("table_no") @db.VarChar(10)
+  capacity Int     @default(4)
+  isActive Boolean @default(true) @map("is_active")
+
+  tabs BarTab[]
+
+  @@map("bar_tables")
+}
+
+// ========================
+// 11. BAR TABS
+// ========================
+
+model BarTab {
+  id         Int       @id @default(autoincrement())
+  barTableId Int       @map("bar_table_id")
+  memberId   Int?      @map("member_id")
+  openedBy   Int       @map("opened_by")
+  status     TabStatus @default(open)
+  openedAt   DateTime  @default(now()) @map("opened_at") @db.Timestamptz
+  settledAt  DateTime? @map("settled_at") @db.Timestamptz
+  notes      String?   @db.VarChar(500)
+
+  table    BarTable     @relation(fields: [barTableId], references: [id])
+  member   Member?      @relation(fields: [memberId], references: [id])
+  staff    Staff        @relation(fields: [openedBy], references: [id])
+  items    BarTabItem[]
+  payments Payment[]
+
+  @@index([barTableId])
+  @@index([status])
+  @@map("bar_tabs")
+}
+
+// ========================
+// 12. BAR TAB ITEMS
+// ========================
+
+model BarTabItem {
+  id         Int      @id @default(autoincrement())
+  tabId      Int      @map("tab_id")
+  menuItemId Int      @map("menu_item_id")
+  qty        Int
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(10, 2)
+  subtotal   Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tab      BarTab   @relation(fields: [tabId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([tabId])
+  @@map("bar_tab_items")
+}
+
+// ========================
+// 13. LEADS
+// ========================
+
+model Lead {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(150)
+  email      String?    @db.VarChar(255)
+  phone      String?    @db.VarChar(20)
+  message    String?    @db.VarChar(2000)
+  status     LeadStatus @default(new)
+  assignedTo Int?       @map("assigned_to")
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  staff Staff? @relation(fields: [assignedTo], references: [id])
+
+  @@index([status])
+  @@map("leads")
+}
+
+// ========================
+// 14. STAFF
+// ========================
+
+model Staff {
+  id           Int       @id @default(autoincrement())
+  firstName    String    @map("first_name") @db.VarChar(100)
+  lastName     String    @map("last_name") @db.VarChar(100)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         StaffRole
+  phone        String?   @db.VarChar(20)
+  salary       Decimal?  @db.Decimal(10, 2)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  barTabs        BarTab[]
+  leads          Lead[]
+  shifts         Shift[]
+  leaveRequests  LeaveRequest[] @relation("StaffLeaveRequests")
+  reviewedLeaves LeaveRequest[] @relation("StaffReviewedLeaves")
+
+  @@index([role])
+  @@map("staff")
+}
+
+// ========================
+// 15. SHIFTS
+// ========================
+
+model Shift {
+  id         Int       @id @default(autoincrement())
+  staffId    Int       @map("staff_id")
+  shiftDate  DateTime  @map("shift_date") @db.Date
+  shiftStart DateTime  @map("shift_start") @db.Timestamptz
+  shiftEnd   DateTime? @map("shift_end") @db.Timestamptz
+  notes      String?   @db.VarChar(500)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([shiftDate])
+  @@map("shifts")
+}
+
+// ========================
+// 16. LEAVE REQUESTS
+// ========================
+
+model LeaveRequest {
+  id         Int         @id @default(autoincrement())
+  staffId    Int         @map("staff_id")
+  fromDate   DateTime    @map("from_date") @db.Date
+  toDate     DateTime    @map("to_date") @db.Date
+  reason     String?     @db.VarChar(500)
+  status     LeaveStatus @default(pending)
+  reviewedBy Int?        @map("reviewed_by")
+  reviewedAt DateTime?   @map("reviewed_at") @db.Timestamptz
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  staff    Staff  @relation("StaffLeaveRequests", fields: [staffId], references: [id])
+  reviewer Staff? @relation("StaffReviewedLeaves", fields: [reviewedBy], references: [id])
+
+  @@index([staffId])
+  @@index([status])
+  @@map("leave_requests")
+}
+
+// ========================
+// 17. PAYMENTS
+// ========================
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  memberId      Int?          @map("member_id")
+  bookingId     Int?          @map("booking_id")
+  orderId       Int?          @map("order_id")
+  barTabId      Int?          @map("bar_tab_id")
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @map("payment_method")
+  referenceNo   String?       @map("reference_no") @db.VarChar(100)
+  notes         String?       @db.VarChar(500)
+  paidAt        DateTime      @default(now()) @map("paid_at") @db.Timestamptz
+
+  member  Member?  @relation(fields: [memberId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+  order   Order?   @relation(fields: [orderId], references: [id])
+  barTab  BarTab?  @relation(fields: [barTabId], references: [id])
+
+  @@index([memberId])
+  @@index([paidAt])
+  @@map("payments")
+}
