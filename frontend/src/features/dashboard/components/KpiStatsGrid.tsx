@@ -1,4 +1,4 @@
-import { FaUsers, FaCalendarCheck, FaTableTennisPaddleBall, FaIndianRupeeSign, FaWineGlass, FaUserTie } from 'react-icons/fa6';
+import { FaUsers, FaCalendarCheck, FaTableTennisPaddleBall, FaIndianRupeeSign } from 'react-icons/fa6';
 import type { ClubSummaryKPIs } from '@/types/reports';
 
 interface KpiStatsGridProps {
@@ -23,75 +23,62 @@ export const KpiStatsGrid = ({ kpis, loading }: KpiStatsGridProps) => {
     {
       title: 'Total Revenue',
       value: formatRupees(kpis?.totalRevenuePaise ?? 485000000),
-      desc: '↗︎ 14.8% growth vs last month',
-      icon: <FaIndianRupeeSign className="size-5 text-emerald-500" />,
+      desc: '+14.8% vs last month',
+      icon: <FaIndianRupeeSign className="size-4.5 text-base-content/70" />,
     },
     {
       title: 'Active Members',
       value: String(kpis?.activeMembersCount ?? 524),
-      desc: '↗︎ 34 enrolled this month',
-      icon: <FaUsers className="size-5 text-primary" />,
+      desc: '+34 enrolled this month',
+      icon: <FaUsers className="size-4.5 text-base-content/70" />,
     },
     {
       title: "Today's Bookings",
       value: String(kpis?.todayBookingsCount ?? 38),
-      desc: '32 Member • 6 Walk-in / Social',
-      icon: <FaCalendarCheck className="size-5 text-secondary" />,
+      desc: '32 Member • 6 Walk-in',
+      icon: <FaCalendarCheck className="size-4.5 text-base-content/70" />,
     },
     {
       title: 'Court Occupancy',
       value: `${kpis?.courtUtilizationRate ? kpis.courtUtilizationRate.toFixed(1) : '78.4'}%`,
-      desc: 'Peak times: 06-10h & 18-22h',
-      icon: <FaTableTennisPaddleBall className="size-5 text-amber-500" />,
-    },
-    {
-      title: 'Bar & Cafe Sales',
-      value: formatRupees(kpis?.barRevenuePaise ?? 55000000),
-      desc: '8 open tabs currently active',
-      icon: <FaWineGlass className="size-5 text-purple-500" />,
-    },
-    {
-      title: 'Staff On Duty',
-      value: `${kpis?.staffOnDutyCount ?? 6} Staff`,
-      desc: `${kpis?.pendingLeavesCount ?? 2} leave requests pending`,
-      icon: <FaUserTie className="size-5 text-blue-500" />,
+      desc: 'Peak hours: 18:00 - 22:00',
+      icon: <FaTableTennisPaddleBall className="size-4.5 text-base-content/70" />,
     },
   ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-2xl bg-base-200/60 animate-pulse border border-base-300" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 rounded-2xl bg-base-200/50 animate-pulse border border-base-200" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className="stat bg-base-200/50 border border-base-300 rounded-2xl p-4 shadow-xs hover:border-primary/40 hover:bg-base-200/80 transition-all flex flex-col justify-between"
+          className="bg-base-100 border border-base-200/80 rounded-2xl p-5 shadow-xs hover:border-base-300 transition-colors flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-base-300/50">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-base-content/60 tracking-wide">
+              {stat.title}
+            </span>
+            <div className="p-2 rounded-xl bg-base-200/60">
               {stat.icon}
             </div>
           </div>
 
           <div>
-            <div className="stat-title text-[11px] font-bold uppercase tracking-wider text-base-content/60 truncate">
-              {stat.title}
-            </div>
-            <div className="stat-value text-xl sm:text-2xl font-extrabold tracking-tight my-0.5 text-base-content">
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-base-content">
               {stat.value}
             </div>
-          </div>
-
-          <div className="stat-desc text-[11px] text-base-content/70 mt-1 truncate">
-            {stat.desc}
+            <div className="text-xs text-base-content/50 mt-1">
+              {stat.desc}
+            </div>
           </div>
         </div>
       ))}
