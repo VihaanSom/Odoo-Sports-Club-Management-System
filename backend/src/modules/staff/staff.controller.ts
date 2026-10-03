@@ -59,6 +59,30 @@ export class StaffController {
   }
 
   /**
+   * GET /api/v1/staff/shifts - List all shifts with optional filters
+   */
+  async listAllShifts(req: Request, res: Response): Promise<Response> {
+    const shifts = await staffService.listAllShifts(req.query as any);
+    return sendSuccess(res, shifts);
+  }
+
+  /**
+   * POST /api/v1/staff/shifts - Assign/schedule a shift
+   */
+  async assignShift(req: Request, res: Response): Promise<Response> {
+    const shift = await staffService.assignShift(req.body);
+    return sendSuccess(res, shift, 'Shift assigned successfully', 201);
+  }
+
+  /**
+   * POST /api/v1/staff/shifts/clock - Clock in or out
+   */
+  async clockInOut(req: Request, res: Response): Promise<Response> {
+    const shift = await staffService.clockInOut(req.body);
+    return sendSuccess(res, shift, 'Clock action recorded successfully');
+  }
+
+  /**
    * GET /api/v1/staff/:id/shifts
    */
   async getShifts(req: Request, res: Response): Promise<Response> {
@@ -73,7 +97,9 @@ export class StaffController {
    * LV-01: POST /api/v1/leave
    */
   async createLeave(req: Request, res: Response): Promise<Response> {
-    const staffId = (req.user?.sub ?? req.user?.id) as number;
+    const staffId = req.body.staffId
+      ? Number(req.body.staffId)
+      : ((req.user?.sub ?? req.user?.id) as number);
     const leave = await staffService.submitLeaveRequest(staffId, req.body);
     return sendSuccess(res, leave, 'Leave request submitted successfully', 201);
   }

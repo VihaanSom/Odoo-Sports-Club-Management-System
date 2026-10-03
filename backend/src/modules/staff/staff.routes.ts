@@ -11,9 +11,60 @@ import {
   endShiftSchema,
   shiftParamsSchema,
   listLeaveQuerySchema,
+  listShiftsQuerySchema,
+  assignShiftSchema,
+  clockShiftSchema,
 } from './staff.validator';
+import leaveRoutes from './leave.routes';
 
 const router = Router();
+
+// ==========================================
+// LEAVE REQUESTS ALIAS (/api/v1/staff/leaves)
+// ==========================================
+router.use('/leaves', leaveRoutes);
+
+// ==========================================
+// ALL SHIFTS & SCHEDULES (BEFORE /:id)
+// ==========================================
+
+
+/**
+ * List all shifts across all staff
+ * GET /api/v1/staff/shifts
+ * Auth: admin or self
+ */
+router.get(
+  '/shifts',
+  verifyToken,
+  validate(listShiftsQuerySchema, 'query'),
+  (req, res) => staffController.listAllShifts(req, res)
+);
+
+/**
+ * Assign / schedule a shift
+ * POST /api/v1/staff/shifts
+ * Auth: admin
+ */
+router.post(
+  '/shifts',
+  verifyToken,
+  requireRole('admin'),
+  validate(assignShiftSchema, 'body'),
+  (req, res) => staffController.assignShift(req, res)
+);
+
+/**
+ * Clock in or out
+ * POST /api/v1/staff/shifts/clock
+ * Auth: admin or staff
+ */
+router.post(
+  '/shifts/clock',
+  verifyToken,
+  validate(clockShiftSchema, 'body'),
+  (req, res) => staffController.clockInOut(req, res)
+);
 
 // ==========================================
 // STAFF CRUD (ST-01 to ST-04)

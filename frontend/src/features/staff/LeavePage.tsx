@@ -64,8 +64,8 @@ export const LeavePage = () => {
       ]);
       setLeaves(leavesRes);
       setStaffList(staffRes.data);
-    } catch {
-      toast.error('Failed to load leave records');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load leave records');
     } finally {
       setLoading(false);
     }
@@ -80,8 +80,8 @@ export const LeavePage = () => {
       await staffService.reviewLeaveRequest(payload);
       toast.success(`Leave ${payload.status}`);
       loadData();
-    } catch {
-      toast.error('Review action failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Review action failed');
     }
   };
 
@@ -98,8 +98,8 @@ export const LeavePage = () => {
       setIsApplyModalOpen(false);
       reset();
       loadData();
-    } catch {
-      toast.error('Submission failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Submission failed');
     }
   };
 

@@ -27,6 +27,7 @@ export interface BarTab {
   settledAt?: string | null;
   notes?: string | null;
   items: BarTabItem[];
+  itemCount?: number;
   subtotalPaise: number;
   discountPaise: number;
   totalPaise: number;

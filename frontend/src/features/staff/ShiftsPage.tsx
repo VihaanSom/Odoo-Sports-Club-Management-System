@@ -27,7 +27,8 @@ export const ShiftsPage = () => {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string>('2026-10-03');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
@@ -42,7 +43,7 @@ export const ShiftsPage = () => {
     mode: 'onTouched',
     defaultValues: {
       staffId: '',
-      date: '2026-10-03',
+      date: todayStr,
       startTime: '08:00',
       endTime: '16:00',
       notes: '',
@@ -61,8 +62,8 @@ export const ShiftsPage = () => {
       ]);
       setShifts(shiftsRes);
       setStaffList(staffRes.data);
-    } catch {
-      toast.error('Failed to load shifts');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load shifts');
     } finally {
       setLoading(false);
     }
@@ -77,8 +78,8 @@ export const ShiftsPage = () => {
       await staffService.clockInOut({ shiftId, action });
       toast.success(action === 'clock_in' ? 'Clock In recorded' : 'Clock Out recorded');
       loadData();
-    } catch {
-      toast.error('Clock action failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Clock action failed');
     }
   };
 
@@ -94,10 +95,16 @@ export const ShiftsPage = () => {
       await staffService.assignShift(payload);
       toast.success('Shift assigned');
       setIsAssignModalOpen(false);
-      reset();
+      reset({
+        staffId: '',
+        date: todayStr,
+        startTime: '08:00',
+        endTime: '16:00',
+        notes: '',
+      });
       loadData();
-    } catch {
-      toast.error('Shift assignment failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Shift assignment failed');
     }
   };
 

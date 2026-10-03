@@ -12,6 +12,9 @@ import {
   UpdateStaffInput,
   StartShiftInput,
   EndShiftInput,
+  AssignShiftInput,
+  ClockShiftInput,
+  ListShiftsQuery,
   CreateLeaveInput,
   ListLeaveQuery,
   ReviewLeaveInput,
@@ -51,43 +54,77 @@ export const formatStaff = (staff: Staff, includeSalary = false): StaffResponse 
   return res;
 };
 
-export const formatShift = (shift: Shift) => ({
-  id: shift.id,
-  staffId: shift.staffId,
-  shiftDate: shift.shiftDate.toISOString().split('T')[0],
-  shiftStart: shift.shiftStart.toISOString(),
-  shiftEnd: shift.shiftEnd ? shift.shiftEnd.toISOString() : null,
-  notes: shift.notes,
-  createdAt: shift.createdAt.toISOString(),
-});
+export const formatShift = (shift: Shift & { staff?: any }) => {
+  const dateStr = shift.shiftDate.toISOString().split('T')[0];
+  const startTime = shift.shiftStart ? new Date(shift.shiftStart).toISOString().slice(11, 16) : '08:00';
+  const endTime = shift.shiftEnd ? new Date(shift.shiftEnd).toISOString().slice(11, 16) : '17:00';
+  const status = !shift.shiftEnd ? 'in_progress' : 'completed';
 
-export const formatLeave = (leave: LeaveRequest & { staff?: any; reviewer?: any }) => ({
-  id: leave.id,
-  staffId: leave.staffId,
-  fromDate: leave.fromDate.toISOString().split('T')[0],
-  toDate: leave.toDate.toISOString().split('T')[0],
-  reason: leave.reason,
-  status: leave.status,
-  reviewedBy: leave.reviewedBy,
-  reviewedAt: leave.reviewedAt ? leave.reviewedAt.toISOString() : null,
-  createdAt: leave.createdAt.toISOString(),
-  ...(leave.staff && {
-    staff: {
-      id: leave.staff.id,
-      firstName: leave.staff.firstName,
-      lastName: leave.staff.lastName,
-      email: leave.staff.email,
-      role: leave.staff.role,
-    },
-  }),
-  ...(leave.reviewer && {
-    reviewer: {
-      id: leave.reviewer.id,
-      firstName: leave.reviewer.firstName,
-      lastName: leave.reviewer.lastName,
-    },
-  }),
-});
+  return {
+    id: String(shift.id),
+    staffId: String(shift.staffId),
+    staffName: shift.staff ? `${shift.staff.firstName} ${shift.staff.lastName}`.trim() : `Staff #${shift.staffId}`,
+    role: shift.staff?.role || 'front_desk',
+    date: dateStr,
+    shiftDate: dateStr,
+    startTime,
+    endTime,
+    shiftStart: shift.shiftStart.toISOString(),
+    shiftEnd: shift.shiftEnd ? shift.shiftEnd.toISOString() : null,
+    status,
+    clockInTime: shift.shiftStart ? new Date(shift.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
+    clockOutTime: shift.shiftEnd ? new Date(shift.shiftEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
+    notes: shift.notes,
+    createdAt: shift.createdAt.toISOString(),
+  };
+};
+
+export const formatLeave = (leave: LeaveRequest & { staff?: any; reviewer?: any }) => {
+  const fromDateStr = leave.fromDate.toISOString().split('T')[0];
+  const toDateStr = leave.toDate.toISOString().split('T')[0];
+  const diffDays = Math.max(
+    1,
+    Math.round((new Date(toDateStr).getTime() - new Date(fromDateStr).getTime()) / (1000 * 60 * 60 * 24)) + 1
+  );
+
+  return {
+    id: String(leave.id),
+    staffId: String(leave.staffId),
+    staffName: leave.staff ? `${leave.staff.firstName} ${leave.staff.lastName}`.trim() : `Staff #${leave.staffId}`,
+    role: leave.staff?.role || 'front_desk',
+    leaveType: 'casual',
+    startDate: fromDateStr,
+    endDate: toDateStr,
+    fromDate: fromDateStr,
+    toDate: toDateStr,
+    daysCount: diffDays,
+    reason: leave.reason || '',
+    status: leave.status,
+    appliedOn: leave.createdAt.toISOString().split('T')[0],
+    reviewedBy: leave.reviewer
+      ? `${leave.reviewer.firstName} ${leave.reviewer.lastName}`.trim()
+      : (leave.reviewedBy ? String(leave.reviewedBy) : undefined),
+    reviewedAt: leave.reviewedAt ? leave.reviewedAt.toISOString() : null,
+    createdAt: leave.createdAt.toISOString(),
+    ...(leave.staff && {
+      staff: {
+        id: leave.staff.id,
+        firstName: leave.staff.firstName,
+        lastName: leave.staff.lastName,
+        email: leave.staff.email,
+        role: leave.staff.role,
+      },
+    }),
+    ...(leave.reviewer && {
+      reviewer: {
+        id: leave.reviewer.id,
+        firstName: leave.reviewer.firstName,
+        lastName: leave.reviewer.lastName,
+      },
+    }),
+  };
+};
+
 
 export class StaffService {
   /**
@@ -368,8 +405,10 @@ export class StaffService {
       throw new ForbiddenError('ACCOUNT_INACTIVE', 'Staff account is inactive.');
     }
 
-    const fromDate = new Date(`${input.fromDate}T00:00:00.000Z`);
-    const toDate = new Date(`${input.toDate}T00:00:00.000Z`);
+    const fromDateStr = input.fromDate || input.startDate!;
+    const toDateStr = input.toDate || input.endDate!;
+    const fromDate = new Date(`${fromDateStr}T00:00:00.000Z`);
+    const toDate = new Date(`${toDateStr}T00:00:00.000Z`);
 
     const leave = await prisma.leaveRequest.create({
       data: {
@@ -498,6 +537,105 @@ export class StaffService {
 
     return formatLeave(updated);
   }
+
+  /**
+   * List shifts across all staff members (with date, role, or staffId filters).
+   */
+  async listAllShifts(query: ListShiftsQuery) {
+    const where: Prisma.ShiftWhereInput = {};
+
+    if (query.staffId) {
+      where.staffId = query.staffId;
+    }
+
+    if (query.role) {
+      where.staff = { role: query.role };
+    }
+
+    if (query.date) {
+      const startOfDay = new Date(`${query.date}T00:00:00.000Z`);
+      const endOfDay = new Date(`${query.date}T23:59:59.999Z`);
+      where.shiftDate = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+
+    const shifts = await prisma.shift.findMany({
+      where,
+      orderBy: { shiftStart: 'desc' },
+      include: {
+        staff: true,
+      },
+    });
+
+    return shifts.map(formatShift);
+  }
+
+  /**
+   * Assign or schedule a new shift for a staff member.
+   */
+  async assignShift(input: AssignShiftInput) {
+    const staff = await prisma.staff.findUnique({
+      where: { id: input.staffId },
+    });
+
+    if (!staff) {
+      throw new NotFoundError('STAFF_NOT_FOUND', `Staff member with ID ${input.staffId} not found.`);
+    }
+
+    const shiftDate = new Date(`${input.date}T00:00:00.000Z`);
+    const shiftStart = new Date(`${input.date}T${input.startTime}:00.000Z`);
+    const shiftEnd = new Date(`${input.date}T${input.endTime}:00.000Z`);
+
+    const shift = await prisma.shift.create({
+      data: {
+        staffId: input.staffId,
+        shiftDate,
+        shiftStart,
+        shiftEnd,
+        notes: input.notes || null,
+      },
+      include: {
+        staff: true,
+      },
+    });
+
+    return formatShift(shift);
+  }
+
+  /**
+   * Clock in or clock out on a shift.
+   */
+  async clockInOut(input: ClockShiftInput) {
+    const shift = await prisma.shift.findUnique({
+      where: { id: input.shiftId },
+      include: { staff: true },
+    });
+
+    if (!shift) {
+      throw new NotFoundError('SHIFT_NOT_FOUND', `Shift with ID ${input.shiftId} not found.`);
+    }
+
+    const now = new Date();
+    const data: Prisma.ShiftUpdateInput = {};
+
+    if (input.action === 'clock_in') {
+      data.shiftStart = now;
+      data.shiftEnd = null;
+    } else {
+      data.shiftEnd = now;
+    }
+
+    const updated = await prisma.shift.update({
+      where: { id: input.shiftId },
+      data,
+      include: { staff: true },
+    });
+
+    return formatShift(updated);
+  }
 }
 
 export const staffService = new StaffService();
+

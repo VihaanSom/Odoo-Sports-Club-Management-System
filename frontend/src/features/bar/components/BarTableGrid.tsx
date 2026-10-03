@@ -90,7 +90,7 @@ export const BarTableGrid = ({
                       <span className="truncate max-w-[140px] font-semibold">
                         {tab.memberName || 'Walk-in Guest'}
                       </span>
-                      <span>{tab.items.length} items</span>
+                      <span>{tab.itemCount ?? tab.items.length} items</span>
                     </div>
 
                     {tab.memberTier && (

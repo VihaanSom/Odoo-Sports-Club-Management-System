@@ -29,8 +29,8 @@ export const StaffDetailPage = () => {
       setStaff(staffData);
       setShifts(shiftsData);
       setLeaves(leavesData);
-    } catch {
-      toast.error('Failed to load staff details');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load staff details');
     } finally {
       setLoading(false);
     }
@@ -46,8 +46,8 @@ export const StaffDetailPage = () => {
       await staffService.updateStaff(id, payload);
       toast.success('Staff profile updated');
       loadData();
-    } catch {
-      toast.error('Update failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     }
   };
 
@@ -56,8 +56,8 @@ export const StaffDetailPage = () => {
       await staffService.clockInOut({ shiftId, action });
       toast.success(action === 'clock_in' ? 'Clock In recorded' : 'Clock Out recorded');
       loadData();
-    } catch {
-      toast.error('Clock action failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Clock action failed');
     }
   };
 

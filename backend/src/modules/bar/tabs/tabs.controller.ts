@@ -46,6 +46,18 @@ export class BarTabsController {
     const data = await barTabsService.settleTab(id, req.body);
     return sendSuccess(res, data, 'Bar tab settled successfully');
   }
+
+  /**
+   * TB-06: PATCH /api/v1/bar/tabs/:id/items/:itemId
+   */
+  async updateItemQty(req: Request, res: Response): Promise<Response> {
+    const id = parseInt(req.params.id as string, 10);
+    const itemId = parseInt(req.params.itemId as string, 10);
+    const delta = Number(req.body.delta);
+    const data = await barTabsService.updateItemQty(id, itemId, delta);
+    return sendSuccess(res, data, 'Item quantity updated successfully');
+  }
 }
 
 export const barTabsController = new BarTabsController();
+

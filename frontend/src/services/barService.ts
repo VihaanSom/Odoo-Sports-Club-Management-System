@@ -1,11 +1,9 @@
 import { apiClient } from './apiClient';
-import { mockBarTables } from '@/mock/barTables';
-import { mockBarTabs } from '@/mock/barTabs';
-import { mockMenuItems } from '@/mock/menuItems';
-import { mockMembers } from '@/mock/members';
+import type { ApiResponse } from '@/types/api';
 import type {
   BarTable,
   BarTab,
+  BarTabItem,
   CreateBarTabPayload,
   AddBarTabItemPayload,
   SettleBarTabPayload,
@@ -13,40 +11,118 @@ import type {
   UpdateBarTablePayload,
 } from '@/types/bar';
 
-// In-memory state for fallback
-let localTables: BarTable[] = JSON.parse(JSON.stringify(mockBarTables));
-let localTabs: BarTab[] = JSON.parse(JSON.stringify(mockBarTabs));
+/**
+ * Normalizes backend tab response (TabDetailResponse / SettledTabResponse)
+ * into the frontend BarTab interface.
+ */
+export function normalizeBarTab(raw: any): BarTab {
+  if (!raw) {
+    throw new Error('Invalid tab response');
+  }
+
+  const items: BarTabItem[] = (raw.items || []).map((it: any) => ({
+    id: it.id,
+    tabId: it.tabId ?? raw.id,
+    menuItemId: it.menuItemId,
+    name: it.name ?? it.menuItemName ?? (it.menuItem?.name || `Item #${it.menuItemId}`),
+    qty: it.qty,
+    unitPricePaise: it.unitPricePaise ?? Math.round(Number(it.unitPrice ?? 0) * 100),
+    subtotalPaise: it.subtotalPaise ?? Math.round(Number(it.subtotal ?? 0) * 100),
+    createdAt: it.createdAt,
+  }));
+
+  const subtotalPaise =
+    raw.subtotalPaise ??
+    items.reduce((acc, item) => acc + item.subtotalPaise, 0);
+
+  const discountPaise = raw.discountPaise ?? 0;
+  const totalPaise =
+    raw.totalPaise ??
+    raw.runningTotalPaise ??
+    Math.max(0, subtotalPaise - discountPaise);
+
+  return {
+    id: Number(raw.id),
+    barTableId: Number(raw.barTableId ?? raw.table?.id ?? 0),
+    tableNo: raw.tableNo ?? (raw.table ? raw.table.tableNo : undefined),
+    memberId: raw.memberId ? Number(raw.memberId) : null,
+    memberName:
+      raw.memberName ??
+      (raw.member ? `${raw.member.firstName} ${raw.member.lastName}`.trim() : null),
+    memberTier: raw.memberTier ?? raw.member?.tier ?? null,
+    openedBy: Number(raw.openedBy ?? 0),
+    openedByName:
+      raw.openedByName ??
+      (raw.staff ? `${raw.staff.firstName} ${raw.staff.lastName}`.trim() : undefined),
+    status: raw.status ?? 'open',
+    openedAt: raw.openedAt || new Date().toISOString(),
+    settledAt: raw.settledAt ?? null,
+    notes: raw.notes ?? null,
+    items,
+    itemCount: raw.itemCount ?? items.reduce((acc, i) => acc + i.qty, 0),
+    subtotalPaise,
+    discountPaise,
+    totalPaise,
+    paymentMethod: raw.paymentMethod ?? raw.payment?.paymentMethod ?? null,
+  };
+}
+
+/**
+ * Normalizes backend BarTableResponse into frontend BarTable interface.
+ */
+export function normalizeBarTable(raw: any): BarTable {
+  if (!raw) {
+    throw new Error('Invalid bar table response');
+  }
+
+  let activeTab: BarTab | null = null;
+  if (raw.currentTab) {
+    activeTab = {
+      id: Number(raw.currentTab.tabId),
+      barTableId: Number(raw.id),
+      tableNo: raw.tableNo,
+      status: raw.currentTab.status,
+      openedAt: raw.currentTab.openedAt,
+      items: [],
+      itemCount: raw.currentTab.itemCount,
+      subtotalPaise: raw.currentTab.runningTotalPaise,
+      discountPaise: 0,
+      totalPaise: raw.currentTab.runningTotalPaise,
+      openedBy: 0,
+    };
+  } else if (raw.activeTab) {
+    activeTab = normalizeBarTab(raw.activeTab);
+  } else if (Array.isArray(raw.tabs) && raw.tabs.length > 0) {
+    activeTab = normalizeBarTab(raw.tabs[0]);
+  }
+
+  return {
+    id: Number(raw.id),
+    tableNo: raw.tableNo,
+    capacity: Number(raw.capacity ?? 4),
+    isActive: raw.isActive ?? true,
+    activeTab,
+  };
+}
 
 export const barService = {
   // BT-01: Get visual floor table layout & occupancy
   getTables: async (): Promise<BarTable[]> => {
-    try {
-      const response = await apiClient.get<BarTable[]>('/bar/tables');
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      return localTables;
-    } catch {
-      return localTables;
-    }
+    const response = await apiClient.get<ApiResponse<any[]>>('/bar/tables');
+    const rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
+    return rawList.map(normalizeBarTable);
   },
 
   // BT-02: Admin: create bar table
   createTable: async (payload: CreateBarTablePayload): Promise<BarTable> => {
-    try {
-      const response = await apiClient.post<BarTable>('/bar/tables', payload);
-      return response.data;
-    } catch {
-      const newTable: BarTable = {
-        id: localTables.length > 0 ? Math.max(...localTables.map((t) => Number(t.id))) + 1 : 1,
-        tableNo: payload.tableNo,
-        capacity: payload.capacity,
-        isActive: payload.isActive ?? true,
-        activeTab: null,
-      };
-      localTables.push(newTable);
-      return newTable;
-    }
+    const cleanPayload = {
+      tableNo: payload.tableNo.trim(),
+      capacity: Number(payload.capacity),
+      isActive: payload.isActive ?? true,
+    };
+    const response = await apiClient.post<ApiResponse<any>>('/bar/tables', cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTable(rawData);
   },
 
   // BT-03: Admin: update bar table
@@ -54,101 +130,42 @@ export const barService = {
     id: number | string,
     payload: UpdateBarTablePayload
   ): Promise<BarTable> => {
-    try {
-      const response = await apiClient.put<BarTable>(`/bar/tables/${id}`, payload);
-      return response.data;
-    } catch {
-      const index = localTables.findIndex((t) => String(t.id) === String(id));
-      if (index === -1) {
-        throw new Error('Table not found');
-      }
-      localTables[index] = {
-        ...localTables[index],
-        ...payload,
-      };
-      return localTables[index];
-    }
+    const cleanPayload: Record<string, any> = {};
+    if (payload.tableNo !== undefined) cleanPayload.tableNo = payload.tableNo.trim();
+    if (payload.capacity !== undefined) cleanPayload.capacity = Number(payload.capacity);
+    if (payload.isActive !== undefined) cleanPayload.isActive = payload.isActive;
+
+    const response = await apiClient.put<ApiResponse<any>>(`/bar/tables/${id}`, cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTable(rawData);
   },
 
   // TB-01: List all currently open tabs
   getOpenTabs: async (): Promise<BarTab[]> => {
-    try {
-      const response = await apiClient.get<BarTab[]>('/bar/tabs', {
-        params: { status: 'open' },
-      });
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      return localTabs.filter((tab) => tab.status === 'open');
-    } catch {
-      return localTabs.filter((tab) => tab.status === 'open');
-    }
+    const response = await apiClient.get<ApiResponse<any[]>>('/bar/tabs', {
+      params: { status: 'open' },
+    });
+    const rawList = response.data?.data || (Array.isArray(response.data) ? response.data : []);
+    return rawList.map(normalizeBarTab);
   },
 
   // TB-02: Get tab detail by ID
   getTabById: async (id: number | string): Promise<BarTab> => {
-    try {
-      const response = await apiClient.get<BarTab>(`/bar/tabs/${id}`);
-      if (
-        response.data &&
-        typeof response.data === 'object' &&
-        'id' in response.data &&
-        Array.isArray((response.data as BarTab).items)
-      ) {
-        return response.data;
-      }
-      throw new Error('Invalid tab response');
-    } catch {
-      const tab = localTabs.find((t) => String(t.id) === String(id));
-      if (!tab) {
-        throw new Error('Tab not found');
-      }
-      return tab;
-    }
+    const response = await apiClient.get<ApiResponse<any>>(`/bar/tabs/${id}`);
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTab(rawData);
   },
-
 
   // TB-03: Open a new bar tab
   openTab: async (payload: CreateBarTabPayload): Promise<BarTab> => {
-    try {
-      const response = await apiClient.post<BarTab>('/bar/tabs', payload);
-      return response.data;
-    } catch {
-      const table = localTables.find((t) => String(t.id) === String(payload.barTableId));
-      if (!table) {
-        throw new Error('Selected table does not exist');
-      }
-
-      const member = payload.memberId
-        ? mockMembers.find((m) => String(m.id) === String(payload.memberId))
-        : null;
-
-      const newTabId = localTabs.length > 0 ? Math.max(...localTabs.map((t) => Number(t.id))) + 1 : 101;
-      const newTab: BarTab = {
-        id: newTabId,
-        barTableId: Number(table.id),
-        tableNo: table.tableNo,
-        memberId: member ? Number(member.id.replace(/\D/g, '') || 1) : null,
-        memberName: member ? member.name : 'Walk-in Guest',
-        memberTier: member ? (member.membershipPlan as string) : null,
-        openedBy: payload.openedBy || 1,
-        openedByName: 'Alex Mercer',
-        status: 'open',
-        openedAt: new Date().toISOString(),
-        settledAt: null,
-        notes: payload.notes || null,
-        items: [],
-        subtotalPaise: 0,
-        discountPaise: 0,
-        totalPaise: 0,
-      };
-
-      localTabs.unshift(newTab);
-      // Link table activeTab
-      table.activeTab = newTab;
-
-      return newTab;
-    }
+    const cleanPayload = {
+      barTableId: Number(payload.barTableId),
+      memberId: payload.memberId ? Number(payload.memberId) : null,
+      notes: payload.notes?.trim() || null,
+    };
+    const response = await apiClient.post<ApiResponse<any>>('/bar/tabs', cleanPayload);
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTab(rawData);
   },
 
   // TB-04: Add item to bar tab
@@ -156,51 +173,17 @@ export const barService = {
     tabId: number | string,
     payload: AddBarTabItemPayload
   ): Promise<BarTab> => {
-    try {
-      const response = await apiClient.post<BarTab>(`/bar/tabs/${tabId}/items`, payload);
-      return response.data;
-    } catch {
-      const tab = localTabs.find((t) => String(t.id) === String(tabId));
-      if (!tab) throw new Error('Tab not found');
-
-      const menuItem = mockMenuItems.find((m) => String(m.id) === String(payload.menuItemId));
-      if (!menuItem) throw new Error('Menu item not found');
-
-      const existingItem = tab.items.find(
-        (i) => String(i.menuItemId) === String(payload.menuItemId)
-      );
-
-      if (existingItem) {
-        existingItem.qty += payload.qty;
-        existingItem.subtotalPaise = existingItem.qty * existingItem.unitPricePaise;
-      } else {
-        const newItemId = tab.items.length > 0 ? Math.max(...tab.items.map((i) => i.id)) + 1 : 1;
-        tab.items.push({
-          id: newItemId,
-          tabId: Number(tab.id),
-          menuItemId: Number(menuItem.id),
-          name: menuItem.name,
-          qty: payload.qty,
-          unitPricePaise: menuItem.pricePaise,
-          subtotalPaise: payload.qty * menuItem.pricePaise,
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      // Recompute totals
-      tab.subtotalPaise = tab.items.reduce((acc, curr) => acc + curr.subtotalPaise, 0);
-      const discountPct = tab.memberTier === 'VIP' ? 0.1 : tab.memberTier === 'Premium' ? 0.05 : 0;
-      tab.discountPaise = Math.round(tab.subtotalPaise * discountPct);
-      tab.totalPaise = tab.subtotalPaise - tab.discountPaise;
-
-      // Update table reference
-      const table = localTables.find((t) => Number(t.id) === tab.barTableId);
-      if (table) {
-        table.activeTab = tab;
-      }
-
-      return tab;
-    }
+    const requestBody = {
+      items: [
+        {
+          menuItemId: Number(payload.menuItemId),
+          qty: Number(payload.qty),
+        },
+      ],
+    };
+    const response = await apiClient.post<ApiResponse<any>>(`/bar/tabs/${tabId}/items`, requestBody);
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTab(rawData);
   },
 
   // TB-05: Settle bar tab
@@ -208,28 +191,13 @@ export const barService = {
     tabId: number | string,
     payload: SettleBarTabPayload
   ): Promise<BarTab> => {
-    try {
-      const response = await apiClient.put<BarTab>(`/bar/tabs/${tabId}/settle`, payload);
-      return response.data;
-    } catch {
-      const tab = localTabs.find((t) => String(t.id) === String(tabId));
-      if (!tab) throw new Error('Tab not found');
-
-      tab.status = 'settled';
-      tab.settledAt = new Date().toISOString();
-      tab.paymentMethod = payload.paymentMethod;
-      if (payload.notes) {
-        tab.notes = tab.notes ? `${tab.notes} | ${payload.notes}` : payload.notes;
-      }
-
-      // Unlink active tab from table
-      const table = localTables.find((t) => Number(t.id) === tab.barTableId);
-      if (table && table.activeTab?.id === tab.id) {
-        table.activeTab = null;
-      }
-
-      return tab;
-    }
+    const requestBody = {
+      paymentMethod: payload.paymentMethod,
+      referenceNo: payload.notes?.trim() || undefined,
+    };
+    const response = await apiClient.put<ApiResponse<any>>(`/bar/tabs/${tabId}/settle`, requestBody);
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTab(rawData);
   },
 
   // TB-06: Update item quantity in bar tab
@@ -238,45 +206,13 @@ export const barService = {
     itemId: number | string,
     delta: number
   ): Promise<BarTab> => {
-    try {
-      const response = await apiClient.patch<BarTab>(`/bar/tabs/${tabId}/items/${itemId}`, { delta });
-      if (
-        response.data &&
-        typeof response.data === 'object' &&
-        'id' in response.data &&
-        Array.isArray((response.data as BarTab).items)
-      ) {
-        return response.data;
-      }
-      throw new Error('Invalid tab response');
-    } catch {
-      const tab = localTabs.find((t) => String(t.id) === String(tabId));
-      if (!tab) throw new Error('Tab not found');
-
-      const item = tab.items.find((i) => String(i.id) === String(itemId));
-      if (!item) throw new Error('Item not found on tab');
-
-      const newQty = item.qty + delta;
-      if (newQty < 1) {
-        throw new Error('Quantity cannot be less than 1');
-      }
-
-      item.qty = newQty;
-      item.subtotalPaise = item.qty * item.unitPricePaise;
-
-      // Recompute totals
-      tab.subtotalPaise = tab.items.reduce((acc, curr) => acc + curr.subtotalPaise, 0);
-      const discountPct = tab.memberTier === 'VIP' ? 0.1 : tab.memberTier === 'Premium' ? 0.05 : 0;
-      tab.discountPaise = Math.round(tab.subtotalPaise * discountPct);
-      tab.totalPaise = tab.subtotalPaise - tab.discountPaise;
-
-      // Update table reference
-      const table = localTables.find((t) => Number(t.id) === tab.barTableId);
-      if (table) {
-        table.activeTab = tab;
-      }
-
-      return tab;
-    }
+    const response = await apiClient.patch<ApiResponse<any>>(
+      `/bar/tabs/${tabId}/items/${itemId}`,
+      { delta: Number(delta) }
+    );
+    const rawData = response.data?.data || response.data;
+    return normalizeBarTab(rawData);
   },
 };
+
+export default barService;
