@@ -108,7 +108,7 @@ export const SignupPage = () => {
     try {
       const { user, token } = await authService.signup(data);
       login(user, token);
-      toast.success(`Welcome to Champions Club, ${user.name}!`);
+      toast.success(`Welcome to Champions Club, ${user.name || user.firstName}!`);
 
       if (data.paymentMethod === 'cash') {
         toast('Your membership is active! Please settle cash at counter.', {
@@ -123,8 +123,13 @@ export const SignupPage = () => {
 
       // Redirect to dashboard
       navigate('/', { replace: true });
-    } catch {
-      toast.error('Registration failed. Please check form fields.');
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Registration failed. Please check form fields.';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
