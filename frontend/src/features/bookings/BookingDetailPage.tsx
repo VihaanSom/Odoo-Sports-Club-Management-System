@@ -52,8 +52,13 @@ export const BookingDetailPage = () => {
       await bookingService.cancelBooking(numericId, { reason });
       toast.success('Booking cancelled successfully');
       await fetchBooking();
-    } catch {
-      toast.error('Failed to cancel booking');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to cancel booking';
+      toast.error(msg);
     }
   };
 
