@@ -5,3 +5,4 @@ export * from './AppShell';
 export * from './AuthGuard';
 export * from './AdminGuard';
 export * from './PublicLayout';
+export * from './ProtectedRoute';

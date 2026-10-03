@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
 import { queryClient } from './lib/queryClient';
 import { useThemeStore } from './stores/themeStore';
-import { AppShell } from './components/layout/AppShell';
+import { AppShell, ProtectedRoute } from './components/layout';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { MembersPage } from './features/members/MembersPage';
@@ -41,20 +41,22 @@ export const App = () => {
           {/* Public Website Portal */}
           {publicJsxRoutes}
 
-          {/* Main AppShell Layout Routes */}
-          <Route path="/" element={<AppShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="members" element={<MembersPage />} />
-            <Route path="facilities" element={<FacilitiesPage />} />
-            <Route path="equipment" element={<EquipmentPage />} />
-            {bookingRoutes}
-            {commerceJsxRoutes}
-            {crmJsxRoutes}
-            {adminJsxRoutes}
-            <Route path="memberships" element={<MembershipsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="404" element={<NotFoundPage />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
+          {/* Main AppShell Layout Routes (Protected) */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<AppShell />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="facilities" element={<FacilitiesPage />} />
+              <Route path="equipment" element={<EquipmentPage />} />
+              {bookingRoutes}
+              {commerceJsxRoutes}
+              {crmJsxRoutes}
+              {adminJsxRoutes}
+              <Route path="memberships" element={<MembershipsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="404" element={<NotFoundPage />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

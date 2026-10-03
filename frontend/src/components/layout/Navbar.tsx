@@ -83,10 +83,12 @@ export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
           >
             <li className="px-3 py-2 border-b border-base-200">
               <div className="flex flex-col p-0">
-                <span className="font-bold text-sm">{user?.name || 'Club Admin'}</span>
-                <span className="text-xs text-base-content/60">{user?.email || 'admin@odoosports.club'}</span>
+                <span className="font-bold text-sm">
+                  {user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Club Member'}
+                </span>
+                <span className="text-xs text-base-content/60">{user?.email || 'member@odoosports.club'}</span>
                 <span className="badge badge-sm badge-primary mt-1 self-start capitalize">
-                  {user?.role || 'Administrator'}
+                  {user?.role || 'member'}
                 </span>
               </div>
             </li>
