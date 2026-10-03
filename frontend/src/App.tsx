@@ -1,0 +1,63 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'react-hot-toast';
+import { queryClient } from './lib/queryClient';
+import { useThemeStore } from './stores/themeStore';
+import { AppShell } from './components/layout/AppShell';
+import { PublicLayout } from './components/layout/PublicLayout';
+import { DashboardPage } from './features/dashboard/DashboardPage';
+import { MembersPage } from './features/members/MembersPage';
+import { FacilitiesPage } from './features/facilities/FacilitiesPage';
+import { EquipmentPage } from './features/equipment/EquipmentPage';
+import { BookingsPage } from './features/bookings/BookingsPage';
+import { MembershipsPage } from './features/memberships/MembershipsPage';
+import { SettingsPage } from './features/settings/SettingsPage';
+import { LoginPage } from './features/auth/LoginPage';
+import { NotFoundPage } from './features/errors/NotFoundPage';
+
+export const App: React.FC = () => {
+  const theme = useThemeStore((s) => s.theme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Auth Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+          </Route>
+
+          {/* Main AppShell Layout Routes */}
+          <Route path="/" element={<AppShell />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="members" element={<MembersPage />} />
+            <Route path="facilities" element={<FacilitiesPage />} />
+            <Route path="equipment" element={<EquipmentPage />} />
+            <Route path="bookings" element={<BookingsPage />} />
+            <Route path="memberships" element={<MembershipsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="404" element={<NotFoundPage />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          className: 'bg-base-200 text-base-content border border-base-300 shadow-lg text-sm rounded-xl',
+          duration: 3500,
+        }}
+      />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
+};
+
+export default App;
