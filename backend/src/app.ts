@@ -24,7 +24,7 @@ export const createApp = (): Application => {
   // Static uploads directory for photos
   app.use('/uploads', express.static(path.resolve(process.cwd(), env.UPLOAD_DIR)));
 
-  // Health check endpoint
+  // Root health check endpoint
   app.get('/health', (_req: Request, res: Response) => {
     sendSuccess(res, {
       status: 'UP',
@@ -33,7 +33,7 @@ export const createApp = (): Application => {
     }, 'Champions Club Backend API is running healthy');
   });
 
-  // API v1 Routes
+  // API v1 Central Router
   app.use('/api/v1', apiRouter);
 
   // 404 handler
