@@ -1,0 +1,48 @@
+import type { MembershipPlan } from '@/types';
+
+export const mockPlans: MembershipPlan[] = [
+  {
+    id: 'PLAN-01',
+    name: 'Junior',
+    tier: 'Junior',
+    price: '$29',
+    period: '/ month',
+    desc: 'For youth under 18 aiming to learn and practice sports.',
+    features: ['Weekday court access (until 4 PM)', 'Basic equipment rental included', '1 Coaching clinic per month'],
+    popular: false,
+    badge: 'Youth',
+  },
+  {
+    id: 'PLAN-02',
+    name: 'Standard',
+    tier: 'Standard',
+    price: '$49',
+    period: '/ month',
+    desc: 'Full access for individual sports enthusiasts.',
+    features: ['Access to all 12 facilities', 'Standard equipment rental', 'Member tournament access', 'Online court reservations'],
+    popular: false,
+    badge: 'Popular',
+  },
+  {
+    id: 'PLAN-03',
+    name: 'Premium',
+    tier: 'Premium',
+    price: '$89',
+    period: '/ month',
+    desc: 'Enhanced privileges and prime-time reservations.',
+    features: ['Prime-time booking priority (7 days ahead)', 'Complimentary premium rackets & balls', 'Guest passes (2 per month)', 'Locker room & sauna access'],
+    popular: true,
+    badge: 'Best Value',
+  },
+  {
+    id: 'PLAN-04',
+    name: 'VIP All-Access',
+    tier: 'VIP',
+    price: '$149',
+    period: '/ month',
+    desc: 'The ultimate sports club experience with personal coaching.',
+    features: ['Unlimited facility access 24/7', 'Dedicated coach sessions (4/mo)', 'VIP lounge & complimentary drinks', 'Private locker & laundry service'],
+    popular: false,
+    badge: 'Exclusive',
+  },
+];
