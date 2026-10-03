@@ -5,12 +5,14 @@ import type { MenuItem } from '@/types/menu';
 
 interface MenuItemsTableProps {
   items: MenuItem[];
+  canEdit?: boolean;
   onEdit: (item: MenuItem) => void;
   onToggleAvailability: (item: MenuItem) => void;
 }
 
 export const MenuItemsTable = ({
   items,
+  canEdit = true,
   onEdit,
   onToggleAvailability,
 }: MenuItemsTableProps) => {
@@ -31,9 +33,9 @@ export const MenuItemsTable = ({
               <th>Item</th>
               <th>Category</th>
               <th className="text-right">Price</th>
-              <th className="text-center">Stock</th>
-              <th className="text-center">Available</th>
-              <th className="text-right">Actions</th>
+              <th className="text-center">{canEdit ? 'Stock' : 'Availability'}</th>
+              {canEdit && <th className="text-center">POS Active</th>}
+              <th className="text-right">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -82,28 +84,36 @@ export const MenuItemsTable = ({
                   </td>
 
                   <td className="text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="font-mono text-xs">{item.stockQty}</span>
-                      {isLowStock && (
-                        <span
-                          className="badge badge-error badge-xs gap-1 font-semibold text-[10px]"
-                          title={`Low stock alert (<= ${item.lowStockThreshold})`}
-                        >
-                          <FaTriangleExclamation className="size-2.5" /> Low
-                        </span>
-                      )}
-                    </div>
+                    {canEdit ? (
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="font-mono text-xs">{item.stockQty}</span>
+                        {isLowStock && (
+                          <span
+                            className="badge badge-error badge-xs gap-1 font-semibold text-[10px]"
+                            title={`Low stock alert (<= ${item.lowStockThreshold})`}
+                          >
+                            <FaTriangleExclamation className="size-2.5" /> Low
+                          </span>
+                        )}
+                      </div>
+                    ) : item.isAvailable && item.stockQty > 0 ? (
+                      <span className="badge badge-success badge-xs font-semibold">Available</span>
+                    ) : (
+                      <span className="badge badge-ghost badge-xs text-base-content/50">Sold Out</span>
+                    )}
                   </td>
 
-                  <td className="text-center">
-                    <input
-                      type="checkbox"
-                      checked={item.isAvailable}
-                      onChange={() => onToggleAvailability(item)}
-                      className="toggle toggle-primary toggle-sm"
-                      title={item.isAvailable ? 'Item Active' : 'Item Disabled'}
-                    />
-                  </td>
+                  {canEdit && (
+                    <td className="text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.isAvailable}
+                        onChange={() => onToggleAvailability(item)}
+                        className="toggle toggle-primary toggle-sm"
+                        title={item.isAvailable ? 'Item Active' : 'Item Disabled'}
+                      />
+                    </td>
+                  )}
 
                   <td className="text-right space-x-1">
                     <Link
@@ -112,13 +122,15 @@ export const MenuItemsTable = ({
                     >
                       <FaFolderOpen className="size-3" /> View
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => onEdit(item)}
-                      className="btn btn-ghost btn-xs gap-1"
-                    >
-                      <FaPenToSquare className="size-3" /> Edit
-                    </button>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(item)}
+                        className="btn btn-ghost btn-xs gap-1"
+                      >
+                        <FaPenToSquare className="size-3" /> Edit
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

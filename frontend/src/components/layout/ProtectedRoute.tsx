@@ -6,7 +6,7 @@ import type { UserRole } from '@/types';
 export interface ProtectedRouteProps {
   children?: React.ReactNode;
   /** Restrict route to specific roles (e.g. ['admin'] or ['staff', 'admin']) */
-  allowedRoles?: UserRole[];
+  allowedRoles?: (UserRole | string)[];
   /** Where to redirect if unauthenticated. Defaults to '/login' */
   redirectPath?: string;
 }
@@ -27,7 +27,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // If roles are restricted and user is loaded, verify authorization
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !allowedRoles.includes(user.role as string)) {
     return <Navigate to="/" replace />;
   }
 

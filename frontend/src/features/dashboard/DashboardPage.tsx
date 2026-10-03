@@ -15,6 +15,8 @@ import type {
   MemberGrowthPoint,
   BarAnalyticsSummary,
 } from '@/types/reports';
+import { useAuthStore } from '@/stores/authStore';
+import { isMemberRole } from '@/lib/permissions';
 import {
   KpiStatsGrid,
   FacilityOccupancyGrid,
@@ -27,9 +29,13 @@ import {
   RecentLeadsWidget,
   LowStockAlerts,
   EquipmentStatusCard,
+  MemberDashboardView,
 } from './components';
 
 export const DashboardPage = () => {
+  const user = useAuthStore((s) => s.user);
+  const isMember = isMemberRole(user?.role);
+
   const [kpis, setKpis] = useState<ClubSummaryKPIs | null>(null);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
   const [heatmap, setHeatmap] = useState<CourtHeatmapPoint[]>([]);
@@ -75,13 +81,19 @@ export const DashboardPage = () => {
   }, []);
 
   useEffect(() => {
-    fetchDashboardData(false);
-  }, [fetchDashboardData]);
+    if (!isMember) {
+      fetchDashboardData(false);
+    }
+  }, [fetchDashboardData, isMember]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchDashboardData(true);
   };
+
+  if (isMember) {
+    return <MemberDashboardView />;
+  }
 
   return (
     <motion.div

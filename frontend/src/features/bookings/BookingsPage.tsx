@@ -7,8 +7,10 @@ import {
   FaGear,
   FaChevronDown,
 } from 'react-icons/fa6';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/stores/authStore';
+import { isMemberRole, canManageBookings } from '@/lib/permissions';
 import { bookingService } from '@/services/bookingService';
 import { courtService } from '@/services/courtService';
 import type { BookingDetail, BookingType } from '@/types/bookings';
@@ -16,6 +18,13 @@ import type { Court } from '@/types/courts';
 import { BookingsTable, BookingCancelModal } from './components';
 
 export const BookingsPage = () => {
+  const user = useAuthStore((s) => s.user);
+
+  // Normal members should not see the global list of bookings; redirect to availability grid
+  if (isMemberRole(user?.role)) {
+    return <Navigate to="/bookings/calendar" replace />;
+  }
+
   const [bookings, setBookings] = useState<BookingDetail[]>([]);
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,14 +118,16 @@ export const BookingsPage = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* DaisyUI Tooltip */}
-          <div className="tooltip tooltip-bottom" data-tip="Manage Courts & Schedules">
-            <Link
-              to="/facilities/manage"
-              className="btn btn-ghost btn-sm gap-1.5 text-base-content/70"
-            >
-              <FaGear className="size-3.5" /> Manage Courts
-            </Link>
-          </div>
+          {canManageBookings(user?.role) && (
+            <div className="tooltip tooltip-bottom" data-tip="Manage Courts & Schedules">
+              <Link
+                to="/facilities/manage"
+                className="btn btn-ghost btn-sm gap-1.5 text-base-content/70"
+              >
+                <FaGear className="size-3.5" /> Manage Courts
+              </Link>
+            </div>
+          )}
 
           <Link to="/bookings/calendar" className="btn btn-outline btn-sm gap-2">
             <FaCalendarDays className="size-3.5" /> Schedule Grid

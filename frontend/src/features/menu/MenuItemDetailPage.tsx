@@ -11,6 +11,8 @@ import {
   FaBan,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/stores/authStore';
+import { canManageMenu, isMemberRole } from '@/lib/permissions';
 import { menuService } from '@/services/menuService';
 import { formatPaise } from '@/lib/utils';
 import type { MenuItem, UpdateMenuItemPayload } from '@/types/menu';
@@ -19,6 +21,10 @@ import { MenuItemFormModal } from './components';
 export const MenuItemDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const user = useAuthStore((s) => s.user);
+  const canManage = canManageMenu(user?.role);
+  const isMember = isMemberRole(user?.role);
 
   const [item, setItem] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,13 +127,15 @@ export const MenuItemDetailPage = () => {
           <Link to="/menu" className="btn btn-outline btn-sm">
             Back
           </Link>
-          <button
-            type="button"
-            onClick={() => setIsEditModalOpen(true)}
-            className="btn btn-primary btn-sm gap-1.5"
-          >
-            <FaPenToSquare className="size-3" /> Edit
-          </button>
+          {canManage && (
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(true)}
+              className="btn btn-primary btn-sm gap-1.5"
+            >
+              <FaPenToSquare className="size-3" /> Edit
+            </button>
+          )}
         </div>
       </div>
 
@@ -151,23 +159,35 @@ export const MenuItemDetailPage = () => {
           <div className="p-4 border-t border-base-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-base-content/70">Availability</span>
-              <button
-                type="button"
-                onClick={handleToggle}
-                className={`btn btn-xs gap-1 ${
-                  item.isAvailable ? 'btn-success text-white' : 'btn-ghost text-base-content/60'
-                }`}
-              >
-                {item.isAvailable ? (
-                  <>
-                    <FaCheck className="size-2.5" /> Active in POS
-                  </>
+              {canManage ? (
+                <button
+                  type="button"
+                  onClick={handleToggle}
+                  className={`btn btn-xs gap-1 ${
+                    item.isAvailable ? 'btn-success text-white' : 'btn-ghost text-base-content/60'
+                  }`}
+                >
+                  {item.isAvailable ? (
+                    <>
+                      <FaCheck className="size-2.5" /> Active in POS
+                    </>
+                  ) : (
+                    <>
+                      <FaBan className="size-2.5" /> Inactive
+                    </>
+                  )}
+                </button>
+              ) : (
+                item.isAvailable ? (
+                  <span className="badge badge-success text-white badge-xs gap-1 font-bold">
+                    <FaCheck className="size-2.5" /> Available
+                  </span>
                 ) : (
-                  <>
-                    <FaBan className="size-2.5" /> Inactive
-                  </>
-                )}
-              </button>
+                  <span className="badge badge-ghost badge-xs gap-1">
+                    <FaBan className="size-2.5" /> Sold Out
+                  </span>
+                )
+              )}
             </div>
           </div>
         </div>
@@ -186,20 +206,44 @@ export const MenuItemDetailPage = () => {
             </div>
 
             <div>
-              <span className="text-xs font-semibold text-base-content/60 uppercase">
-                Stock On Hand
-              </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-2xl font-extrabold font-mono">{item.stockQty}</span>
-                {isLowStock && (
-                  <span className="badge badge-error badge-sm gap-1 font-bold">
-                    <FaTriangleExclamation className="size-3" /> Low Stock
+              {canManage ? (
+                <>
+                  <span className="text-xs font-semibold text-base-content/60 uppercase">
+                    Stock On Hand
                   </span>
-                )}
-              </div>
-              <span className="text-[11px] text-base-content/50">
-                Threshold: {item.lowStockThreshold} units
-              </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-2xl font-extrabold font-mono">{item.stockQty}</span>
+                    {isLowStock && (
+                      <span className="badge badge-error badge-sm gap-1 font-bold">
+                        <FaTriangleExclamation className="size-3" /> Low Stock
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-base-content/50">
+                    Threshold: {item.lowStockThreshold} units
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs font-semibold text-base-content/60 uppercase">
+                    Service Status
+                  </span>
+                  <div className="mt-1">
+                    {item.isAvailable && item.stockQty > 0 ? (
+                      <span className="badge badge-success text-white font-semibold">
+                        Ready to Order
+                      </span>
+                    ) : (
+                      <span className="badge badge-ghost text-base-content/60 font-semibold">
+                        Sold Out Today
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-base-content/50 block mt-1">
+                    Order courtside or at cafe bar counter
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -225,33 +269,50 @@ export const MenuItemDetailPage = () => {
                   <td className="font-semibold text-base-content/60">Category</td>
                   <td className="capitalize">{item.category}</td>
                 </tr>
-                <tr className="border-b border-base-300">
-                  <td className="font-semibold text-base-content/60">Paise Stored Value</td>
-                  <td className="font-mono">{item.pricePaise} paise</td>
-                </tr>
-                <tr>
-                  <td className="font-semibold text-base-content/60">POS Availability</td>
-                  <td>
-                    {item.isAvailable ? (
-                      <span className="text-success font-semibold">Enabled</span>
-                    ) : (
-                      <span className="text-error font-semibold">Disabled</span>
-                    )}
-                  </td>
-                </tr>
+                {canManage && (
+                  <>
+                    <tr className="border-b border-base-300">
+                      <td className="font-semibold text-base-content/60">Paise Stored Value</td>
+                      <td className="font-mono">{item.pricePaise} paise</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold text-base-content/60">POS Availability</td>
+                      <td>
+                        {item.isAvailable ? (
+                          <span className="text-success font-semibold">Enabled</span>
+                        ) : (
+                          <span className="text-error font-semibold">Disabled</span>
+                        )}
+                      </td>
+                    </tr>
+                  </>
+                )}
               </tbody>
             </table>
           </div>
+
+          {!canManage && (
+            <div className="card bg-base-200/40 border border-base-300 p-4 space-y-1">
+              <h4 className="font-bold text-xs uppercase tracking-wide text-primary">
+                Cafe & Courtside Dining
+              </h4>
+              <p className="text-xs text-base-content/70">
+                Orders can be placed with staff at the club cafe, lounge tables, or courtside service. Mention your membership number for applicable member tier discounts.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Edit Modal */}
-      <MenuItemFormModal
-        isOpen={isEditModalOpen}
-        item={item}
-        onClose={() => setIsEditModalOpen(false)}
-        onSubmit={handleUpdate}
-      />
+      {/* Edit Modal (Staff only) */}
+      {canManage && (
+        <MenuItemFormModal
+          isOpen={isEditModalOpen}
+          item={item}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdate}
+        />
+      )}
     </motion.div>
   );
 };

@@ -28,30 +28,55 @@ export const SlotPicker = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadCourts = async () => {
-      const data = await courtService.getCourts({ isActive: true });
-      setCourts(data);
-      if (!selectedCourtId && data.length > 0) {
-        onSelectCourt(data[0].id);
-      }
-    };
-    loadCourts();
-  }, [selectedCourtId, onSelectCourt]);
-
-  useEffect(() => {
-    if (!selectedCourtId || !selectedDate) return;
-    const loadSlots = async () => {
+    let cancelled = false;
+    const loadCourtsAndSlots = async () => {
       setLoading(true);
       try {
-        const avail = await courtService.getAvailability(selectedDate);
-        const courtAvail = avail.find((a) => a.courtId === selectedCourtId);
-        setSlots(courtAvail ? courtAvail.slots : []);
+        const dateToFetch = selectedDate || new Date().toISOString().split('T')[0];
+        const avail = await courtService.getAvailability(dateToFetch);
+        if (cancelled) return;
+
+        const availableCourts: Court[] = avail.map((a) => ({
+          id: a.courtId,
+          name: a.courtName,
+          sport: a.sport,
+          openTime: '06:00',
+          closeTime: '23:00',
+          isActive: true,
+        }));
+
+        setCourts(availableCourts);
+
+        // Auto-select first court if none selected
+        if (availableCourts.length > 0) {
+          if (!selectedCourtId || !availableCourts.some((c) => c.id === selectedCourtId)) {
+            onSelectCourt(availableCourts[0].id);
+          }
+        }
+
+        const activeCourtId =
+          selectedCourtId && availableCourts.some((c) => c.id === selectedCourtId)
+            ? selectedCourtId
+            : availableCourts[0]?.id;
+
+        if (activeCourtId) {
+          const courtAvail = avail.find((a) => a.courtId === activeCourtId);
+          setSlots(courtAvail ? courtAvail.slots : []);
+        } else {
+          setSlots([]);
+        }
+      } catch (err) {
+        console.error('Failed to load court availability:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    loadSlots();
-  }, [selectedCourtId, selectedDate]);
+
+    loadCourtsAndSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate, selectedCourtId]);
 
   const selectedCourt = courts.find((c) => c.id === selectedCourtId);
 

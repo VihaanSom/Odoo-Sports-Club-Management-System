@@ -14,6 +14,8 @@ import {
   FaBan,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/stores/authStore';
+import { canManageEquipment, isMemberRole } from '@/lib/permissions';
 import { equipmentService } from '@/services/equipmentService';
 import { formatPaise } from '@/lib/utils';
 import type { EquipmentItem, UpdateEquipmentPayload } from '@/types/equipment';
@@ -22,6 +24,10 @@ import { EquipmentFormModal } from './components';
 export const EquipmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const user = useAuthStore((s) => s.user);
+  const canManage = canManageEquipment(user?.role);
+  const isMember = isMemberRole(user?.role);
 
   const [item, setItem] = useState<EquipmentItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -138,13 +144,15 @@ export const EquipmentDetailPage = () => {
           <Link to="/equipment" className="btn btn-outline btn-sm">
             Back
           </Link>
-          <button
-            type="button"
-            onClick={() => setIsEditModalOpen(true)}
-            className="btn btn-primary btn-sm gap-1.5"
-          >
-            <FaPenToSquare className="size-3" /> Edit
-          </button>
+          {canManage && (
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(true)}
+              className="btn btn-primary btn-sm gap-1.5"
+            >
+              <FaPenToSquare className="size-3" /> Edit
+            </button>
+          )}
         </div>
       </div>
 
@@ -205,20 +213,44 @@ export const EquipmentDetailPage = () => {
             </div>
 
             <div>
-              <span className="text-xs font-semibold text-base-content/60 uppercase">
-                Available Stock
-              </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-3xl font-extrabold font-mono">{item.stockQty}</span>
-                {isLowStock && (
-                  <span className="badge badge-error badge-sm gap-1 font-bold">
-                    <FaTriangleExclamation className="size-3" /> Low Stock
+              {canManage ? (
+                <>
+                  <span className="text-xs font-semibold text-base-content/60 uppercase">
+                    Available Stock
                   </span>
-                )}
-              </div>
-              <span className="text-[11px] text-base-content/50">
-                Low-stock threshold: {item.lowStockThreshold} units
-              </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-3xl font-extrabold font-mono">{item.stockQty}</span>
+                    {isLowStock && (
+                      <span className="badge badge-error badge-sm gap-1 font-bold">
+                        <FaTriangleExclamation className="size-3" /> Low Stock
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-base-content/50">
+                    Low-stock threshold: {item.lowStockThreshold} units
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs font-semibold text-base-content/60 uppercase">
+                    Availability Status
+                  </span>
+                  <div className="mt-1">
+                    {item.stockQty > 0 ? (
+                      <span className="badge badge-success text-white font-semibold">
+                        In Stock &bull; Available at Desk
+                      </span>
+                    ) : (
+                      <span className="badge badge-ghost text-base-content/60 font-semibold">
+                        Temporarily Out of Stock
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-base-content/50 block mt-1">
+                    Pickup & court checkouts handled at front desk
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -232,72 +264,85 @@ export const EquipmentDetailPage = () => {
             </p>
           </div>
 
-          {/* Stock Adjustment Controls */}
-          <div className="card bg-base-200/50 border border-base-300 p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <FaBoxesStacked className="size-4 text-primary" />
-              <h3 className="font-bold text-xs uppercase tracking-wide">
-                Adjust Inventory Stock (IV-01)
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="form-control">
-                <label className="label py-0.5">
-                  <span className="label-text text-[11px] font-semibold">Quantity Delta</span>
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={adjustQty}
-                  onChange={(e) => setAdjustQty(Math.max(1, Number(e.target.value)))}
-                  className="input input-bordered input-sm text-xs font-mono"
-                />
+          {/* Stock Adjustment Controls (Staff/Admin only) */}
+          {canManage ? (
+            <div className="card bg-base-200/50 border border-base-300 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <FaBoxesStacked className="size-4 text-primary" />
+                <h3 className="font-bold text-xs uppercase tracking-wide">
+                  Adjust Inventory Stock (IV-01)
+                </h3>
               </div>
 
-              <div className="form-control sm:col-span-2">
-                <label className="label py-0.5">
-                  <span className="label-text text-[11px] font-semibold">Reason for Adjustment</span>
-                </label>
-                <input
-                  type="text"
-                  value={adjustReason}
-                  onChange={(e) => setAdjustReason(e.target.value)}
-                  className="input input-bordered input-sm text-xs"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="form-control">
+                  <label className="label py-0.5">
+                    <span className="label-text text-[11px] font-semibold">Quantity Delta</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={adjustQty}
+                    onChange={(e) => setAdjustQty(Math.max(1, Number(e.target.value)))}
+                    className="input input-bordered input-sm text-xs font-mono"
+                  />
+                </div>
+
+                <div className="form-control sm:col-span-2">
+                  <label className="label py-0.5">
+                    <span className="label-text text-[11px] font-semibold">Reason for Adjustment</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={adjustReason}
+                    onChange={(e) => setAdjustReason(e.target.value)}
+                    className="input input-bordered input-sm text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={adjusting || item.stockQty <= 0}
+                  onClick={() => handleAdjustStock(-adjustQty)}
+                  className="btn btn-error text-white btn-sm gap-1"
+                >
+                  <FaMinus className="size-2.5" /> Deduct {adjustQty}
+                </button>
+                <button
+                  type="button"
+                  disabled={adjusting}
+                  onClick={() => handleAdjustStock(adjustQty)}
+                  className="btn btn-success text-white btn-sm gap-1"
+                >
+                  <FaPlus className="size-2.5" /> Restock +{adjustQty}
+                </button>
               </div>
             </div>
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                disabled={adjusting || item.stockQty <= 0}
-                onClick={() => handleAdjustStock(-adjustQty)}
-                className="btn btn-error text-white btn-sm gap-1"
-              >
-                <FaMinus className="size-2.5" /> Deduct {adjustQty}
-              </button>
-              <button
-                type="button"
-                disabled={adjusting}
-                onClick={() => handleAdjustStock(adjustQty)}
-                className="btn btn-success text-white btn-sm gap-1"
-              >
-                <FaPlus className="size-2.5" /> Restock +{adjustQty}
-              </button>
+          ) : (
+            <div className="card bg-base-200/40 border border-base-300 p-4 space-y-1">
+              <h4 className="font-bold text-xs uppercase tracking-wide text-primary">
+                Pro Shop Desk Services
+              </h4>
+              <p className="text-xs text-base-content/70">
+                Gear purchases and hourly rentals are processed directly at the Pro Shop front counter. Speak with front-desk staff to issue equipment to your club membership account.
+              </p>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Edit Modal */}
-      <EquipmentFormModal
-        isOpen={isEditModalOpen}
-        item={item}
-        onClose={() => setIsEditModalOpen(false)}
-        onSubmit={handleUpdate}
-      />
+      {/* Edit Modal (Staff only) */}
+      {canManage && (
+        <EquipmentFormModal
+          isOpen={isEditModalOpen}
+          item={item}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdate}
+        />
+      )}
     </motion.div>
   );
 };

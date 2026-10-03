@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaBasketball, FaGear, FaPlus } from 'react-icons/fa6';
+import { useAuthStore } from '@/stores/authStore';
+import { canManageBookings } from '@/lib/permissions';
 import { courtService } from '@/services/courtService';
 import type { Court } from '@/types/courts';
 import type { Facility } from '@/types';
@@ -10,6 +12,7 @@ import { FacilityCard, FacilityFilterBar } from './components';
 
 export const FacilitiesPage = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string>('All');
@@ -18,14 +21,29 @@ export const FacilitiesPage = () => {
   const fetchCourts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await courtService.getCourts();
-      setCourts(data);
+      if (user?.role === 'member') {
+        const today = new Date().toISOString().split('T')[0];
+        const avail = await courtService.getAvailability(today);
+        setCourts(
+          avail.map((a) => ({
+            id: a.courtId,
+            name: a.courtName,
+            sport: a.sport,
+            openTime: '06:00',
+            closeTime: '23:00',
+            isActive: true,
+          }))
+        );
+      } else {
+        const data = await courtService.getCourts();
+        setCourts(data);
+      }
     } catch {
       toast.error('Failed to load courts from server');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => {
     fetchCourts();
@@ -72,9 +90,11 @@ export const FacilitiesPage = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link to="/facilities/management" className="btn btn-outline btn-sm gap-1.5">
-            <FaGear className="size-3.5" /> Court Operations
-          </Link>
+          {canManageBookings(user?.role) && (
+            <Link to="/facilities/manage" className="btn btn-outline btn-sm gap-1.5">
+              <FaGear className="size-3.5" /> Court Operations
+            </Link>
+          )}
           <Link to="/bookings/new" className="btn btn-primary btn-sm gap-1.5 font-bold">
             <FaPlus className="size-3.5" /> Book Court
           </Link>

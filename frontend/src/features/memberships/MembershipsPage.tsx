@@ -3,11 +3,17 @@ import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaIdCard, FaPlus, FaRotate } from 'react-icons/fa6';
 import { Button, Skeleton, Modal, Input } from '@/components/ui';
+import { useAuthStore } from '@/stores/authStore';
+import { canManagePlans, isMemberRole } from '@/lib/permissions';
 import { membershipPlanService } from '@/services/memberService';
 import type { MembershipPlan } from '@/types';
 import { MembershipPlanCard } from './components';
 
 export const MembershipsPage = () => {
+  const user = useAuthStore((s) => s.user);
+  const canManage = canManagePlans(user?.role);
+  const isMember = isMemberRole(user?.role);
+
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -67,20 +73,39 @@ export const MembershipsPage = () => {
       const shopDiscountPct = parseInt(newShopDiscount, 10);
       const barDiscountPct = parseInt(newBarDiscount, 10);
 
-      await membershipPlanService.create({
-        tier: newTier,
-        durationMonths: newDuration,
-        pricePaise,
-        courtRatePaise,
-        shopDiscountPct,
-        barDiscountPct,
-      });
+      // Check if a plan for this tier and duration already exists
+      const existing = plans.find(
+        (p) => p.tier === newTier && p.durationMonths === newDuration
+      );
 
-      toast.success('Membership plan created successfully');
+      if (existing) {
+        await membershipPlanService.update(existing.id, {
+          pricePaise,
+          courtRatePaise,
+          shopDiscountPct,
+          barDiscountPct,
+          isActive: true,
+        });
+        toast.success(`Updated existing ${newTier} (${newDuration} Mo) plan rates!`);
+      } else {
+        await membershipPlanService.create({
+          tier: newTier,
+          durationMonths: newDuration,
+          pricePaise,
+          courtRatePaise,
+          shopDiscountPct,
+          barDiscountPct,
+        });
+        toast.success('Membership plan created successfully');
+      }
+
       setIsCreateModalOpen(false);
       fetchPlans();
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || 'Failed to create plan';
+      const msg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        'Failed to save membership plan. Ensure you are logged in as admin.';
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -129,7 +154,9 @@ export const MembershipsPage = () => {
             <FaIdCard className="size-7 text-primary" /> Membership Plans & Tiers
           </h1>
           <p className="text-sm text-base-content/70 mt-1">
-            Club subscription tiers, court reservation discounts, and pro-shop benefits.
+            {isMember
+              ? 'Explore club subscription tiers, court reservation discounts, and member benefits.'
+              : 'Club subscription tiers, court reservation discounts, and pro-shop benefits.'}
           </p>
         </div>
 
@@ -143,14 +170,16 @@ export const MembershipsPage = () => {
             Refresh
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<FaPlus className="size-3.5" />}
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Create Plan
-          </Button>
+          {canManage && (
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<FaPlus className="size-3.5" />}
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Create Plan
+            </Button>
+          )}
         </div>
       </div>
 
@@ -167,8 +196,8 @@ export const MembershipsPage = () => {
               key={plan.id}
               plan={plan}
               onSelect={handleSelectPlan}
-              onEdit={handleOpenEdit}
-              isAdmin={true}
+              onEdit={canManage ? handleOpenEdit : undefined}
+              isAdmin={canManage}
             />
           ))}
 
@@ -181,7 +210,7 @@ export const MembershipsPage = () => {
       )}
 
       {/* Create Plan Modal */}
-      {isCreateModalOpen && (
+      {canManage && isCreateModalOpen && (
         <Modal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
@@ -216,6 +245,14 @@ export const MembershipsPage = () => {
                 </select>
               </div>
             </div>
+
+            {plans.some((p) => p.tier === newTier && p.durationMonths === newDuration) && (
+              <div className="p-2.5 bg-info/10 text-info border border-info/20 rounded-xl text-xs flex items-center gap-2">
+                <span>
+                  A <strong>{newTier} ({newDuration} Month)</strong> plan already exists. Saving will update its pricing and discounts.
+                </span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
@@ -274,7 +311,7 @@ export const MembershipsPage = () => {
       )}
 
       {/* Edit Plan Modal */}
-      {editingPlan && (
+      {canManage && editingPlan && (
         <Modal
           isOpen={!!editingPlan}
           onClose={() => setEditingPlan(null)}

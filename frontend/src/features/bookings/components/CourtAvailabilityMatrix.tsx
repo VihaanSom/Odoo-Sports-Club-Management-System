@@ -11,6 +11,8 @@ import { courtService } from '@/services/courtService';
 import { formatDate, formatSlotTime, formatSlotRange } from '@/lib/utils';
 import type { CourtAvailability } from '@/types/courts';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { useAuthStore } from '@/stores/authStore';
+import { isStaffRole } from '@/lib/permissions';
 
 interface CourtAvailabilityMatrixProps {
   initialDate?: string;
@@ -24,6 +26,8 @@ export const CourtAvailabilityMatrix = ({
   onSelectSlot,
 }: CourtAvailabilityMatrixProps) => {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isStaff = isStaffRole(user?.role);
   const todayStr = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState<string>(initialDate || todayStr);
   const [sport, setSport] = useState<string>(initialSport || '');
@@ -202,7 +206,9 @@ export const CourtAvailabilityMatrix = ({
 
                     const tipText = isFree
                       ? `Available: ${rangeLabel}`
-                      : `Booked: ${rangeLabel} (${slot.bookingType === 'walk_in' ? 'WALK IN' : (slot.bookingType || 'reserved')})`;
+                      : isStaff
+                      ? `Booked: ${rangeLabel} (${slot.bookingType === 'walk_in' ? 'WALK IN' : (slot.bookingType || 'reserved')})`
+                      : `Booked: ${rangeLabel}`;
 
                     return (
                       <div key={idx} className="tooltip tooltip-top" data-tip={tipText}>
