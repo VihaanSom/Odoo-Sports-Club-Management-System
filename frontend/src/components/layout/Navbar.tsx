@@ -29,11 +29,11 @@ export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <FaBars className="size-5" />
           </button>
         )}
-        <Link to="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-primary">
+        <Link to="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight">
           <div className="size-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shadow-sm">
             <Logo className="size-5" />
           </div>
-          <span className="hidden sm:inline bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <span className="font-bold text-black text-lg">
             Champions Club
           </span>
         </Link>

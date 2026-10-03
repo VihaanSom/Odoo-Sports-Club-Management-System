@@ -194,11 +194,14 @@ export const DashboardPage = () => {
             </div>
           </div>
 
+          {/* Facility Occupancy Grid */}
+          <FacilityOccupancyGrid />
+
           {/* Recent Reservations Table */}
           <RecentBookingsTable />
         </div>
 
-        {/* Sidebar Right Column: Club Status + Facility Grid + Operations Watchlist */}
+        {/* Sidebar Right Column: Club Status + Operations Watchlist */}
         <div className="xl:col-span-1 space-y-6">
           {/* Club Status Card */}
           <div className="card bg-base-100 border border-base-200/80 p-5 shadow-xs rounded-2xl">
@@ -217,9 +220,6 @@ export const DashboardPage = () => {
               <progress className="progress progress-primary w-full h-2" value={78} max={100} />
             </div>
           </div>
-
-          {/* Facility Occupancy Grid */}
-          <FacilityOccupancyGrid />
 
           {/* Operations Watchlist (Tabbed) */}
           <div className="space-y-3">
