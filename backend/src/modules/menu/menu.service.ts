@@ -161,6 +161,51 @@ export class MenuService {
 
     return formatMenuItem(updated);
   }
+
+  /**
+   * MI-05: Toggle menu item availability
+   */
+  async toggleAvailability(id: number): Promise<MenuItemResponse> {
+    const existing = await prisma.menuItem.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundError(
+        'MENU_ITEM_NOT_FOUND',
+        `Menu item with ID ${id} not found.`
+      );
+    }
+
+    const updated = await prisma.menuItem.update({
+      where: { id },
+      data: { isAvailable: !existing.isAvailable },
+    });
+
+    return formatMenuItem(updated);
+  }
+
+  /**
+   * MI-06: Delete menu item
+   */
+  async deleteMenuItem(id: number): Promise<boolean> {
+    const existing = await prisma.menuItem.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundError(
+        'MENU_ITEM_NOT_FOUND',
+        `Menu item with ID ${id} not found.`
+      );
+    }
+
+    await prisma.menuItem.delete({
+      where: { id },
+    });
+
+    return true;
+  }
 }
 
 export const menuService = new MenuService();

@@ -1,4 +1,4 @@
-import {  useState  } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,8 @@ import {
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 import { orderService } from '@/services/orderService';
-import { mockMembers } from '@/mock/members';
+import { memberService } from '@/services/memberService';
+import type { MemberDetail } from '@/types/members';
 import { formatPaise } from '@/lib/utils';
 import type { OrderType } from '@/types/orders';
 import { OrderItemSelector, type SelectedOrderItem } from './components/OrderItemSelector';
@@ -33,6 +34,11 @@ export const NewOrderPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedItems, setSelectedItems] = useState<SelectedOrderItem[]>([]);
+  const [members, setMembers] = useState<MemberDetail[]>([]);
+
+  useEffect(() => {
+    memberService.getAll({ pageSize: 100 }).then(setMembers).catch(() => {});
+  }, []);
 
   const {
     register,
@@ -54,9 +60,8 @@ export const NewOrderPage = () => {
   const orderType = watch('orderType');
   const selectedMemberId = watch('memberId');
 
-
   const selectedMember = selectedMemberId
-    ? mockMembers.find((m) => m.id.replace(/\D/g, '') === selectedMemberId || m.id === selectedMemberId)
+    ? members.find((m) => String(m.id) === String(selectedMemberId))
     : null;
 
   // Cart operations
@@ -113,9 +118,11 @@ export const NewOrderPage = () => {
   );
 
   const discountRate =
-    selectedMember?.membershipPlan === 'VIP'
-      ? 0.1
-      : selectedMember?.membershipPlan === 'Premium'
+    selectedMember?.tier === 'Gold' || (selectedMember as any)?.membershipPlan === 'Gold'
+      ? 0.15
+      : selectedMember?.tier === 'Silver' || (selectedMember as any)?.membershipPlan === 'Silver'
+      ? 0.10
+      : selectedMember?.tier === 'Junior' || (selectedMember as any)?.membershipPlan === 'Junior'
       ? 0.05
       : 0;
 
@@ -263,14 +270,14 @@ export const NewOrderPage = () => {
                 {...register('memberId')}
               >
                 <option value="">Walk-in Customer (No Member Perks)</option>
-                {mockMembers.map((m) => (
-                  <option key={m.id} value={m.id.replace(/\D/g, '') || m.id}>
-                    {m.name} &bull; {m.membershipPlan} ({m.email})
+                {members.map((m) => (
+                  <option key={m.id} value={String(m.id)}>
+                    {m.name || `${m.firstName} ${m.lastName}`.trim()} &bull; {m.tier} ({m.email})
                   </option>
                 ))}
               </select>
               <span className="text-base-content/60 text-xs mt-1">
-                VIP members receive 10% discount; Premium receives 5%.
+                Gold members receive 15% discount; Silver receives 10%; Junior receives 5%.
               </span>
             </div>
 

@@ -162,6 +162,33 @@ export class EquipmentService {
 
     return formatEquipment(updated);
   }
+
+  /**
+   * EQ-05: Adjust equipment stock level atomically.
+   */
+  async adjustStock(id: number, adjustmentQty: number): Promise<EquipmentResponse> {
+    const existing = await prisma.equipment.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundError('EQUIPMENT_NOT_FOUND', `Equipment with ID ${id} not found.`);
+    }
+
+    const newStock = Math.max(0, existing.stockQty + adjustmentQty);
+    const updated = await prisma.equipment.update({
+      where: { id },
+      data: { stockQty: newStock },
+    });
+
+    return formatEquipment(updated);
+  }
+
+  /**
+   * EQ-06: Get low stock alerts.
+   */
+  async getLowStockAlerts(): Promise<EquipmentResponse[]> {
+    const all = await prisma.equipment.findMany({ where: { isActive: true } });
+    const lowStock = all.filter((item) => item.stockQty <= item.lowStockThreshold);
+    return lowStock.map(formatEquipment);
+  }
 }
 
 export const equipmentService = new EquipmentService();

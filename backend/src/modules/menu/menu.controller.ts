@@ -36,6 +36,24 @@ export class MenuController {
     const updated = await menuService.updateMenuItem(id, req.body);
     return sendSuccess(res, updated, 'Menu item updated successfully');
   }
+
+  /**
+   * MI-05: PATCH /api/v1/menu-items/:id/toggle-availability
+   */
+  async toggleAvailability(req: Request, res: Response): Promise<Response> {
+    const id = parseInt(req.params.id as string, 10);
+    const updated = await menuService.toggleAvailability(id);
+    return sendSuccess(res, updated, 'Menu item availability toggled');
+  }
+
+  /**
+   * MI-06: DELETE /api/v1/menu-items/:id
+   */
+  async deleteMenuItem(req: Request, res: Response): Promise<Response> {
+    const id = parseInt(req.params.id as string, 10);
+    await menuService.deleteMenuItem(id);
+    return sendSuccess(res, null, 'Menu item deleted successfully');
+  }
 }
 
 export const menuController = new MenuController();

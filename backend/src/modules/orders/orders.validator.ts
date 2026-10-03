@@ -8,7 +8,7 @@ export const orderIdParamSchema = z.object({
 export const listOrdersQuerySchema = z.object({
   page: z.coerce.number().int().min(1, 'page must be at least 1').default(1),
   pageSize: z.coerce.number().int().min(1).max(100, 'pageSize cannot exceed 100').default(20),
-  orderType: z.enum([OrderType.in_store, OrderType.online]).optional(),
+  orderType: z.enum([OrderType.in_store, OrderType.online, OrderType.bar]).optional(),
   status: z
     .enum([
       OrderStatus.pending,
@@ -18,6 +18,7 @@ export const listOrdersQuerySchema = z.object({
     ])
     .optional(),
   memberId: z.coerce.number().int().positive().optional(),
+  search: z.string().max(100, 'search cannot exceed 100 characters').optional(),
   from: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'from must be in YYYY-MM-DD format')
@@ -33,19 +34,26 @@ export const listOrdersQuerySchema = z.object({
 export const createOrderSchema = z
   .object({
     memberId: z.coerce.number().int().positive().nullable().optional(),
-    orderType: z.enum([OrderType.in_store, OrderType.online], {
-      message: 'orderType must be either in_store or online',
+    orderType: z.enum([OrderType.in_store, OrderType.online, OrderType.bar], {
+      message: 'orderType must be one of: in_store, online, bar',
     }),
-    paymentMethod: z.enum([PaymentMethod.cash, PaymentMethod.card, PaymentMethod.upi], {
-      message: 'paymentMethod must be one of: cash, card, upi',
+    paymentMethod: z.enum([PaymentMethod.cash, PaymentMethod.card, PaymentMethod.upi, PaymentMethod.plan], {
+      message: 'paymentMethod must be one of: cash, card, upi, plan',
     }),
     deliveryAddress: z.string().max(500, 'deliveryAddress cannot exceed 500 characters').nullable().optional(),
+    notes: z.string().max(500, 'notes cannot exceed 500 characters').nullable().optional(),
     items: z
       .array(
-        z.object({
-          equipmentId: z.coerce.number().int().positive('equipmentId must be a positive integer'),
-          qty: z.number().int().min(1, 'qty must be at least 1').max(99, 'qty cannot exceed 99'),
-        })
+        z
+          .object({
+            equipmentId: z.coerce.number().int().positive().optional(),
+            menuItemId: z.coerce.number().int().positive().optional(),
+            qty: z.number().int().min(1, 'qty must be at least 1').max(99, 'qty cannot exceed 99'),
+          })
+          .refine(
+            (item) => item.equipmentId !== undefined || item.menuItemId !== undefined,
+            { message: 'Item must have either equipmentId or menuItemId' }
+          )
       )
       .min(1, 'Order must contain at least 1 item')
       .max(50, 'Order cannot exceed 50 items'),

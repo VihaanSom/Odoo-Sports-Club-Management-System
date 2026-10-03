@@ -1,66 +1,69 @@
-import {  useState  } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaTrophy, FaBoxesStacked, FaPlus } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui';
-import { mockEquipment } from '@/mock';
 import type { Equipment } from '@/types';
 import type { CreateEquipmentPayload, UpdateEquipmentPayload } from '@/types/equipment';
 import { equipmentService } from '@/services/equipmentService';
 import { EquipmentTable, EquipmentCategoryTabs, EquipmentFormModal } from './components';
 
 export const EquipmentPage = () => {
-  const [items, setItems] = useState<Equipment[]>(mockEquipment);
+  const [items, setItems] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const categories = ['All', 'Rackets', 'Balls', 'Protective Gear', 'Gym Accessories', 'Court Accessories'];
+  const categories = ['All', 'Racket', 'Ball', 'Shoe', 'Accessory', 'Apparel'];
+
+  const fetchEquipment = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await equipmentService.getAll();
+      setItems(data);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load equipment');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEquipment();
+  }, [fetchEquipment]);
 
   const filtered = items.filter(
-    (item) => selectedCategory === 'All' || item.category === selectedCategory
+    (item) => selectedCategory === 'All' || item.category.toLowerCase() === selectedCategory.toLowerCase()
   );
 
-  const handleRent = (id: string, name: string) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id && item.quantityAvailable > 0) {
-          return { ...item, quantityAvailable: item.quantityAvailable - 1 };
-        }
-        return item;
-      })
-    );
-    toast.success(`Issued 1x ${name} to member.`);
+  const handleRent = async (id: string | number, name: string) => {
+    try {
+      await equipmentService.rentItem(id);
+      toast.success(`Issued 1x ${name} to member.`);
+      await fetchEquipment();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to issue equipment');
+    }
   };
 
-  const handleReturn = (id: string, name: string) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id && item.quantityAvailable < item.quantityTotal) {
-          return { ...item, quantityAvailable: item.quantityAvailable + 1 };
-        }
-        return item;
-      })
-    );
-    toast.success(`Returned 1x ${name} to club stock.`);
+  const handleReturn = async (id: string | number, name: string) => {
+    try {
+      await equipmentService.returnItem(id);
+      toast.success(`Returned 1x ${name} to club stock.`);
+      await fetchEquipment();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to return equipment');
+    }
   };
 
   const handleCreateEquipment = async (
     payload: CreateEquipmentPayload | UpdateEquipmentPayload
   ) => {
     try {
-      const created = await equipmentService.createEquipment(payload as CreateEquipmentPayload);
-      const newLegacyItem: Equipment = {
-        id: `EQ-0${items.length + 1}`,
-        name: created.name,
-        category: (created.category === 'racket' ? 'Rackets' : created.category === 'ball' ? 'Balls' : 'Gym Accessories') as any,
-        quantityTotal: created.stockQty,
-        quantityAvailable: created.stockQty,
-        condition: (created.condition || 'Excellent') as any,
-        rentalRate: Math.round((created.rentalRatePaise || 0) / 100),
-      };
-      setItems((prev) => [newLegacyItem, ...prev]);
-      toast.success('Equipment item created');
+      await equipmentService.createEquipment(payload as CreateEquipmentPayload);
+      toast.success('Equipment item created successfully');
+      await fetchEquipment();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to create equipment');
     }
@@ -110,11 +113,17 @@ export const EquipmentPage = () => {
         onSelectCategory={setSelectedCategory}
       />
 
-      <EquipmentTable
-        items={filtered}
-        onRent={handleRent}
-        onReturn={handleReturn}
-      />
+      {loading ? (
+        <div className="py-20 flex justify-center items-center">
+          <span className="loading loading-spinner loading-md text-primary" />
+        </div>
+      ) : (
+        <EquipmentTable
+          items={filtered}
+          onRent={handleRent}
+          onReturn={handleReturn}
+        />
+      )}
 
       <EquipmentFormModal
         isOpen={isModalOpen}
@@ -126,4 +135,3 @@ export const EquipmentPage = () => {
 };
 
 export default EquipmentPage;
-

@@ -144,7 +144,7 @@ export const OrderDetailPage = () => {
             {formatPaise(order.totalPaise)}
           </div>
           <span className="text-[11px] text-base-content/50">
-            {order.items.reduce((acc, i) => acc + i.qty, 0)} total line items
+            {(order.items || []).reduce((acc, i) => acc + i.qty, 0)} total line items
           </span>
         </div>
       </div>
@@ -186,7 +186,7 @@ export const OrderDetailPage = () => {
               </tr>
             </thead>
             <tbody>
-              {order.items.map((item) => (
+              {(order.items || []).map((item) => (
                 <tr key={item.id} className="hover">
                   <td>
                     <div className="flex items-center gap-3">

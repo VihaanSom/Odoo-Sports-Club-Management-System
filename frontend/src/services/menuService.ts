@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { mockMenuItems } from '@/mock/menuItems';
+import type { ApiResponse } from '@/types/api';
 import type {
   MenuItem,
   CreateMenuItemPayload,
@@ -7,56 +7,48 @@ import type {
   MenuItemQueryParams,
 } from '@/types/menu';
 
-let localMenuItems: MenuItem[] = JSON.parse(JSON.stringify(mockMenuItems));
-
 export const menuService = {
   // MI-01: Get menu catalog with filters
   getMenuItems: async (params?: MenuItemQueryParams): Promise<MenuItem[]> => {
-    try {
-      const response = await apiClient.get<MenuItem[]>('/menu', { params });
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      return filterLocalMenu(params);
-    } catch {
-      return filterLocalMenu(params);
+    const cleanParams: Record<string, any> = {
+      pageSize: 100,
+    };
+    if (params?.category && params.category !== 'all') {
+      cleanParams.category = params.category.toLowerCase();
     }
+    if (params?.search && params.search.trim()) {
+      cleanParams.search = params.search.trim();
+    }
+    if (typeof params?.isAvailable === 'boolean') {
+      cleanParams.isAvailable = params.isAvailable;
+    }
+
+    const response = await apiClient.get<ApiResponse<MenuItem[]>>('/menu-items', {
+      params: cleanParams,
+    });
+    return response.data?.data || (Array.isArray(response.data) ? (response.data as unknown as MenuItem[]) : []);
   },
 
   // MI-02: Get menu item by ID
   getMenuItemById: async (id: number | string): Promise<MenuItem> => {
-    try {
-      const response = await apiClient.get<MenuItem>(`/menu/${id}`);
-      return response.data;
-    } catch {
-      const item = localMenuItems.find((m) => String(m.id) === String(id));
-      if (!item) throw new Error('Menu item not found');
-      return item;
-    }
+    const response = await apiClient.get<ApiResponse<MenuItem>>(`/menu-items/${id}`);
+    return response.data?.data || (response.data as unknown as MenuItem);
   },
 
   // MI-03: Create new menu item
   createMenuItem: async (payload: CreateMenuItemPayload): Promise<MenuItem> => {
-    try {
-      const response = await apiClient.post<MenuItem>('/menu', payload);
-      return response.data;
-    } catch {
-      const newId = localMenuItems.length > 0 ? Math.max(...localMenuItems.map((m) => m.id)) + 1 : 1;
-      const newItem: MenuItem = {
-        id: newId,
-        name: payload.name,
-        category: payload.category,
-        description: payload.description || null,
-        pricePaise: payload.pricePaise,
-        stockQty: payload.stockQty,
-        lowStockThreshold: payload.lowStockThreshold ?? 5,
-        isAvailable: payload.isAvailable ?? true,
-        imageUrl: payload.imageUrl || null,
-        createdAt: new Date().toISOString(),
-      };
-      localMenuItems.unshift(newItem);
-      return newItem;
-    }
+    const cleanPayload = {
+      name: payload.name.trim(),
+      category: payload.category.toLowerCase(),
+      description: payload.description ? payload.description.trim() : null,
+      pricePaise: Number(payload.pricePaise),
+      stockQty: Number(payload.stockQty),
+      lowStockThreshold: payload.lowStockThreshold ?? 5,
+      isAvailable: payload.isAvailable ?? true,
+      imageUrl: payload.imageUrl ? payload.imageUrl.trim() : null,
+    };
+    const response = await apiClient.post<ApiResponse<MenuItem>>('/menu-items', cleanPayload);
+    return response.data?.data || (response.data as unknown as MenuItem);
   },
 
   // MI-04: Update menu item
@@ -64,71 +56,29 @@ export const menuService = {
     id: number | string,
     payload: UpdateMenuItemPayload
   ): Promise<MenuItem> => {
-    try {
-      const response = await apiClient.put<MenuItem>(`/menu/${id}`, payload);
-      return response.data;
-    } catch {
-      const index = localMenuItems.findIndex((m) => String(m.id) === String(id));
-      if (index === -1) throw new Error('Menu item not found');
+    const cleanPayload: Record<string, any> = {};
+    if (payload.name !== undefined) cleanPayload.name = payload.name.trim();
+    if (payload.category !== undefined) cleanPayload.category = payload.category.toLowerCase();
+    if (payload.description !== undefined) cleanPayload.description = payload.description ? payload.description.trim() : null;
+    if (payload.pricePaise !== undefined) cleanPayload.pricePaise = Number(payload.pricePaise);
+    if (payload.stockQty !== undefined) cleanPayload.stockQty = Number(payload.stockQty);
+    if (payload.lowStockThreshold !== undefined) cleanPayload.lowStockThreshold = Number(payload.lowStockThreshold);
+    if (payload.isAvailable !== undefined) cleanPayload.isAvailable = payload.isAvailable;
+    if (payload.imageUrl !== undefined) cleanPayload.imageUrl = payload.imageUrl ? payload.imageUrl.trim() : null;
 
-      localMenuItems[index] = {
-        ...localMenuItems[index],
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      };
-      return localMenuItems[index];
-    }
+    const response = await apiClient.put<ApiResponse<MenuItem>>(`/menu-items/${id}`, cleanPayload);
+    return response.data?.data || (response.data as unknown as MenuItem);
   },
 
-  // Toggle availability shortcut
+  // MI-05: Toggle availability shortcut
   toggleAvailability: async (id: number | string): Promise<MenuItem> => {
-    try {
-      const response = await apiClient.patch<MenuItem>(`/menu/${id}/toggle-availability`);
-      return response.data;
-    } catch {
-      const index = localMenuItems.findIndex((m) => String(m.id) === String(id));
-      if (index === -1) throw new Error('Menu item not found');
-
-      localMenuItems[index].isAvailable = !localMenuItems[index].isAvailable;
-      return localMenuItems[index];
-    }
+    const response = await apiClient.patch<ApiResponse<MenuItem>>(`/menu-items/${id}/toggle-availability`);
+    return response.data?.data || (response.data as unknown as MenuItem);
   },
 
-  // Delete menu item
+  // MI-06: Delete menu item
   deleteMenuItem: async (id: number | string): Promise<boolean> => {
-    try {
-      await apiClient.delete(`/menu/${id}`);
-      return true;
-    } catch {
-      const index = localMenuItems.findIndex((m) => String(m.id) === String(id));
-      if (index !== -1) {
-        localMenuItems.splice(index, 1);
-      }
-      return true;
-    }
+    await apiClient.delete(`/menu-items/${id}`);
+    return true;
   },
 };
-
-function filterLocalMenu(params?: MenuItemQueryParams): MenuItem[] {
-  let result = [...localMenuItems];
-  if (!params) return result;
-
-  if (params.category && params.category !== 'all') {
-    result = result.filter(
-      (m) => m.category.toLowerCase() === params.category!.toLowerCase()
-    );
-  }
-  if (params.search && params.search.trim()) {
-    const q = params.search.toLowerCase().trim();
-    result = result.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) ||
-        (m.description && m.description.toLowerCase().includes(q))
-    );
-  }
-  if (typeof params.isAvailable === 'boolean') {
-    result = result.filter((m) => m.isAvailable === params.isAvailable);
-  }
-
-  return result;
-}

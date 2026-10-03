@@ -63,4 +63,28 @@ router.put(
   (req, res) => menuController.updateMenuItem(req, res)
 );
 
+/**
+ * MI-05: Toggle menu item availability
+ * PATCH /api/v1/menu-items/:id/toggle-availability
+ * Auth: admin, bar
+ */
+router.patch(
+  '/:id/toggle-availability',
+  requireRole('admin', 'bar'),
+  validate(menuItemIdParamSchema, 'params'),
+  (req, res) => menuController.toggleAvailability(req, res)
+);
+
+/**
+ * MI-06: Delete menu item
+ * DELETE /api/v1/menu-items/:id
+ * Auth: admin, bar
+ */
+router.delete(
+  '/:id',
+  requireRole('admin', 'bar'),
+  validate(menuItemIdParamSchema, 'params'),
+  (req, res) => menuController.deleteMenuItem(req, res)
+);
+
 export default router;

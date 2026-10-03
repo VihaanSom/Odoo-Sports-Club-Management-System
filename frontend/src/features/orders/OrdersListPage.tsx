@@ -230,7 +230,7 @@ export const OrdersListPage = () => {
 
                     <td className="text-xs">
                       <span className="font-mono font-semibold">
-                        {order.items.reduce((sum, i) => sum + i.qty, 0)}
+                        {(order.items || []).reduce((sum, i) => sum + i.qty, 0)}
                       </span>{' '}
                       item(s)
                     </td>

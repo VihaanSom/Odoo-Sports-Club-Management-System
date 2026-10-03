@@ -21,17 +21,18 @@ export const listMenuItemsQuerySchema = z.object({
 
 export type ListMenuItemsQuery = z.infer<typeof listMenuItemsQuerySchema>;
 
-export const createMenuItemSchema = z
-  .object({
-    name: z.string().trim().min(1, 'Name is required').max(200),
-    category: z.nativeEnum(MenuCategory),
-    description: z.string().trim().max(500).optional().nullable(),
-    pricePaise: z.number().int().min(0, 'pricePaise must be non-negative integer'),
-    stockQty: z.number().int().min(0, 'stockQty must be non-negative integer'),
-    lowStockThreshold: z.number().int().min(0).default(5),
-    imageUrl: z.string().trim().url('Invalid image URL').max(500).optional().nullable(),
-  })
-  .strict();
+export const createMenuItemSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(200),
+  category: z.nativeEnum(MenuCategory),
+  description: z.string().trim().max(500).optional().nullable(),
+  pricePaise: z.coerce.number().int().min(0, 'pricePaise must be non-negative integer'),
+  stockQty: z.coerce.number().int().min(0, 'stockQty must be non-negative integer'),
+  lowStockThreshold: z.coerce.number().int().min(0).default(5),
+  isAvailable: z.boolean().optional(),
+  imageUrl: z
+    .preprocess((val) => (val === '' ? null : val), z.string().trim().url('Invalid image URL').max(500).optional().nullable())
+    .optional(),
+});
 
 export type CreateMenuItemInput = z.infer<typeof createMenuItemSchema>;
 
@@ -40,13 +41,14 @@ export const updateMenuItemSchema = z
     name: z.string().trim().min(1).max(200).optional(),
     category: z.nativeEnum(MenuCategory).optional(),
     description: z.string().trim().max(500).optional().nullable(),
-    pricePaise: z.number().int().min(0).optional(),
-    stockQty: z.number().int().min(0).optional(),
-    lowStockThreshold: z.number().int().min(0).optional(),
+    pricePaise: z.coerce.number().int().min(0).optional(),
+    stockQty: z.coerce.number().int().min(0).optional(),
+    lowStockThreshold: z.coerce.number().int().min(0).optional(),
     isAvailable: z.boolean().optional(),
-    imageUrl: z.string().trim().url('Invalid image URL').max(500).optional().nullable(),
+    imageUrl: z
+      .preprocess((val) => (val === '' ? null : val), z.string().trim().url('Invalid image URL').max(500).optional().nullable())
+      .optional(),
   })
-  .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided for update',
   });

@@ -7,6 +7,7 @@ import {
   listEquipmentQuerySchema,
   createEquipmentSchema,
   updateEquipmentSchema,
+  adjustStockSchema,
 } from './equipment.validator';
 
 const router = Router();
@@ -21,6 +22,18 @@ router.get(
   verifyToken,
   validate(listEquipmentQuerySchema, 'query'),
   (req, res) => equipmentController.listEquipment(req, res)
+);
+
+/**
+ * EQ-06: Low stock alerts
+ * GET /api/v1/equipment/alerts/low-stock
+ * Auth: admin, shop
+ */
+router.get(
+  '/alerts/low-stock',
+  verifyToken,
+  requireRole('admin', 'shop'),
+  (req, res) => equipmentController.getLowStockAlerts(req, res)
 );
 
 /**
@@ -60,6 +73,20 @@ router.put(
   validate(equipmentIdParamSchema, 'params'),
   validate(updateEquipmentSchema, 'body'),
   (req, res) => equipmentController.updateEquipment(req, res)
+);
+
+/**
+ * EQ-05: Adjust stock
+ * POST /api/v1/equipment/:id/adjust-stock
+ * Auth: admin, shop
+ */
+router.post(
+  '/:id/adjust-stock',
+  verifyToken,
+  requireRole('admin', 'shop'),
+  validate(equipmentIdParamSchema, 'params'),
+  validate(adjustStockSchema, 'body'),
+  (req, res) => equipmentController.adjustStock(req, res)
 );
 
 export default router;
