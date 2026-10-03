@@ -1,0 +1,280 @@
+{
+  "info": {
+    "_postman_id": "champions-club-staff-hr-collection",
+    "name": "Champions Club — Staff & HR Module (ST-01 to LV-03)",
+    "description": "Postman collection for testing Champions Club Staff, Shifts, and Leave endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "staffToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "staffId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "shiftId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "leaveId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login as Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('adminToken', jsonData.data.accessToken);",
+              "    console.log('Saved adminToken');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@championsclub.com\",\n  \"password\": \"Admin@12345\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. ST-01: List Staff (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/staff?page=1&pageSize=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "pageSize", "value": "20" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. ST-02: Create Staff (Admin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('staffId', jsonData.data.id);",
+              "    console.log('Saved staffId:', jsonData.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Sunil\",\n  \"lastName\": \"Kumble\",\n  \"email\": \"sunil.coach@championsclub.com\",\n  \"password\": \"Staff@12345\",\n  \"role\": \"front_desk\",\n  \"phone\": \"+919876543219\",\n  \"salary\": 4500000\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/staff",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff"]
+        }
+      }
+    },
+    {
+      "name": "4. ST-03: Get Staff Details",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/staff/{{staffId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff", "{{staffId}}"]
+        }
+      }
+    },
+    {
+      "name": "5. ST-04: Update Staff Details",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"salary\": 5000000,\n  \"phone\": \"+919876543299\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/staff/{{staffId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff", "{{staffId}}"]
+        }
+      }
+    },
+    {
+      "name": "6. SH-01: Start Shift (Clock in)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('shiftId', jsonData.data.id);",
+              "    console.log('Saved shiftId:', jsonData.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notes\": \"Morning front-desk shift\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/staff/{{staffId}}/shifts",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff", "{{staffId}}", "shifts"]
+        }
+      }
+    },
+    {
+      "name": "7. SH-02: End Shift (Clock out)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notes\": \"Handed over keys to evening staff\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/staff/{{staffId}}/shifts/{{shiftId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff", "{{staffId}}", "shifts", "{{shiftId}}"]
+        }
+      }
+    },
+    {
+      "name": "8. LV-01: Submit Leave Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('leaveId', jsonData.data.id);",
+              "    console.log('Saved leaveId:', jsonData.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fromDate\": \"2026-10-10\",\n  \"toDate\": \"2026-10-12\",\n  \"reason\": \"Family wedding\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/leave",
+          "host": ["{{baseUrl}}"],
+          "path": ["leave"]
+        }
+      }
+    },
+    {
+      "name": "9. LV-02: Get Staff Leave History",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/staff/{{staffId}}/leave",
+          "host": ["{{baseUrl}}"],
+          "path": ["staff", "{{staffId}}", "leave"]
+        }
+      }
+    },
+    {
+      "name": "10. LV-03: Approve or Reject Leave",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"approved\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/leave/{{leaveId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["leave", "{{leaveId}}"]
+        }
+      }
+    }
+  ]
+}

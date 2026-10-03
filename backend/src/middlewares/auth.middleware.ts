@@ -60,7 +60,7 @@ export const requireSelfOrRole = (...allowedRoles: (UserRole | string)[]) => {
     const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const targetId = parseInt(rawId, 10);
     const userId = req.user.sub ?? req.user.id;
-    if (req.user.role === 'member' && userId === targetId) {
+    if (userId === targetId) {
       return next();
     }
 

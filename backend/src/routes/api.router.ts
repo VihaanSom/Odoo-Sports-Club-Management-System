@@ -21,6 +21,7 @@ import barRoutes from '../modules/bar/bar.routes';
 import menuRoutes from '../modules/menu/menu.routes';
 import leadsRoutes from '../modules/leads/leads.routes';
 import staffRoutes from '../modules/staff/staff.routes';
+import leaveRoutes from '../modules/staff/leave.routes';
 import paymentsRoutes from '../modules/payments/payments.routes';
 
 import { sendSuccess } from '../utils/response';
@@ -64,6 +65,7 @@ router.use('/bar', barRoutes);
 router.use('/menu-items', menuRoutes);
 router.use('/menu', menuRoutes);
 router.use('/staff', staffRoutes);
+router.use('/leave', leaveRoutes);
 router.use('/payments', paymentsRoutes);
 
 export default router;
