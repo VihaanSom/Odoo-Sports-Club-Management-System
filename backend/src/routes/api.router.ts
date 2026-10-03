@@ -12,6 +12,7 @@ import barRoutes from '../modules/bar/bar.routes';
 import bookingRoutes from '../modules/bookings/booking.routes';
 import membersRoutes from '../modules/members/members.routes';
 import plansRoutes from '../modules/plans/plans.routes';
+import leadsRoutes, { publicRoutes } from '../modules/leads/leads.routes';
 
 // Domain Modules (Stubs / In Progress)
 import equipmentRoutes from '../modules/equipment/equipment.routes';
@@ -50,7 +51,9 @@ router.use('/bar', barRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/members', membersRoutes);
 router.use('/membership-plans', plansRoutes);
-router.use('/plans', plansRoutes); // Alias for convenience
+router.use('/plans', plansRoutes); // Alias
+router.use('/public', publicRoutes);
+router.use('/leads', leadsRoutes);
 
 // ==========================================
 // REMAINING MODULE ROUTE REGISTRATIONS
@@ -59,9 +62,8 @@ router.use('/equipment', equipmentRoutes);
 router.use('/orders', ordersRoutes);
 router.use('/bar', barRoutes);
 router.use('/menu-items', menuRoutes);
-router.use('/leads', leadsRoutes);
+router.use('/menu', menuRoutes);
 router.use('/staff', staffRoutes);
 router.use('/payments', paymentsRoutes);
 
 export default router;
-

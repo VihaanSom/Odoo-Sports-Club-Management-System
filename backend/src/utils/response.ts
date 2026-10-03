@@ -54,6 +54,7 @@ export function sendError(
     message = arg2;
     statusCode = typeof arg3 === 'number' ? arg3 : 400;
     errors = arg4;
+<<<<<<< HEAD
     messageOrCode: string,
       statusOrMessage ?: number | string,
       errorsOrStatusCode ?: any,
@@ -89,3 +90,15 @@ export function sendError(
       return res.status(statusCode).json(payload);
     }
 
+=======
+  }
+
+  const payload: ApiResponse = {
+    success: false,
+    message,
+    ...(code && { code }),
+    ...(errors !== undefined && { errors }),
+  };
+  return res.status(statusCode).json(payload);
+}
+>>>>>>> dd3b269109ff0d20f16be7ce794013239fab26de

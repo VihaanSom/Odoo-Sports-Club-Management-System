@@ -17,14 +17,10 @@ export interface MenuItemResponse {
   lowStockThreshold: number;
   isAvailable: boolean;
   imageUrl: string | null;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * Transforms a MenuItem entity to the API Contract shape.
- * Converts DB Decimal values (Rupees) into integer Paise without altering DB schema definitions.
- */
 export const formatMenuItem = (item: MenuItem): MenuItemResponse => ({
   id: item.id,
   name: item.name,
@@ -41,29 +37,25 @@ export const formatMenuItem = (item: MenuItem): MenuItemResponse => ({
 
 export class MenuService {
   /**
-   * MI-01: List menu items with category/availability filters, search, and pagination.
+   * MI-01: List menu items with pagination, filters, and search.
    */
   async listMenuItems(query: ListMenuItemsQuery) {
     const where: Prisma.MenuItemWhereInput = {};
-
-    if (query.isAvailable !== undefined) {
-      where.isAvailable = query.isAvailable;
-    }
 
     if (query.category) {
       where.category = query.category;
     }
 
-    if (query.search) {
-      where.name = { contains: query.search, mode: 'insensitive' };
+    if (query.isAvailable !== undefined) {
+      where.isAvailable = query.isAvailable;
     }
 
-    const sortFieldMap: Record<string, keyof Prisma.MenuItemOrderByWithRelationInput> = {
-      name: 'name',
-      price: 'price',
-      created_at: 'createdAt',
-    };
-    const sortField = sortFieldMap[query.sortBy] || 'name';
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
 
     const skip = (query.page - 1) * query.pageSize;
     const take = query.pageSize;
@@ -71,7 +63,7 @@ export class MenuService {
     const [items, total] = await Promise.all([
       prisma.menuItem.findMany({
         where,
-        orderBy: { [sortField]: query.sortOrder },
+        orderBy: { name: 'asc' },
         skip,
         take,
       }),
@@ -90,27 +82,7 @@ export class MenuService {
   }
 
   /**
-   * MI-02: Create new menu item.
-   */
-  async createMenuItem(input: CreateMenuItemInput): Promise<MenuItemResponse> {
-    const created = await prisma.menuItem.create({
-      data: {
-        name: input.name,
-        category: input.category,
-        description: input.description ?? null,
-        price: new Prisma.Decimal(input.pricePaise / 100),
-        stockQty: input.stockQty,
-        lowStockThreshold: input.lowStockThreshold ?? 5,
-        isAvailable: true,
-        imageUrl: input.imageUrl ?? null,
-      },
-    });
-
-    return formatMenuItem(created);
-  }
-
-  /**
-   * MI-03: Get menu item detail by ID.
+   * MI-03: Get menu item by ID.
    */
   async getMenuItemById(id: number): Promise<MenuItemResponse> {
     const item = await prisma.menuItem.findUnique({
@@ -118,38 +90,73 @@ export class MenuService {
     });
 
     if (!item) {
-      throw new NotFoundError('MENU_ITEM_NOT_FOUND', `Menu item with ID ${id} not found.`);
+      throw new NotFoundError(
+        'MENU_ITEM_NOT_FOUND',
+        `Menu item with ID ${id} not found.`
+      );
     }
 
     return formatMenuItem(item);
   }
 
   /**
-   * MI-04: Update menu item details, pricing, availability, or restock.
+   * MI-02: Create new menu item.
    */
-  async updateMenuItem(id: number, input: UpdateMenuItemInput): Promise<MenuItemResponse> {
-    const existing = await prisma.menuItem.findUnique({ where: { id } });
+  async createMenuItem(input: CreateMenuItemInput): Promise<MenuItemResponse> {
+    const priceDecimal = new Prisma.Decimal(input.pricePaise).div(100);
+
+    const item = await prisma.menuItem.create({
+      data: {
+        name: input.name,
+        category: input.category,
+        description: input.description || null,
+        price: priceDecimal,
+        stockQty: input.stockQty,
+        lowStockThreshold: input.lowStockThreshold ?? 5,
+        isAvailable: true,
+        imageUrl: input.imageUrl || null,
+      },
+    });
+
+    return formatMenuItem(item);
+  }
+
+  /**
+   * MI-04: Update menu item.
+   */
+  async updateMenuItem(
+    id: number,
+    input: UpdateMenuItemInput
+  ): Promise<MenuItemResponse> {
+    const existing = await prisma.menuItem.findUnique({
+      where: { id },
+    });
+
     if (!existing) {
-      throw new NotFoundError('MENU_ITEM_NOT_FOUND', `Menu item with ID ${id} not found.`);
+      throw new NotFoundError(
+        'MENU_ITEM_NOT_FOUND',
+        `Menu item with ID ${id} not found.`
+      );
     }
 
-    const updateData: Prisma.MenuItemUpdateInput = {};
-    if (input.name !== undefined) updateData.name = input.name;
-    if (input.category !== undefined) updateData.category = input.category;
-    if (input.description !== undefined) updateData.description = input.description;
+    const data: Prisma.MenuItemUpdateInput = {};
+
+    if (input.name !== undefined) data.name = input.name;
+    if (input.category !== undefined) data.category = input.category;
+    if (input.description !== undefined) data.description = input.description || null;
     if (input.pricePaise !== undefined) {
-      updateData.price = new Prisma.Decimal(input.pricePaise / 100);
+      data.price = new Prisma.Decimal(input.pricePaise).div(100);
     }
-    if (input.stockQty !== undefined) updateData.stockQty = input.stockQty;
+    if (input.stockQty !== undefined) data.stockQty = input.stockQty;
     if (input.lowStockThreshold !== undefined) {
-      updateData.lowStockThreshold = input.lowStockThreshold;
+      data.lowStockThreshold = input.lowStockThreshold;
     }
-    if (input.isAvailable !== undefined) updateData.isAvailable = input.isAvailable;
-    if (input.imageUrl !== undefined) updateData.imageUrl = input.imageUrl;
+    if (input.isAvailable !== undefined) data.isAvailable = input.isAvailable;
+    if (input.imageUrl !== undefined) data.imageUrl = input.imageUrl || null;
 
     const updated = await prisma.menuItem.update({
       where: { id },
-      data: updateData,
+      data,
     });
 
     return formatMenuItem(updated);
