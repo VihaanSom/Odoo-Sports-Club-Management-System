@@ -2,7 +2,7 @@ import {  useEffect, useState  } from 'react';
 import { FaClock, FaUser, FaCircleCheck, FaBan, FaCalendarDay } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import { bookingService } from '@/services/bookingService';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatSlotRange } from '@/lib/utils';
 import type { TodaysBookingsResponse } from '@/types/bookings';
 
 export const TodaysBookingsView = () => {
@@ -68,8 +68,6 @@ export const TodaysBookingsView = () => {
             ) : (
               <div className="space-y-1.5">
                 {court.bookings.map((b) => {
-                  const start = new Date(b.slotStart).getUTCHours();
-                  const end = new Date(b.slotEnd).getUTCHours();
                   const isCancelled = b.status === 'cancelled';
                   const bookingTypeLabel = b.bookingType === 'walk_in' ? 'WALK IN' : b.bookingType.replace('_', ' ').toUpperCase();
 
@@ -82,7 +80,7 @@ export const TodaysBookingsView = () => {
                       <div className="flex items-center gap-2">
                         <FaClock className="size-3 text-base-content/40" />
                         <span className="font-mono font-bold">
-                          {start.toString().padStart(2, '0')}:00 - {end.toString().padStart(2, '0')}:00
+                          {formatSlotRange(b.slotStart, b.slotEnd)}
                         </span>
                       </div>
 

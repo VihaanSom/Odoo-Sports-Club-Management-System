@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FaCheck } from 'react-icons/fa6';
 import { bookingService } from '@/services/bookingService';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatSlotRange } from '@/lib/utils';
 import type {
   BookingType,
   BookingPaymentMethod,
@@ -283,8 +283,7 @@ export const BookingWizard = ({
               <div>
                 <span className="text-base-content/60 block">Time Slot</span>
                 <span className="font-mono font-bold text-primary">
-                  {slotStart ? `${new Date(slotStart).getUTCHours().toString().padStart(2, '0')}:00` : ''} -{' '}
-                  {slotEnd ? `${new Date(slotEnd).getUTCHours().toString().padStart(2, '0')}:00 UTC` : ''}
+                  {formatSlotRange(slotStart, slotEnd, true)}
                 </span>
               </div>
               <div>

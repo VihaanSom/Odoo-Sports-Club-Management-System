@@ -8,7 +8,7 @@ import {
   FaLock,
 } from 'react-icons/fa6';
 import { courtService } from '@/services/courtService';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatSlotTime, formatSlotRange } from '@/lib/utils';
 import type { CourtAvailability } from '@/types/courts';
 import { DatePicker } from '@/components/ui/DatePicker';
 
@@ -196,13 +196,13 @@ export const CourtAvailabilityMatrix = ({
                 {/* Slots Strip */}
                 <div className="flex-1 flex flex-wrap gap-1.5">
                   {court.slots.map((slot, idx) => {
-                    const startH = new Date(slot.slotStart).getUTCHours();
                     const isFree = slot.status === 'free';
-                    const timeLabel = `${startH.toString().padStart(2, '0')}:00`;
+                    const timeLabel = formatSlotTime(slot.slotStart);
+                    const rangeLabel = formatSlotRange(slot.slotStart, slot.slotEnd);
 
                     const tipText = isFree
-                      ? `Available: ${timeLabel}`
-                      : `Booked: ${timeLabel} (${slot.bookingType === 'walk_in' ? 'WALK IN' : (slot.bookingType || 'reserved')})`;
+                      ? `Available: ${rangeLabel}`
+                      : `Booked: ${rangeLabel} (${slot.bookingType === 'walk_in' ? 'WALK IN' : (slot.bookingType || 'reserved')})`;
 
                     return (
                       <div key={idx} className="tooltip tooltip-top" data-tip={tipText}>
@@ -214,7 +214,7 @@ export const CourtAvailabilityMatrix = ({
                           disabled={!isFree}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all flex flex-col items-center justify-center min-w-[62px] ${
                             isFree
-                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white cursor-pointer shadow-2xs'
+                              ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white cursor-pointer shadow-2xs'
                               : 'bg-base-300 text-base-content/40 border border-base-content/10 cursor-not-allowed'
                           }`}
                         >

@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 import { bookingService } from '@/services/bookingService';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatSlotRange } from '@/lib/utils';
 import type { BookingDetail } from '@/types/bookings';
 import { BookingCancelModal } from './components/BookingCancelModal';
 
@@ -86,10 +86,8 @@ export const BookingDetailPage = () => {
   }
 
   const isCancelled = booking.status === 'cancelled';
-  const startD = new Date(booking.slotStart);
-  const endD = new Date(booking.slotEnd);
   const dateFormatted = formatDate(booking.slotStart);
-  const timeFormatted = `${startD.getUTCHours().toString().padStart(2, '0')}:00 - ${endD.getUTCHours().toString().padStart(2, '0')}:00 UTC`;
+  const timeFormatted = formatSlotRange(booking.slotStart, booking.slotEnd, true);
 
   return (
     <motion.div

@@ -4,7 +4,6 @@ import { Calendar, type Options, type DateAny } from 'vanilla-calendar-pro';
 import 'vanilla-calendar-pro/styles/index.css';
 import { FaCalendarDays, FaXmark } from 'react-icons/fa6';
 import { cn, formatDate, parseDateToISO } from '@/lib/utils';
-import { useThemeStore } from '@/stores/themeStore';
 
 export interface DatePickerProps {
   value?: string; // YYYY-MM-DD or DD-MM-YYYY
@@ -38,26 +37,34 @@ export const DatePicker = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-
-  const theme = useThemeStore((s) => s.theme);
-  const isDark = theme === 'black';
 
   const isoValue = parseDateToISO(value);
   const displayValue = formatDate(value);
 
+  const updatePosition = () => {
+    if (inputWrapRef.current) {
+      const rect = inputWrapRef.current.getBoundingClientRect();
+      const calHeight = 350;
+      const fitsBelow = rect.bottom + 4 + calHeight <= window.innerHeight;
+      const top = fitsBelow ? rect.bottom + 4 : Math.max(8, rect.top - calHeight - 4);
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 300));
+      setPopoverStyle({
+        position: 'fixed',
+        top,
+        left,
+        zIndex: 9999,
+      });
+    }
+  };
+
   // Toggle calendar open/close
   const toggleCalendar = () => {
     if (!disabled) {
-      if (!isOpen && inputWrapRef.current) {
-        const rect = inputWrapRef.current.getBoundingClientRect();
-        setPopoverStyle({
-          position: 'fixed',
-          top: rect.bottom + 4,
-          left: rect.left,
-          zIndex: 9999,
-        });
+      if (!isOpen) {
+        updatePosition();
       }
       setIsOpen((prev) => !prev);
     }
@@ -69,12 +76,15 @@ export const DatePicker = ({
     setIsOpen(false);
   };
 
-  // Close calendar on outside click or Escape key
+  // Close calendar on outside click or Escape key, and keep repositioned on scroll/resize
   useEffect(() => {
     if (!isOpen) return;
 
     const handleOutsideClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedContainer = containerRef.current?.contains(target);
+      const clickedPopover = popoverRef.current?.contains(target);
+      if (!clickedContainer && !clickedPopover) {
         setIsOpen(false);
       }
     };
@@ -85,11 +95,20 @@ export const DatePicker = ({
       }
     };
 
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
     document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
     };
   }, [isOpen]);
 
@@ -108,10 +127,11 @@ export const DatePicker = ({
     const isoMax = parseDateToISO(maxDate || '2050-12-31');
 
     const options: Options = {
-      selectedTheme: isDark ? 'dark' : 'light',
+      selectedTheme: 'light',
       selectedDates: isoValue ? [isoValue] : [],
       dateMin: isoMin as DateAny,
       dateMax: isoMax as DateAny,
+      enableDateToggle: false,
       selectionYearsMode: true,
       selectionMonthsMode: true,
       onClickDate(self) {
@@ -142,7 +162,7 @@ export const DatePicker = ({
       }
       wrapper.innerHTML = '';
     };
-  }, [isOpen, isDark, isoValue, minDate, maxDate]);
+  }, [isOpen, isoValue, minDate, maxDate]);
 
   return (
     <div ref={containerRef} className={cn('fieldset w-full relative', className)}>
@@ -201,6 +221,7 @@ export const DatePicker = ({
       {isOpen &&
         createPortal(
           <div
+            ref={popoverRef}
             style={popoverStyle}
             className="bg-base-100 rounded-2xl border border-base-300 shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-100"
           >

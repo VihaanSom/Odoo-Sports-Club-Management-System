@@ -9,7 +9,7 @@ import {
   FaUsers,
   FaIndianRupeeSign,
 } from 'react-icons/fa6';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatSlotRange } from '@/lib/utils';
 import type { BookingDetail } from '@/types/bookings';
 import type { Booking } from '@/types/models';
 
@@ -61,12 +61,7 @@ export const BookingsTable = ({ bookings, onCancel }: BookingsTableProps) => {
                 let scheduleDate = '';
 
                 if (detail) {
-                  const startD = new Date(detail.slotStart);
-                  const endD = new Date(detail.slotEnd);
-                  scheduleTime = `${startD.getUTCHours().toString().padStart(2, '0')}:00 - ${endD
-                    .getUTCHours()
-                    .toString()
-                    .padStart(2, '0')}:00`;
+                  scheduleTime = formatSlotRange(detail.slotStart, detail.slotEnd);
                   scheduleDate = formatDate(detail.slotStart);
                 } else if (legacy) {
                   scheduleTime = `${legacy.startTime} - ${legacy.endTime}`;

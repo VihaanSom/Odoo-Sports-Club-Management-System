@@ -55,3 +55,30 @@ export function formatPaise(paise?: number | null): string {
   if (paise == null || isNaN(paise)) return '₹0.00';
   return `₹${(paise / 100).toFixed(2)}`;
 }
+
+/**
+ * Format a slot UTC start/end timestamp to HH:mm string (e.g. "06:30")
+ */
+export function formatSlotTime(isoString?: string | Date | null): string {
+  if (!isoString) return '';
+  const d = typeof isoString === 'string' ? new Date(isoString) : isoString;
+  if (isNaN(d.getTime())) return '';
+  const h = d.getUTCHours().toString().padStart(2, '0');
+  const m = d.getUTCMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+/**
+ * Format a slot UTC start and end time range (e.g. "06:30 - 07:30" or "06:30 - 07:30 UTC")
+ */
+export function formatSlotRange(
+  startIso?: string | Date | null,
+  endIso?: string | Date | null,
+  appendUtc = false
+): string {
+  const start = formatSlotTime(startIso);
+  const end = formatSlotTime(endIso);
+  if (!start && !end) return '';
+  if (!end) return start;
+  return `${start} - ${end}${appendUtc ? ' UTC' : ''}`;
+}

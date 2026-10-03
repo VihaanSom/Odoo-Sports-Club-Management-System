@@ -1,7 +1,7 @@
 import {  useEffect, useState  } from 'react';
 import { FaClock, FaCheck, FaChevronDown } from 'react-icons/fa6';
 import { courtService } from '@/services/courtService';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatSlotTime, formatSlotRange } from '@/lib/utils';
 import type { Court, SlotAvailabilityItem } from '@/types/courts';
 import { DatePicker } from '@/components/ui/DatePicker';
 
@@ -128,17 +128,17 @@ export const SlotPicker = ({
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {slots.map((s, idx) => {
-              const startH = new Date(s.slotStart).getUTCHours();
-              const endH = new Date(s.slotEnd).getUTCHours();
+              const timeLabel = formatSlotTime(s.slotStart);
+              const endLabel = formatSlotTime(s.slotEnd);
+              const rangeLabel = formatSlotRange(s.slotStart, s.slotEnd);
               const isSelected = selectedSlotStart === s.slotStart;
               const isFree = s.status === 'free';
-              const label = `${startH.toString().padStart(2, '0')}:00 - ${endH.toString().padStart(2, '0')}:00`;
 
               return (
                 <button
                   key={idx}
                   type="button"
-                  title={label}
+                  title={rangeLabel}
                   disabled={!isFree}
                   onClick={() => {
                     if (selectedCourtId) {
@@ -149,12 +149,13 @@ export const SlotPicker = ({
                     isSelected
                       ? 'bg-primary text-primary-content font-bold shadow-md scale-102 ring-2 ring-primary ring-offset-2'
                       : isFree
-                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white cursor-pointer'
+                      ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white cursor-pointer'
                       : 'bg-base-200 text-base-content/30 border border-base-300 cursor-not-allowed'
                   }`}
                 >
-                  <span className="font-semibold text-[11px]">{startH.toString().padStart(2, '0')}:00</span>
-                  <span className="text-[9px] mt-0.5 flex items-center gap-1">
+                  <span className="font-semibold text-[11px]">{timeLabel}</span>
+                  <span className="text-[9px] opacity-65 font-sans">to {endLabel}</span>
+                  <span className="text-[9px] mt-0.5 flex items-center gap-1 font-sans">
                     {isSelected ? (
                       <FaCheck className="size-2 text-primary-content" />
                     ) : isFree ? (
