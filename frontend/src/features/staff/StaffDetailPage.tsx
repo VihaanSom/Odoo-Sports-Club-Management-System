@@ -240,7 +240,9 @@ export const StaffDetailPage = () => {
                             </button>
                           )}
                           {s.status === 'completed' && (
-                            <span className="badge badge-neutral badge-xs font-semibold">Done</span>
+                            <span className="btn btn-xs btn-ghost border border-base-300 text-base-content/60 font-medium px-3 whitespace-nowrap min-w-[76px] pointer-events-none select-none">
+                              Done
+                            </span>
                           )}
                         </td>
                       </tr>

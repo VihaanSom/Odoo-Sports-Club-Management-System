@@ -22,6 +22,17 @@ const shiftSchema = z.object({
 
 type ShiftFormData = z.infer<typeof shiftSchema>;
 
+const cleanShiftNotes = (notes?: string) => {
+  if (!notes) return '—';
+  const cleaned = notes
+    .replace(/\[?\bClocked (?:In|Out)\b\]?/gi, '')
+    .replace(/\|\s*\|/g, '|')
+    .trim()
+    .replace(/^\|\s*|\s*\|$/g, '')
+    .trim();
+  return cleaned || '—';
+};
+
 export const ShiftsPage = () => {
   const navigate = useNavigate();
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -267,8 +278,8 @@ export const ShiftsPage = () => {
                       <span className="text-base-content/70"> | Out: {s.clockOutTime}</span>
                     ) : null}
                   </td>
-                  <td className="text-xs text-base-content/70 max-w-xs truncate">
-                    {s.notes || '—'}
+                  <td className="text-xs text-base-content/70 max-w-xs truncate" title={cleanShiftNotes(s.notes)}>
+                    {cleanShiftNotes(s.notes)}
                   </td>
                   <td className="text-center">
                     {s.status === 'in_progress' && (
@@ -312,7 +323,9 @@ export const ShiftsPage = () => {
                       </button>
                     )}
                     {s.status === 'completed' && (
-                      <span className="badge badge-neutral badge-xs font-semibold">Done</span>
+                      <span className="btn btn-xs btn-ghost border border-base-300 text-base-content/60 font-medium px-3 whitespace-nowrap min-w-[76px] pointer-events-none select-none">
+                        Done
+                      </span>
                     )}
                   </td>
                 </tr>

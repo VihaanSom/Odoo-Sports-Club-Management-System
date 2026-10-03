@@ -103,6 +103,13 @@ export function normalizeShift(s: any): Shift {
     }
   }
 
+  const cleanNotes = (notes || '')
+    .replace(/\[?\bClocked (?:In|Out)\b\]?/gi, '')
+    .replace(/\|\s*\|/g, '|')
+    .trim()
+    .replace(/^\|\s*|\s*\|$/g, '')
+    .trim();
+
   return {
     id: String(s.id),
     staffId: String(s.staffId),
@@ -117,7 +124,7 @@ export function normalizeShift(s: any): Shift {
     clockInTime,
     clockOutTime,
     facility: s.facility,
-    notes: s.notes || undefined,
+    notes: cleanNotes || undefined,
   };
 }
 

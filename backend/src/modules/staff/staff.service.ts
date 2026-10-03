@@ -101,6 +101,13 @@ export const formatShift = (shift: Shift & { staff?: any }) => {
       : undefined;
   }
 
+  const cleanNotes = notes
+    .replace(/\[?\bClocked (?:In|Out)\b\]?/gi, '')
+    .replace(/\|\s*\|/g, '|')
+    .trim()
+    .replace(/^\|\s*|\s*\|$/g, '')
+    .trim();
+
   return {
     id: String(shift.id),
     staffId: String(shift.staffId),
@@ -115,7 +122,7 @@ export const formatShift = (shift: Shift & { staff?: any }) => {
     status,
     clockInTime,
     clockOutTime,
-    notes: shift.notes,
+    notes: cleanNotes || null,
     createdAt: shift.createdAt.toISOString(),
   };
 };
