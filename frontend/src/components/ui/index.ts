@@ -12,3 +12,5 @@ export * from './ImageWithFallback';
 export * from './DatePicker';
 export * from './VanillaCalendar';
 export * from './Logo';
+export * from './ApiErrorAlert';
+export * from './PriceDisplay';

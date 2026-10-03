@@ -1,13 +1,8 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
+import React from 'react';
+import { ProtectedRoute, type ProtectedRouteProps } from './ProtectedRoute';
 
-export const AuthGuard = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const location = useLocation();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <Outlet />;
+export const AuthGuard: React.FC<ProtectedRouteProps> = (props) => {
+  return <ProtectedRoute {...props} />;
 };
+
+export default AuthGuard;
