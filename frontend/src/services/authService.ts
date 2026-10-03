@@ -66,7 +66,12 @@ export const authService = {
         }
       } catch {
         // Fallback plan ID if query fails
-        planId = 1;
+        planId =
+          payload.tier.toLowerCase() === 'junior'
+            ? 43
+            : payload.tier.toLowerCase() === 'silver'
+            ? 40
+            : 37;
       }
     }
 
@@ -88,6 +93,7 @@ export const authService = {
       planId: Number(planId) || 1,
       paymentMethod: payload.paymentMethod,
       referenceNo,
+      photoUrl: payload.photoUrl || null,
       address: payload.addrLine1
         ? {
             addrLine1: payload.addrLine1,
@@ -113,12 +119,31 @@ export const authService = {
       status: member.status,
       membershipStart: member.membershipStart,
       membershipEnd: member.membershipEnd,
+      photoUrl: member.photoUrl,
+      avatarUrl: member.photoUrl,
     };
 
     return {
       user,
       token: accessToken,
     };
+  },
+
+  /**
+   * Upload profile picture before registration (unauthenticated)
+   */
+  uploadProfilePicture: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', 'member');
+
+    const response = await apiClient.post('/uploads/public', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data.data.url;
   },
 
   /**

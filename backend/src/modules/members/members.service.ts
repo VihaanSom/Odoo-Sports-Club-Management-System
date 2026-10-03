@@ -136,14 +136,24 @@ export class MembersService {
       }
     }
 
-    // 2. Lookup and validate plan
-    const plan = await prisma.membershipPlan.findUnique({
-      where: { id: input.planId },
-    });
+    // 2. Lookup and validate plan (with robust fallback to active tier plan)
+    let plan = input.planId
+      ? await prisma.membershipPlan.findUnique({
+          where: { id: input.planId },
+        })
+      : null;
+
+    if (!plan || !plan.isActive) {
+      plan = await prisma.membershipPlan.findFirst({
+        where: { tier: input.tier, isActive: true },
+        orderBy: { durationMonths: 'asc' },
+      });
+    }
+
     if (!plan || !plan.isActive) {
       throw new NotFoundError(
         'PLAN_NOT_FOUND',
-        `Membership plan with ID ${input.planId} does not exist or is inactive.`
+        `Membership plan for tier '${input.tier}' does not exist or is inactive.`
       );
     }
     if (plan.tier !== input.tier) {

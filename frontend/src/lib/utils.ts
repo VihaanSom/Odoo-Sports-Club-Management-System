@@ -45,6 +45,9 @@ export function parseDateToISO(dateStr?: string | null): string {
     const [d, m, y] = dateStr.split('-');
     return `${y}-${m}-${d}`;
   }
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    return dateStr.slice(0, 10);
+  }
   return dateStr;
 }
 

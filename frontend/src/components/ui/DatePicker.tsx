@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, type Options, type DateAny } from 'vanilla-calendar-pro';
 import 'vanilla-calendar-pro/styles/index.css';
@@ -44,21 +44,33 @@ export const DatePicker = ({
   const isoValue = parseDateToISO(value);
   const displayValue = formatDate(value);
 
-  const updatePosition = () => {
-    if (inputWrapRef.current) {
-      const rect = inputWrapRef.current.getBoundingClientRect();
-      const calHeight = 350;
-      const fitsBelow = rect.bottom + 4 + calHeight <= window.innerHeight;
-      const top = fitsBelow ? rect.bottom + 4 : Math.max(8, rect.top - calHeight - 4);
-      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 300));
-      setPopoverStyle({
-        position: 'fixed',
-        top,
-        left,
-        zIndex: 9999,
-      });
+  // Calculate and update popover position relative to viewport
+  const updatePosition = useCallback(() => {
+    if (!inputWrapRef.current) return;
+    const rect = inputWrapRef.current.getBoundingClientRect();
+    const calendarHeight = 340;
+    const calendarWidth = 280;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    let top = rect.bottom + 4;
+    // If not enough room below and more room above, position above input
+    if (spaceBelow < calendarHeight && spaceAbove > spaceBelow) {
+      top = Math.max(8, rect.top - calendarHeight - 4);
     }
-  };
+
+    let left = rect.left;
+    if (left + calendarWidth > window.innerWidth) {
+      left = Math.max(8, window.innerWidth - calendarWidth - 8);
+    }
+
+    setPopoverStyle({
+      position: 'fixed',
+      top: `${top}px`,
+      left: `${left}px`,
+      zIndex: 99999,
+    });
+  }, []);
 
   // Toggle calendar open/close
   const toggleCalendar = () => {
@@ -76,17 +88,53 @@ export const DatePicker = ({
     setIsOpen(false);
   };
 
-  // Close calendar on outside click or Escape key, and keep repositioned on scroll/resize
+  // Recalculate position on resize or scroll
+  useEffect(() => {
+    if (!isOpen) return;
+
+    updatePosition();
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+
+    return () => {
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+    };
+  }, [isOpen, updatePosition]);
+
+  // Stop mousedown propagation inside popover to prevent document outside-click from firing
+  useEffect(() => {
+    const popover = popoverRef.current;
+    if (!isOpen || !popover) return;
+
+    const stopPropagation = (e: MouseEvent) => {
+      e.stopPropagation();
+    };
+
+    popover.addEventListener('mousedown', stopPropagation);
+    return () => {
+      popover.removeEventListener('mousedown', stopPropagation);
+    };
+  }, [isOpen]);
+
+  // Close calendar on outside click or Escape key
   useEffect(() => {
     if (!isOpen) return;
 
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as Node;
-      const clickedContainer = containerRef.current?.contains(target);
-      const clickedPopover = popoverRef.current?.contains(target);
-      if (!clickedContainer && !clickedPopover) {
-        setIsOpen(false);
+      if (
+        containerRef.current?.contains(target) ||
+        popoverRef.current?.contains(target)
+      ) {
+        return;
       }
+      setIsOpen(false);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,20 +143,12 @@ export const DatePicker = ({
       }
     };
 
-    const handleScrollOrResize = () => {
-      updatePosition();
-    };
-
     document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('resize', handleScrollOrResize);
-    window.addEventListener('scroll', handleScrollOrResize, true);
 
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('resize', handleScrollOrResize);
-      window.removeEventListener('scroll', handleScrollOrResize, true);
     };
   }, [isOpen]);
 
@@ -131,11 +171,15 @@ export const DatePicker = ({
       selectedDates: isoValue ? [isoValue] : [],
       dateMin: isoMin as DateAny,
       dateMax: isoMax as DateAny,
-      enableDateToggle: false,
+      selectionDatesMode: 'single',
       selectionYearsMode: true,
       selectionMonthsMode: true,
-      onClickDate(self) {
-        const chosen = self.context.selectedDates[0];
+      enableDateToggle: false,
+      enableJumpToSelectedDate: true,
+      onClickDate(self, event) {
+        const target = event.target as HTMLElement | null;
+        const dateEl = target?.closest<HTMLElement>('[data-vc-date]');
+        const chosen = self.context.selectedDates[0] || dateEl?.dataset.vcDate;
         if (chosen) {
           onChangeRef.current?.(chosen);
           setIsOpen(false);
@@ -143,11 +187,11 @@ export const DatePicker = ({
       },
     };
 
-    if (isoValue) {
-      const d = new Date(isoValue);
-      if (!isNaN(d.getTime())) {
-        options.selectedYear = d.getFullYear();
-        options.selectedMonth = d.getMonth() as unknown as Options['selectedMonth'];
+    if (isoValue && /^\d{4}-\d{2}-\d{2}$/.test(isoValue)) {
+      const [y, m] = isoValue.split('-').map(Number);
+      if (!isNaN(y) && !isNaN(m) && m >= 1 && m <= 12) {
+        options.selectedYear = y;
+        options.selectedMonth = (m - 1) as unknown as Options['selectedMonth'];
       }
     }
 
@@ -223,7 +267,7 @@ export const DatePicker = ({
           <div
             ref={popoverRef}
             style={popoverStyle}
-            className="bg-base-100 rounded-2xl border border-base-300 shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-100"
+            className="bg-base-100 rounded-2xl border border-base-300 shadow-2xl p-2 select-none"
           >
             <div ref={wrapperRef} />
           </div>,

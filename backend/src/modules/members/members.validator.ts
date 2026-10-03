@@ -47,7 +47,7 @@ export const createMemberSchema = z.object({
   tier: z.enum([MembershipTier.Gold, MembershipTier.Silver, MembershipTier.Junior], {
     message: 'tier must be one of: Gold, Silver, Junior',
   }),
-  planId: z.coerce.number().int().positive('planId must be a positive integer'),
+  planId: z.coerce.number().int().positive('planId must be a positive integer').optional(),
   address: addressBodySchema.nullable().optional(),
   photoUrl: z.string().max(500, 'photoUrl cannot exceed 500 characters').nullable().optional(),
 });

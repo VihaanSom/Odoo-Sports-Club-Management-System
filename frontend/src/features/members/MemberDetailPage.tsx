@@ -223,15 +223,9 @@ export const MemberDetailPage = () => {
                   <span className="text-base-content/60">Start Date:</span>
                   <span className="font-mono">{member.membershipStart || member.joinedDate}</span>
                 </div>
-                <div className="flex justify-between border-b border-base-300/60 pb-1.5">
+                <div className="flex justify-between">
                   <span className="text-base-content/60">Renewal Due Date:</span>
                   <span className="font-mono">{member.membershipEnd || '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-base-content/60">Odoo Partner Sync ID:</span>
-                  <span className="font-mono font-bold text-primary">
-                    {member.odooPartnerId ? `#${member.odooPartnerId}` : 'Synced'}
-                  </span>
                 </div>
               </div>
             </div>
