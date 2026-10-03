@@ -11,7 +11,6 @@ import {
   FaArrowRightToBracket,
   FaCamera,
   FaUser,
-  FaTrash,
 } from 'react-icons/fa6';
 import { Card, CardBody, Button, DatePicker, Logo } from '@/components/ui';
 import { TierSelector, PaymentMethodSection, PasswordStrength } from './components';
