@@ -27,19 +27,20 @@ export type MemberPlanTier =
   | 'VIP';
 
 export interface MemberDetail extends Member {
-  id: string;
+  id: number;
   firstName?: string;
   lastName?: string;
-  name: string;
+  name?: string;
   email: string;
   phone: string;
   dateOfBirth?: string | null;
   tier: MemberPlanTier;
-  membershipPlan: MemberPlanTier;
+  membershipPlan?: MemberPlanTier;
   membershipStart?: string;
   membershipEnd?: string;
   status: MemberStatus | 'active' | 'suspended' | 'expired';
-  joinedDate: string;
+  /** @deprecated Use membershipStart */
+  joinedDate?: string;
   photoUrl?: string;
   avatarUrl?: string;
   odooPartnerId?: number;

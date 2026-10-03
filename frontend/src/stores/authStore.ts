@@ -7,7 +7,7 @@ interface AuthState {
   isAuthenticated: boolean;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
-  login: (user: User, token: string, refreshToken?: string) => void;
+  login: (user: User, token: string) => void;
   logout: () => void;
 }
 
@@ -24,16 +24,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ token, isAuthenticated: Boolean(token) });
   },
-  login: (user, token, refreshToken) => {
+  login: (user, token) => {
     localStorage.setItem('auth_token', token);
-    if (refreshToken) {
-      localStorage.setItem('refresh_token', refreshToken);
-    }
+    // Refresh token is handled by httpOnly cookie — not stored in localStorage
     set({ user, token, isAuthenticated: true });
   },
   logout: () => {
     localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
     set({ user: null, token: null, isAuthenticated: false });
   },
 }));
