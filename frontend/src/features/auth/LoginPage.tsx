@@ -35,7 +35,7 @@ export const LoginPage = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: 'admin@championsclub.com',
-      password: 'password123',
+      password: 'Admin@12345',
       rememberMe: true,
     },
   });
@@ -51,18 +51,23 @@ export const LoginPage = () => {
       });
 
       login(user, token);
-      toast.success(`Welcome back, ${user.name}!`);
+      toast.success(`Welcome back, ${user.name || user.firstName || 'Member'}!`);
       navigate(from, { replace: true });
-    } catch {
-      toast.error('Authentication failed. Please check your credentials.');
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Authentication failed. Please check your credentials.';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fillDemo = (email: string) => {
+  const fillDemo = (email: string, password = 'Admin@12345') => {
     setValue('email', email, { shouldValidate: true });
-    setValue('password', 'password123', { shouldValidate: true });
+    setValue('password', password, { shouldValidate: true });
     toast.success(`Loaded credentials for ${email}`);
   };
 
@@ -180,14 +185,14 @@ export const LoginPage = () => {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => fillDemo('admin@championsclub.com')}
+                onClick={() => fillDemo('admin@championsclub.com', 'Admin@12345')}
                 className="btn btn-xs btn-outline rounded-lg text-[10px] font-semibold"
               >
                 Club Admin
               </button>
               <button
                 type="button"
-                onClick={() => fillDemo('gold.member@championsclub.com')}
+                onClick={() => fillDemo('rahul.gold@championsclub.com', 'Member@12345')}
                 className="btn btn-xs btn-outline rounded-lg text-[10px] font-semibold"
               >
                 Gold Member
