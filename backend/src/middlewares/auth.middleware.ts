@@ -92,6 +92,32 @@ export const requireMember = (
   next();
 };
 
+export const verifyToken = authenticate;
+
+export const requireRole = (...roles: string[]) => {
+  return requireRoles(...(roles as UserRole[]));
+};
+
+export const requireSelfOrRole = (...allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      sendError(res, 'Authentication required', 401);
+      return;
+    }
+
+    const targetId = parseInt(req.params.id as string, 10);
+    const isSelf = req.user.role === 'member' && !isNaN(targetId) && req.user.id === targetId;
+    const hasRole = (allowedRoles as string[]).includes(req.user.role);
+
+    if (isSelf || hasRole) {
+      next();
+      return;
+    }
+
+    sendError(res, 'Access forbidden: insufficient permissions', 403);
+  };
+};
+
 // Aliases for cross-module compatibility (Dev A & Dev B)
 export const verifyToken = authenticate;
 export const requireRole = requireRoles;
