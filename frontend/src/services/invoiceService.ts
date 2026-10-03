@@ -1,117 +1,119 @@
 import { apiClient } from './apiClient';
-import { mockRenewalDues, mockInvoices } from '@/mock/invoices';
-import { mockMembers } from '@/mock/members';
 import type { RenewalDueMember, MemberInvoice, GenerateInvoiceResponse } from '@/types/invoices';
 
-let localRenewalDues: RenewalDueMember[] = JSON.parse(JSON.stringify(mockRenewalDues));
-let localInvoices: MemberInvoice[] = JSON.parse(JSON.stringify(mockInvoices));
+export interface BackendRenewalMember {
+  memberId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  tier: string;
+  membershipEnd: string;
+  daysRemaining: number;
+}
+
+export interface BackendGenerateInvoiceData {
+  invoiceNumber: string;
+  memberId: number;
+  memberName: string;
+  tier: string;
+  currentMembershipEnd: string;
+  renewalAmountPaise: number;
+  generatedAt: string;
+}
+
+// In-memory store for invoices generated during the current application session
+const sessionInvoices: MemberInvoice[] = [];
 
 export const invoiceService = {
-  // IN-01: Members due for renewal
+  // IN-01: List members due for renewal (GET /invoices/members)
   getRenewalDues: async (): Promise<RenewalDueMember[]> => {
-    try {
-      const response = await apiClient.get<RenewalDueMember[] | { data: RenewalDueMember[] }>('/invoices/members');
-      const data = response.data;
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object' && 'data' in data && Array.isArray((data as any).data)) {
-        return (data as any).data;
-      }
-      return localRenewalDues;
-    } catch {
-      return localRenewalDues;
-    }
-  },
+    const response = await apiClient.get<{ success: boolean; data: BackendRenewalMember[] }>('/invoices/members');
+    const raw: BackendRenewalMember[] = (response.data as any).data || response.data || [];
 
-  // IN-02: Generate membership renewal invoice
-  generateInvoice: async (memberId: string | number): Promise<GenerateInvoiceResponse> => {
-    try {
-      const response = await apiClient.post<GenerateInvoiceResponse>(`/invoices/${memberId}`);
-      return response.data;
-    } catch {
-      const dueItem = localRenewalDues.find((d) => String(d.memberId) === String(memberId));
-      const member = mockMembers.find((m) => String(m.id) === String(memberId));
+    const tierPricesPaise: Record<string, number> = {
+      Gold: 5000000,
+      Silver: 3000000,
+      Junior: 1500000,
+      VIP: 8000000,
+      Standard: 4900000,
+    };
 
-      const memberName = dueItem?.name || member?.name || `Member ${memberId}`;
-      const tier = dueItem?.tier || member?.membershipPlan || 'Standard';
-      const currentMembershipEnd = dueItem?.membershipEnd || '2026-10-31';
-
-      // Tier pricing in paise
-      const tierPricesPaise: Record<string, number> = {
-        Junior: 290000,
-        Standard: 490000,
-        Premium: 890000,
-        VIP: 1490000,
-      };
-      const renewalAmountPaise = dueItem?.renewalAmountPaise || tierPricesPaise[tier] || 490000;
-
-      const nextNum = localInvoices.length + 42;
-      const invoiceNumber = `INV-2026-${String(nextNum).padStart(4, '0')}`;
-
-      // Due date is current membership end date or 14 days from now
-      const dueDate = currentMembershipEnd;
-      const newEndDate = new Date(new Date(currentMembershipEnd).getTime() + 365 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0];
-
-      const newInvoice: MemberInvoice = {
-        invoiceNumber,
-        memberId,
-        memberName,
-        memberEmail: dueItem?.email || member?.email,
-        memberPhone: dueItem?.phone || member?.phone,
-        tier,
-        currentMembershipEnd,
-        newMembershipEnd: newEndDate,
-        renewalAmountPaise,
-        generatedAt: new Date().toISOString(),
-        dueDate,
-        status: 'issued',
-        notes: `Automated renewal invoice generated for ${tier} Annual Membership.`,
-      };
-
-      // Record in local invoices
-      localInvoices.unshift(newInvoice);
-
-      // Update renewal due member record
-      if (dueItem) {
-        dueItem.lastInvoiceNumber = invoiceNumber;
-      }
+    return raw.map((m) => {
+      const name = `${m.firstName || ''} ${m.lastName || ''}`.trim() || `Member ${m.memberId}`;
+      const renewalAmountPaise = tierPricesPaise[m.tier] || 5000000;
+      const existingInv = sessionInvoices.find((inv) => String(inv.memberId) === String(m.memberId));
 
       return {
-        invoiceNumber,
-        memberId,
-        memberName,
-        tier,
-        currentMembershipEnd,
+        memberId: m.memberId,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        name,
+        email: m.email,
+        phone: m.phone,
+        tier: m.tier,
+        membershipEnd: m.membershipEnd,
+        daysRemaining: m.daysRemaining,
         renewalAmountPaise,
-        generatedAt: newInvoice.generatedAt,
-        invoice: newInvoice,
+        lastInvoiceNumber: existingInv ? existingInv.invoiceNumber : null,
       };
-    }
+    });
   },
 
-  // Get all generated invoices
-  getAllInvoices: async (): Promise<MemberInvoice[]> => {
-    try {
-      const response = await apiClient.get<MemberInvoice[] | { data: MemberInvoice[] }>('/invoices');
-      const data = response.data;
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object' && 'data' in data && Array.isArray((data as any).data)) {
-        return (data as any).data;
-      }
-      return localInvoices;
-    } catch {
-      return localInvoices;
+  // IN-02: Generate membership renewal invoice (POST /invoices/:memberId)
+  generateInvoice: async (memberId: string | number): Promise<GenerateInvoiceResponse> => {
+    const numericMemberId = typeof memberId === 'string' ? parseInt(memberId.replace(/\D/g, ''), 10) || memberId : memberId;
+    const response = await apiClient.post<{ success: boolean; data: BackendGenerateInvoiceData }>(`/invoices/${numericMemberId}`);
+    const data: BackendGenerateInvoiceData = (response.data as any).data || response.data;
+
+    const dueDate = data.currentMembershipEnd;
+    const newEndDate = new Date(new Date(data.currentMembershipEnd).getTime() + 365 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+
+    const newInvoice: MemberInvoice = {
+      invoiceNumber: data.invoiceNumber,
+      memberId: data.memberId,
+      memberName: data.memberName,
+      tier: data.tier,
+      currentMembershipEnd: data.currentMembershipEnd,
+      newMembershipEnd: newEndDate,
+      renewalAmountPaise: data.renewalAmountPaise,
+      generatedAt: data.generatedAt,
+      dueDate,
+      status: 'issued',
+      notes: `Automated renewal invoice generated for ${data.tier} Annual Membership.`,
+    };
+
+    // Store in session cache
+    const existingIndex = sessionInvoices.findIndex((i) => i.invoiceNumber === newInvoice.invoiceNumber);
+    if (existingIndex >= 0) {
+      sessionInvoices[existingIndex] = newInvoice;
+    } else {
+      sessionInvoices.unshift(newInvoice);
     }
+
+    return {
+      invoiceNumber: data.invoiceNumber,
+      memberId: data.memberId,
+      memberName: data.memberName,
+      tier: data.tier,
+      currentMembershipEnd: data.currentMembershipEnd,
+      renewalAmountPaise: data.renewalAmountPaise,
+      generatedAt: data.generatedAt,
+      invoice: newInvoice,
+    };
+  },
+
+  // Get all session-generated invoices
+  getAllInvoices: async (): Promise<MemberInvoice[]> => {
+    return [...sessionInvoices];
   },
 
   // Get invoice by invoiceNumber
   getInvoiceById: async (invoiceNumber: string): Promise<MemberInvoice | undefined> => {
-    try {
-      const response = await apiClient.get<MemberInvoice>(`/invoices/${invoiceNumber}`);
-      return response.data;
-    } catch {
-      return localInvoices.find((i) => i.invoiceNumber.toLowerCase() === invoiceNumber.toLowerCase());
-    }
+    return sessionInvoices.find((i) => i.invoiceNumber.toLowerCase() === invoiceNumber.toLowerCase());
   },
 };
+
+export default invoiceService;
