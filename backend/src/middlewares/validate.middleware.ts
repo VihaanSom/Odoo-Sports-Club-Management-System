@@ -45,3 +45,13 @@ export const validateParams = (schema: ZodSchema) => {
     }
   };
 };
+
+export const validate = (
+  schema: ZodSchema,
+  source: 'body' | 'query' | 'params' = 'body'
+) => {
+  if (source === 'query') return validateQuery(schema);
+  if (source === 'params') return validateParams(schema);
+  return validateBody(schema);
+};
+
