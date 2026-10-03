@@ -101,6 +101,7 @@ export const signupSchema = z
     dob: z
       .string()
       .min(1, 'Date of birth is required'),
+    photoUrl: z.string().trim().max(500).optional().or(z.literal('')),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')

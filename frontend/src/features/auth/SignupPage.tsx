@@ -9,6 +9,9 @@ import {
   FaArrowRight,
   FaArrowLeft,
   FaArrowRightToBracket,
+  FaCamera,
+  FaUser,
+  FaTrash,
 } from 'react-icons/fa6';
 import { Card, CardBody, Button, DatePicker, Logo } from '@/components/ui';
 import { TierSelector, PaymentMethodSection, PasswordStrength } from './components';
@@ -26,6 +29,8 @@ export const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
@@ -47,6 +52,7 @@ export const SignupPage = () => {
       email: '',
       phone: '',
       dob: '2000-01-01',
+      photoUrl: '',
       password: '',
       confirmPassword: '',
       addrLine1: '',
@@ -70,6 +76,44 @@ export const SignupPage = () => {
   const cardHolderValue = watch('cardHolder');
   const cardExpiryValue = watch('cardExpiry');
   const cardCvvValue = watch('cardCvv');
+  const photoUrlValue = watch('photoUrl');
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Profile photo must be less than 5MB');
+      return;
+    }
+
+    const validMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validMimes.includes(file.type)) {
+      toast.error('Only JPG, PNG, or WebP images are allowed');
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setPhotoPreview(localPreview);
+    setIsUploadingPhoto(true);
+
+    try {
+      const uploadedUrl = await authService.uploadProfilePicture(file);
+      setValue('photoUrl', uploadedUrl, { shouldValidate: true });
+      toast.success('Profile photo uploaded!');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to upload photo. Please try again.');
+      setPhotoPreview(null);
+      setValue('photoUrl', '');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setValue('photoUrl', '');
+  };
 
   const currentTierInfo = MEMBERSHIP_TIERS.find((t) => t.id === selectedTier) || MEMBERSHIP_TIERS[0];
 
@@ -201,6 +245,69 @@ export const SignupPage = () => {
                   transition={{ duration: 0.2 }}
                   className="space-y-4"
                 >
+                  {/* Profile Picture Upload Section */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-base-200/50 rounded-2xl border border-base-300">
+                    <div className="relative shrink-0">
+                      <div className="size-20 rounded-full overflow-hidden border-2 border-primary/30 bg-base-300 flex items-center justify-center shadow-inner">
+                        {photoPreview || photoUrlValue ? (
+                          <img
+                            src={photoPreview || photoUrlValue}
+                            alt="Profile Preview"
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <FaUser className="size-8 text-base-content/40" />
+                        )}
+                      </div>
+                      {isUploadingPhoto && (
+                        <div className="absolute inset-0 bg-base-900/60 rounded-full flex items-center justify-center">
+                          <span className="loading loading-spinner loading-sm text-primary" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 text-center sm:text-left space-y-1">
+                      <div className="flex items-center justify-center sm:justify-start gap-2">
+                        <label className="text-xs font-bold text-base-content">
+                          Profile Picture
+                        </label>
+                        <span className="badge badge-xs badge-neutral text-[10px]">Optional</span>
+                      </div>
+                      <p className="text-[11px] text-base-content/60">
+                        Upload a photo for your digital member badge (JPG, PNG, WebP up to 5MB).
+                      </p>
+                      <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                        <label
+                          className={cn(
+                            'btn btn-xs btn-primary gap-1.5 cursor-pointer',
+                            isUploadingPhoto && 'btn-disabled opacity-50'
+                          )}
+                        >
+                          <FaCamera className="size-3" />
+                          {photoUrlValue || photoPreview ? 'Change Photo' : 'Upload Photo'}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handlePhotoUpload}
+                            disabled={isUploadingPhoto}
+                          />
+                        </label>
+                        {(photoUrlValue || photoPreview) && (
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            disabled={isUploadingPhoto}
+                            className="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                          >
+                            <FaTrash className="size-3" />
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* First Name */}
                     <div className="fieldset w-full">

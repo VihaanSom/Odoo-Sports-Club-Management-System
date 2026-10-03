@@ -153,6 +153,7 @@ export const publicRegisterSchema = z.object({
   paymentMethod: z.enum(['cash', 'card', 'upi']),
   referenceNo: z.string().trim().max(100).nullable().optional(),
   address: publicAddressSchema.optional(),
+  photoUrl: z.string().trim().max(500, 'photoUrl cannot exceed 500 characters').nullable().optional(),
 });
 
 export type PublicRegisterInput = z.infer<typeof publicRegisterSchema>;

@@ -552,6 +552,7 @@ export class LeadsService {
           membershipStart,
           membershipEnd,
           status: 'active',
+          photoUrl: input.photoUrl ?? null,
         },
       });
 
@@ -602,6 +603,7 @@ export class LeadsService {
         membershipStart: result.membershipStart.toISOString().split('T')[0],
         membershipEnd: result.membershipEnd.toISOString().split('T')[0],
         status: result.status,
+        photoUrl: result.photoUrl,
       },
       accessToken,
       refreshToken,
