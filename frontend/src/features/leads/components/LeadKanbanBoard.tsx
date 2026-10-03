@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaUserTie,
@@ -5,9 +6,10 @@ import {
   FaArrowRight,
   FaCheck,
   FaXmark,
+  FaGripVertical,
 } from 'react-icons/fa6';
 import { Badge } from '@/components/ui';
-import { formatDate } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
 import type { Lead, LeadStatus } from '@/types/leads';
 
 interface LeadKanbanBoardProps {
@@ -54,16 +56,67 @@ export const LeadKanbanBoard = ({
   onTransitionStage,
 }: LeadKanbanBoardProps) => {
   const navigate = useNavigate();
+  const [draggedLeadId, setDraggedLeadId] = useState<string | number | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<LeadStatus | null>(null);
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, leadId: string | number) => {
+    e.dataTransfer.setData('text/plain', String(leadId));
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedLeadId(leadId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedLeadId(null);
+    setDragOverColumn(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, colStatus: LeadStatus) => {
+    e.preventDefault();
+    setDragOverColumn(colStatus);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>, colStatus: LeadStatus) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      if (dragOverColumn === colStatus) {
+        setDragOverColumn(null);
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, colStatus: LeadStatus) => {
+    e.preventDefault();
+    setDragOverColumn(null);
+    setDraggedLeadId(null);
+    const rawId = e.dataTransfer.getData('text/plain');
+    if (rawId) {
+      onTransitionStage(rawId, colStatus);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
       {columns.map((col) => {
         const columnLeads = leads.filter((l) => l.status === col.status);
+        const isColumnOver = dragOverColumn === col.status;
 
         return (
           <div
             key={col.status}
-            className="flex flex-col rounded-2xl bg-base-200/50 border border-base-300 p-3.5 space-y-3 min-h-[500px]"
+            onDragOver={handleDragOver}
+            onDragEnter={(e) => handleDragEnter(e, col.status)}
+            onDragLeave={(e) => handleDragLeave(e, col.status)}
+            onDrop={(e) => handleDrop(e, col.status)}
+            className={cn(
+              'flex flex-col rounded-2xl bg-base-200/50 border p-3.5 space-y-3 min-h-[520px] transition-all duration-150',
+              isColumnOver
+                ? 'border-primary ring-2 ring-primary/40 bg-primary/5'
+                : 'border-base-300'
+            )}
           >
             {/* Column Header */}
             <div className="flex items-center justify-between px-1.5 pb-2 border-b border-base-300">
@@ -75,113 +128,146 @@ export const LeadKanbanBoard = ({
               </span>
             </div>
 
+            {/* Drop Indicator */}
+            {isColumnOver && (
+              <div className="p-2 rounded-xl bg-primary/20 border-2 border-dashed border-primary text-center text-xs font-bold text-primary animate-pulse">
+                Drop to move to {col.label}
+              </div>
+            )}
+
             {/* Cards List */}
             <div className="space-y-3 flex-1 overflow-y-auto max-h-[680px] pr-1">
-              {columnLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className={`card bg-base-100 border p-4 shadow-2xs hover:shadow-sm transition-all rounded-xl space-y-3 ${col.borderClass}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/leads/${lead.id}`)}
-                        className="text-left font-bold text-sm text-base-content hover:text-primary transition-colors cursor-pointer"
-                      >
-                        {lead.name}
-                      </button>
-                      <span className="text-[10px] text-base-content/50 block font-mono">
-                        #{lead.id} · {formatDate(lead.createdAt)}
+              {columnLeads.map((lead) => {
+                const isBeingDragged = String(draggedLeadId) === String(lead.id);
+
+                return (
+                  <div
+                    key={lead.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, lead.id)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      'card bg-base-100 border p-4 shadow-2xs hover:shadow-md transition-all rounded-xl space-y-3 cursor-grab active:cursor-grabbing select-none',
+                      col.borderClass,
+                      isBeingDragged && 'opacity-40 scale-95 border-dashed border-primary'
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <FaGripVertical className="size-3 text-base-content/30 shrink-0 cursor-grab" />
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/leads/${lead.id}`)}
+                            className="text-left font-bold text-sm text-base-content hover:text-primary transition-colors cursor-pointer"
+                          >
+                            {lead.name}
+                          </button>
+                          <span className="text-[10px] text-base-content/50 block font-mono">
+                            #{lead.id} · {formatDate(lead.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {lead.sport && (
+                        <Badge size="xs" variant="ghost" className="capitalize">
+                          {lead.sport}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {lead.message && (
+                      <p className="text-xs text-base-content/70 line-clamp-2 pl-4">
+                        {lead.message}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between text-[11px] text-base-content/60 pt-1 border-t border-base-200">
+                      <span className="flex items-center gap-1 font-mono">
+                        {lead.phone && <FaPhone className="size-2.5 text-base-content/40" />}
+                        {lead.phone || lead.email || 'No contact'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FaUserTie className="size-2.5 text-base-content/40" />
+                        {lead.assignedStaffName?.split(' ')[0] || 'Unassigned'}
                       </span>
                     </div>
 
-                    {lead.sport && (
-                      <Badge size="xs" variant="ghost" className="capitalize">
-                        {lead.sport}
-                      </Badge>
-                    )}
+                    {/* Quick Stage Progression Buttons */}
+                    <div className="pt-1 flex items-center justify-end gap-1.5 border-t border-base-200">
+                      {lead.status === 'new' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTransitionStage(lead.id, 'contacted');
+                            }}
+                            className="btn btn-warning btn-xs gap-1 font-semibold"
+                            title="Mark Contacted"
+                          >
+                            <FaArrowRight className="size-2.5" /> Next
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTransitionStage(lead.id, 'lost');
+                            }}
+                            className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                            title="Mark Lost"
+                          >
+                            <FaXmark className="size-2.5" />
+                          </button>
+                        </>
+                      )}
+
+                      {lead.status === 'contacted' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTransitionStage(lead.id, 'converted');
+                            }}
+                            className="btn btn-success btn-xs text-success-content gap-1 font-semibold"
+                            title="Convert to Member"
+                          >
+                            <FaCheck className="size-2.5" /> Next
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTransitionStage(lead.id, 'lost');
+                            }}
+                            className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                            title="Mark Lost"
+                          >
+                            <FaXmark className="size-2.5" />
+                          </button>
+                        </>
+                      )}
+
+                      {lead.status === 'converted' && (
+                        <span className="text-[11px] text-success font-bold flex items-center gap-1">
+                          <FaCheck className="size-3" /> Member
+                        </span>
+                      )}
+
+                      {lead.status === 'lost' && (
+                        <span className="text-[11px] text-error font-medium flex items-center gap-1">
+                          <FaXmark className="size-3" /> Closed
+                        </span>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
 
-                  {lead.message && (
-                    <p className="text-xs text-base-content/70 line-clamp-2">
-                      {lead.message}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between text-[11px] text-base-content/60 pt-1 border-t border-base-200">
-                    <span className="flex items-center gap-1 font-mono">
-                      {lead.phone && <FaPhone className="size-2.5 text-base-content/40" />}
-                      {lead.phone || lead.email || 'No contact'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <FaUserTie className="size-2.5 text-base-content/40" />
-                      {lead.assignedStaffName?.split(' ')[0] || 'Unassigned'}
-                    </span>
-                  </div>
-
-                  {/* Quick Stage Progression Buttons */}
-                  <div className="pt-1 flex items-center justify-end gap-1.5 border-t border-base-200">
-                    {lead.status === 'new' && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onTransitionStage(lead.id, 'contacted')}
-                          className="btn btn-warning btn-xs gap-1 font-semibold"
-                          title="Mark Contacted"
-                        >
-                          <FaArrowRight className="size-2.5" /> Next
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onTransitionStage(lead.id, 'lost')}
-                          className="btn btn-ghost btn-xs text-error hover:bg-error/10"
-                          title="Mark Lost"
-                        >
-                          <FaXmark className="size-2.5" />
-                        </button>
-                      </>
-                    )}
-
-                    {lead.status === 'contacted' && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onTransitionStage(lead.id, 'converted')}
-                          className="btn btn-success btn-xs text-success-content gap-1 font-semibold"
-                          title="Convert to Member"
-                        >
-                          <FaCheck className="size-2.5" /> Next
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onTransitionStage(lead.id, 'lost')}
-                          className="btn btn-ghost btn-xs text-error hover:bg-error/10"
-                          title="Mark Lost"
-                        >
-                          <FaXmark className="size-2.5" />
-                        </button>
-                      </>
-                    )}
-
-                    {lead.status === 'converted' && (
-                      <span className="text-[11px] text-success font-bold flex items-center gap-1">
-                        <FaCheck className="size-3" /> Member
-                      </span>
-                    )}
-
-                    {lead.status === 'lost' && (
-                      <span className="text-[11px] text-error font-medium flex items-center gap-1">
-                        <FaXmark className="size-3" /> Closed
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {columnLeads.length === 0 && (
+              {columnLeads.length === 0 && !isColumnOver && (
                 <div className="h-32 flex items-center justify-center border-2 border-dashed border-base-300 rounded-xl text-xs text-base-content/40 font-medium">
-                  No leads in this stage
+                  Drag leads here
                 </div>
               )}
             </div>

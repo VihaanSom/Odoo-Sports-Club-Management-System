@@ -58,7 +58,7 @@ export const MemberDetailHeader = ({
             leftIcon={<FaPenToSquare className="size-3.5" />}
             onClick={onOpenEdit}
           >
-            Save
+            Edit Profile
           </Button>
 
           <Button

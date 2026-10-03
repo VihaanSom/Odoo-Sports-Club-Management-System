@@ -12,3 +12,7 @@ export * from './equipment';
 export * from './members';
 export * from './leads';
 export * from './invoices';
+export * from './staff';
+export * from './reports';
+export * from './payments';
+export * from './public';

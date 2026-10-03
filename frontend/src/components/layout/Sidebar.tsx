@@ -12,6 +12,12 @@ import {
   FaIdCard,
   FaGear,
   FaLayerGroup,
+  FaUserTie,
+  FaFileInvoiceDollar,
+  FaUserGroup,
+  FaMoneyBillTransfer,
+  FaChartLine,
+  FaGlobe,
 } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 
@@ -71,6 +77,39 @@ const navItems: NavItem[] = [
     icon: <FaIdCard className="size-4" />,
   },
   {
+    label: 'CRM Leads',
+    path: '/leads',
+    icon: <FaUserTie className="size-4 text-accent" />,
+    badge: 'CRM',
+  },
+  {
+    label: 'Renewal Invoices',
+    path: '/invoices',
+    icon: <FaFileInvoiceDollar className="size-4 text-warning" />,
+  },
+  {
+    label: 'Staff & Shifts',
+    path: '/staff',
+    icon: <FaUserGroup className="size-4 text-primary" />,
+  },
+  {
+    label: 'Payments Ledger',
+    path: '/payments',
+    icon: <FaMoneyBillTransfer className="size-4 text-success" />,
+  },
+  {
+    label: 'Club Reports',
+    path: '/reports',
+    icon: <FaChartLine className="size-4 text-info" />,
+    badge: 'BI',
+  },
+  {
+    label: 'Public Website',
+    path: '/public',
+    icon: <FaGlobe className="size-4 text-amber-500" />,
+    badge: 'Guest',
+  },
+  {
     label: 'Settings',
     path: '/settings',
     icon: <FaGear className="size-4" />,
@@ -101,7 +140,7 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4 overflow-y-auto flex-1 pr-1">
           <div className="px-2">
             <span className="text-xs font-bold text-base-content/50 uppercase tracking-widest flex items-center gap-2">
               <FaLayerGroup className="size-3 text-primary" /> Management

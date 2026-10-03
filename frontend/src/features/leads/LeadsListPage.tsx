@@ -46,11 +46,19 @@ export const LeadsListPage = () => {
   }, [fetchLeads]);
 
   const handleTransitionStage = async (id: number | string, newStatus: LeadStatus) => {
+    // Optimistic UI update: move card immediately for snappy 0ms drag & drop
+    let previousLeads: Lead[] = [];
+    setLeads((prev) => {
+      previousLeads = prev;
+      return prev.map((l) => (String(l.id) === String(id) ? { ...l, status: newStatus } : l));
+    });
+
     try {
       const updated = await leadService.transitionStage(id, newStatus);
       setLeads((prev) => prev.map((l) => (String(l.id) === String(id) ? updated : l)));
       toast.success(`Lead moved to ${newStatus}`);
     } catch {
+      setLeads(previousLeads);
       toast.error('Failed to update stage');
     }
   };

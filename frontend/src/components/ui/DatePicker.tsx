@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, type Options, type DateAny } from 'vanilla-calendar-pro';
 import 'vanilla-calendar-pro/styles/index.css';
 import { FaCalendarDays, FaXmark } from 'react-icons/fa6';
@@ -33,7 +34,9 @@ export const DatePicker = ({
   id,
 }: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputWrapRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -47,6 +50,15 @@ export const DatePicker = ({
   // Toggle calendar open/close
   const toggleCalendar = () => {
     if (!disabled) {
+      if (!isOpen && inputWrapRef.current) {
+        const rect = inputWrapRef.current.getBoundingClientRect();
+        setPopoverStyle({
+          position: 'fixed',
+          top: rect.bottom + 4,
+          left: rect.left,
+          zIndex: 9999,
+        });
+      }
       setIsOpen((prev) => !prev);
     }
   };
@@ -148,6 +160,7 @@ export const DatePicker = ({
       )}
 
       <div
+        ref={inputWrapRef}
         className={cn(
           'relative w-full cursor-pointer',
           disabled && 'cursor-not-allowed'
@@ -184,12 +197,17 @@ export const DatePicker = ({
 
       {error && <span className="text-error text-xs mt-1">{error}</span>}
 
-      {/* Floating Calendar Popover */}
-      {isOpen && (
-        <div className="absolute left-0 top-[calc(100%+4px)] z-[9999] bg-base-100 rounded-2xl border border-base-300 shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-100">
-          <div ref={wrapperRef} />
-        </div>
-      )}
+      {/* Floating Calendar Popover — rendered via portal to escape modal overflow */}
+      {isOpen &&
+        createPortal(
+          <div
+            style={popoverStyle}
+            className="bg-base-100 rounded-2xl border border-base-300 shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-100"
+          >
+            <div ref={wrapperRef} />
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

@@ -13,6 +13,8 @@ import { FacilitiesPage } from './features/facilities/FacilitiesPage';
 import { EquipmentPage } from './features/equipment/EquipmentPage';
 import { bookingRoutes } from './features/bookings/routes';
 import { commerceJsxRoutes } from './features/commerce/routes';
+import { crmJsxRoutes } from './features/crm/routes';
+import { adminJsxRoutes, publicJsxRoutes } from './features/adminPublic/routes';
 import { MembershipsPage } from './features/memberships/MembershipsPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { LoginPage, SignupPage, ForgotPasswordPage } from './features/auth';
@@ -36,6 +38,9 @@ export const App = () => {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           </Route>
 
+          {/* Public Website Portal */}
+          {publicJsxRoutes}
+
           {/* Main AppShell Layout Routes */}
           <Route path="/" element={<AppShell />}>
             <Route index element={<DashboardPage />} />
@@ -44,6 +49,8 @@ export const App = () => {
             <Route path="equipment" element={<EquipmentPage />} />
             {bookingRoutes}
             {commerceJsxRoutes}
+            {crmJsxRoutes}
+            {adminJsxRoutes}
             <Route path="memberships" element={<MembershipsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="404" element={<NotFoundPage />} />

@@ -32,22 +32,18 @@ export const leadService = {
 
   // LD-03: Update lead status and assignment
   updateStatus: async (id: number | string, payload: UpdateLeadPayload): Promise<Lead> => {
-    try {
-      const response = await apiClient.put<Lead>(`/leads/${id}`, payload);
-      return response.data;
-    } catch {
-      const index = localLeads.findIndex((l) => String(l.id) === String(id));
-      if (index === -1) throw new Error('Lead not found');
+    const staffDirectory: Record<number, string> = {
+      1: 'Mike Staff (Front Desk)',
+      2: 'Elena Vance (Membership)',
+      3: 'Carlos Rivera (Head Coach)',
+      4: 'Front Desk Team',
+    };
 
-      const staffDirectory: Record<number, string> = {
-        1: 'Mike Staff (Front Desk)',
-        2: 'Elena Vance (Membership)',
-        3: 'Carlos Rivera (Head Coach)',
-        4: 'Front Desk Team',
-      };
-
+    const index = localLeads.findIndex((l) => String(l.id) === String(id));
+    let locallyUpdated: Lead | null = null;
+    if (index !== -1) {
       const existing = localLeads[index];
-      const updated: Lead = {
+      locallyUpdated = {
         ...existing,
         status: payload.status,
         assignedTo: payload.assignedTo !== undefined ? payload.assignedTo : existing.assignedTo,
@@ -60,9 +56,19 @@ export const leadService = {
         notes: payload.notes !== undefined ? payload.notes : existing.notes,
         updatedAt: new Date().toISOString(),
       };
+      localLeads[index] = locallyUpdated;
+    }
 
-      localLeads[index] = updated;
-      return updated;
+    try {
+      const response = await apiClient.put<Lead>(`/leads/${id}`, payload, { timeout: 1500 });
+      if (response.data && response.data.id) {
+        if (index !== -1) localLeads[index] = response.data;
+        return response.data;
+      }
+      return locallyUpdated || (localLeads[index] as Lead);
+    } catch {
+      if (locallyUpdated) return locallyUpdated;
+      throw new Error('Lead not found');
     }
   },
 

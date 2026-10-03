@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
   FaBars,
-  FaBell,
   FaMoon,
   FaSun,
   FaUserGear,
@@ -46,13 +45,6 @@ export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
         </Link>
       </div>
 
-      <div className="navbar-center hidden md:flex">
-        <div className="badge badge-outline badge-primary gap-1.5 py-3 px-3 text-xs font-medium">
-          <span className="size-2 rounded-full bg-success animate-pulse"></span>
-          Connected to Odoo ERP
-        </div>
-      </div>
-
       <div className="navbar-end gap-2">
         {/* Theme Toggle Button */}
         <button
@@ -68,41 +60,6 @@ export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
             <FaMoon className="size-5 text-primary" />
           )}
         </button>
-
-        {/* Notifications */}
-        <div className="dropdown dropdown-end">
-          <button
-            tabIndex={0}
-            type="button"
-            className="btn btn-ghost btn-circle"
-            aria-label="Notifications"
-          >
-            <div className="indicator">
-              <FaBell className="size-5 text-base-content/80" />
-              <span className="badge badge-xs badge-secondary indicator-item"></span>
-            </div>
-          </button>
-          <ul
-            tabIndex={0}
-            className="dropdown-content menu bg-base-100 rounded-box z-50 w-72 p-3 shadow-xl border border-base-300 gap-1 mt-3"
-          >
-            <li className="menu-title px-2 py-1 text-xs font-semibold uppercase tracking-wider">
-              Club Alerts
-            </li>
-            <li>
-              <div className="flex flex-col items-start gap-1 p-2 rounded-lg hover:bg-base-200">
-                <span className="font-semibold text-sm">Tennis Court 2 Booked</span>
-                <span className="text-xs text-base-content/70">By Roger Federer • 10:00 AM</span>
-              </div>
-            </li>
-            <li>
-              <div className="flex flex-col items-start gap-1 p-2 rounded-lg hover:bg-base-200">
-                <span className="font-semibold text-sm">Equipment Restocked</span>
-                <span className="text-xs text-base-content/70">20 Wilson Tennis Balls received</span>
-              </div>
-            </li>
-          </ul>
-        </div>
 
         {/* Profile Dropdown */}
         <div className="dropdown dropdown-end">

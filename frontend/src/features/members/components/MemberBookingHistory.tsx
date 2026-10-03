@@ -54,9 +54,8 @@ export const MemberBookingHistory = ({ bookings }: MemberBookingHistoryProps) =>
                         ? 'secondary'
                         : 'error'
                     }
-                    className="capitalize"
                   >
-                    {b.status}
+                    {b.status === 'in_progress' ? 'in progress' : b.status.replace(/_/g, ' ')}
                   </Badge>
                 </td>
               </tr>

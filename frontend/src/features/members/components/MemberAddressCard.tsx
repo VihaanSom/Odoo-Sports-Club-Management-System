@@ -90,7 +90,7 @@ export const MemberAddressCard = ({
             leftIcon={<FaPenToSquare className="size-3" />}
             onClick={handleStartEdit}
           >
-            Save
+            Edit
           </Button>
         )}
       </div>
@@ -160,7 +160,22 @@ export const MemberAddressCard = ({
               label="Pincode (6 digits)"
               placeholder="380054"
               maxLength={6}
-              {...register('pincode')}
+              inputMode="numeric"
+              onKeyDown={(e) => {
+                if (
+                  !/[0-9]/.test(e.key) &&
+                  !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key) &&
+                  !e.ctrlKey &&
+                  !e.metaKey
+                ) {
+                  e.preventDefault();
+                }
+              }}
+              {...register('pincode', {
+                onChange: (e) => {
+                  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                },
+              })}
               error={errors.pincode?.message}
             />
           </div>
