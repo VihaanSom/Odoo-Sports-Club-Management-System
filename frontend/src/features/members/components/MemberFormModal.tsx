@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,11 +20,11 @@ interface MemberFormModalProps {
   onSubmit: (data: MemberFormData) => Promise<void>;
 }
 
-export const MemberFormModal: React.FC<MemberFormModalProps> = ({
+export const MemberFormModal = ({
   isOpen,
   onClose,
   onSubmit,
-}) => {
+}: MemberFormModalProps) => {
   const {
     register,
     handleSubmit,

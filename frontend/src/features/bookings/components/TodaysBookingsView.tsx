@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import {  useEffect, useState  } from 'react';
 import { FaClock, FaUser, FaCircleCheck, FaBan, FaCalendarDay } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import { bookingService } from '@/services/bookingService';
 import { formatDate } from '@/lib/utils';
 import type { TodaysBookingsResponse } from '@/types/bookings';
 
-export const TodaysBookingsView: React.FC = () => {
+export const TodaysBookingsView = () => {
   const [data, setData] = useState<TodaysBookingsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 

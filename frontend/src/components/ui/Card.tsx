@@ -6,13 +6,13 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hoverable?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({
+export const Card = ({
   children,
   className,
   bordered = true,
   hoverable = false,
   ...props
-}) => {
+}: CardProps) => {
   return (
     <div
       className={cn(
@@ -28,21 +28,25 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-export const CardBody: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+export type CardBodyProps = React.HTMLAttributes<HTMLDivElement>;
+
+export const CardBody = ({
   children,
   className,
   ...props
-}) => (
+}: CardBodyProps) => (
   <div className={cn('card-body p-5 sm:p-6', className)} {...props}>
     {children}
   </div>
 );
 
-export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
+export type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
+
+export const CardTitle = ({
   children,
   className,
   ...props
-}) => (
+}: CardTitleProps) => (
   <h3 className={cn('card-title text-lg font-bold tracking-tight', className)} {...props}>
     {children}
   </h3>

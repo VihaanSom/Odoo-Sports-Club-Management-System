@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaCheck, FaClock, FaWrench, FaCircleDollarToSlot, FaCalendarCheck } from 'react-icons/fa6';
 import { Card, Badge, Button, ImageWithFallback } from '@/components/ui';
 import type { Facility } from '@/types';
@@ -8,7 +7,7 @@ interface FacilityCardProps {
   onBook: (facility: Facility) => void;
 }
 
-export const FacilityCard: React.FC<FacilityCardProps> = ({ facility, onBook }) => {
+export const FacilityCard = ({ facility, onBook }: FacilityCardProps) => {
   return (
     <Card hoverable className="overflow-hidden flex flex-col justify-between">
       <figure className="relative h-44 w-full overflow-hidden bg-base-300">

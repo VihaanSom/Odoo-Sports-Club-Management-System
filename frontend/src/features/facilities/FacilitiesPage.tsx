@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaBasketball } from 'react-icons/fa6';
@@ -6,7 +6,7 @@ import { mockFacilities } from '@/mock';
 import type { Facility } from '@/types';
 import { FacilityCard, FacilityFilterBar } from './components';
 
-export const FacilitiesPage: React.FC = () => {
+export const FacilitiesPage = () => {
   const [selectedSport, setSelectedSport] = useState<string>('All');
   const sportsFilter = ['All', 'Tennis', 'Badminton', 'Squash', 'Basketball', 'Swimming', 'Gym'];
 

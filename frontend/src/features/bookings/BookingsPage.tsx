@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { motion } from 'motion/react';
 import {
   FaCalendarCheck,
@@ -15,7 +15,7 @@ import type { BookingDetail, BookingType } from '@/types/bookings';
 import type { Court } from '@/types/courts';
 import { BookingsTable, BookingCancelModal } from './components';
 
-export const BookingsPage: React.FC = () => {
+export const BookingsPage = () => {
   const [bookings, setBookings] = useState<BookingDetail[]>([]);
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);

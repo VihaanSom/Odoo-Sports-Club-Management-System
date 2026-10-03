@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import toast from 'react-hot-toast';
-import { FaUsers, FaUserPlus } from 'react-icons/fa6';
+import { FaUsers } from 'react-icons/fa6';
 import { SearchBar, FilterToolbar } from '@/components/shared';
-import { Button } from '@/components/ui';
 import { mockMembers } from '@/mock';
 import type { Member } from '@/types';
-import { MemberFormModal, MembersTable, type MemberFormData } from './components';
+import { MembersTable } from './components';
 
-export const MembersPage: React.FC = () => {
-  const [members, setMembers] = useState<Member[]>(mockMembers);
+export const MembersPage = () => {
+  const [members] = useState<Member[]>(mockMembers);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const planFilterOptions = [
     { label: 'All Plans', value: 'all' },
@@ -21,24 +18,6 @@ export const MembersPage: React.FC = () => {
     { label: 'VIP', value: 'vip' },
     { label: 'Junior', value: 'junior' },
   ];
-
-  const handleAddMember = async (data: MemberFormData) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    const newMember: Member = {
-      id: `MEM-00${members.length + 1}`,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      membershipPlan: data.membershipPlan,
-      status: data.status,
-      joinedDate: new Date().toISOString().split('T')[0],
-    };
-
-    setMembers([newMember, ...members]);
-    toast.success(`Member ${data.name} successfully registered!`);
-    setIsModalOpen(false);
-  };
 
   const filteredMembers = members.filter((m) => {
     const matchesSearch =
@@ -66,14 +45,6 @@ export const MembersPage: React.FC = () => {
             Manage club registrations, membership tiers, and contacts synchronized with Odoo.
           </p>
         </div>
-
-        <Button
-          variant="primary"
-          leftIcon={<FaUserPlus className="size-4" />}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Add New Member
-        </Button>
       </div>
 
       {/* Filters and search */}
@@ -98,13 +69,6 @@ export const MembersPage: React.FC = () => {
 
       {/* Members Table */}
       <MembersTable members={filteredMembers} />
-
-      {/* Form Modal */}
-      <MemberFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddMember}
-      />
     </motion.div>
   );
 };

@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaCrown, FaShieldHalved, FaGraduationCap, FaCheck } from 'react-icons/fa6';
 import { MEMBERSHIP_TIERS, type TierType } from '@/types';
 import { cn } from '@/lib/utils';
@@ -9,11 +8,11 @@ interface TierSelectorProps {
   error?: string;
 }
 
-export const TierSelector: React.FC<TierSelectorProps> = ({
+export const TierSelector = ({
   selectedTier,
   onSelectTier,
   error,
-}) => {
+}: TierSelectorProps) => {
   const getTierIcon = (id: TierType) => {
     switch (id) {
       case 'Gold':

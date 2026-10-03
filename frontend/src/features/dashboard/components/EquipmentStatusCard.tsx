@@ -1,7 +1,6 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
-export const EquipmentStatusCard: React.FC = () => {
+export const EquipmentStatusCard = () => {
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs">
       <div className="card-body p-5 sm:p-6 flex flex-col justify-between">

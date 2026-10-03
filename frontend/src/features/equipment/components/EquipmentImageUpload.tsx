@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { FaImage, FaTrash } from 'react-icons/fa6';
 
 
@@ -30,10 +30,10 @@ const PRESET_IMAGES = [
   },
 ];
 
-export const EquipmentImageUpload: React.FC<EquipmentImageUploadProps> = ({
+export const EquipmentImageUpload = ({
   value,
   onChange,
-}) => {
+}: EquipmentImageUploadProps) => {
   const [customUrl, setCustomUrl] = useState(value || '');
 
   const handleApplyUrl = () => {

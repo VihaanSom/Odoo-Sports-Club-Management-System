@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ProgressBarProps {
@@ -9,13 +8,13 @@ export interface ProgressBarProps {
   showLabel?: boolean;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({
+export const ProgressBar = ({
   value,
   max = 100,
   variant = 'primary',
   className,
   showLabel = false,
-}) => {
+}: ProgressBarProps) => {
   const variantClass = {
     primary: 'progress-primary',
     secondary: 'progress-secondary',

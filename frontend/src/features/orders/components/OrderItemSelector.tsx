@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {  useState, useEffect  } from 'react';
 import {
   FaMagnifyingGlass,
   FaPlus,
@@ -36,12 +36,12 @@ interface OrderItemSelectorProps {
   onRemoveItem: (itemType: 'equipment' | 'menu', itemId: number) => void;
 }
 
-export const OrderItemSelector: React.FC<OrderItemSelectorProps> = ({
+export const OrderItemSelector = ({
   selectedItems,
   onAddItem,
   onUpdateQty,
   onRemoveItem,
-}) => {
+}: OrderItemSelectorProps) => {
   const [activeCatalog, setActiveCatalog] = useState<'menu' | 'equipment'>('equipment');
   const [searchQuery, setSearchQuery] = useState('');
   const [equipmentList, setEquipmentList] = useState<EquipmentItem[]>([]);

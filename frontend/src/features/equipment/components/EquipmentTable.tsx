@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   FaCircleCheck,
@@ -16,11 +15,11 @@ interface EquipmentTableProps {
   onReturn: (id: string, name: string) => void;
 }
 
-export const EquipmentTable: React.FC<EquipmentTableProps> = ({
+export const EquipmentTable = ({
   items,
   onRent,
   onReturn,
-}) => {
+}: EquipmentTableProps) => {
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="overflow-x-auto">

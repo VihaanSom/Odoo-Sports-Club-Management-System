@@ -1,9 +1,8 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaHouse, FaTriangleExclamation } from 'react-icons/fa6';
 import { Button } from '@/components/ui';
 
-export const NotFoundPage: React.FC = () => {
+export const NotFoundPage = () => {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
       <div className="size-16 rounded-full bg-error/10 border border-error/20 flex items-center justify-center text-error mb-4">

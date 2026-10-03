@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface AvatarProps {
@@ -9,13 +8,13 @@ export interface AvatarProps {
   className?: string;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({
+export const Avatar = ({
   src,
   alt = 'Avatar',
   fallbackText,
   size = 'md',
   className,
-}) => {
+}: AvatarProps) => {
   const sizeMap = {
     xs: 'size-6 text-[10px]',
     sm: 'size-8 text-xs',

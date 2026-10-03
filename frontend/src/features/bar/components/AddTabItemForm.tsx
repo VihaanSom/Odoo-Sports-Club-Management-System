@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import {  useEffect, useState  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,12 +23,12 @@ interface AddTabItemFormProps {
   onItemAdded: () => Promise<void>;
 }
 
-export const AddTabItemForm: React.FC<AddTabItemFormProps> = ({
+export const AddTabItemForm = ({
   isOpen,
   tabId,
   onClose,
   onItemAdded,
-}) => {
+}: AddTabItemFormProps) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
 

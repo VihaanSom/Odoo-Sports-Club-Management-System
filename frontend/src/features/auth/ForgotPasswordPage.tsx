@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
 
 type Step = 1 | 2 | 3;
 
-export const ForgotPasswordPage: React.FC = () => {
+export const ForgotPasswordPage = () => {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [userEmail, setUserEmail] = useState('');
   const [otpValue, setOtpValue] = useState('');

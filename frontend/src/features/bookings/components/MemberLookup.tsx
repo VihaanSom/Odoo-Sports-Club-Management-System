@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {  useState, useEffect  } from 'react';
 import { FaMagnifyingGlass, FaUserCheck, FaUser } from 'react-icons/fa6';
 import { memberService } from '@/services/memberService';
 import type { Member } from '@/types/models';
@@ -8,10 +8,10 @@ interface MemberLookupProps {
   onSelectMember: (memberId: number, memberName: string) => void;
 }
 
-export const MemberLookup: React.FC<MemberLookupProps> = ({
+export const MemberLookup = ({
   selectedMemberId,
   onSelectMember,
-}) => {
+}: MemberLookupProps) => {
   const [query, setQuery] = useState('');
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);

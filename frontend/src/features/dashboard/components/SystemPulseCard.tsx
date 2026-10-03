@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { FaWaveSquare } from 'react-icons/fa6';
 import { newtonsCradle } from 'ldrs';
 
 // Register the custom element once
 newtonsCradle.register();
 
-export const SystemPulseCard: React.FC = () => {
+export const SystemPulseCard = () => {
   const [cradleSpeed, setCradleSpeed] = useState<string>('1.4');
   const [cradleSize, setCradleSize] = useState<string>('78');
   const [cradleColor, setCradleColor] = useState<string>('#6366f1');

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,12 +22,12 @@ interface CourtFormModalProps {
   onSubmit: (data: CreateCourtPayload | UpdateCourtPayload) => Promise<void>;
 }
 
-export const CourtFormModal: React.FC<CourtFormModalProps> = ({
+export const CourtFormModal = ({
   isOpen,
   court,
   onClose,
   onSubmit,
-}) => {
+}: CourtFormModalProps) => {
   const isEdit = Boolean(court);
 
   const {

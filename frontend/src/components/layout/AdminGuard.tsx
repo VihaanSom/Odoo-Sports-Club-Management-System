@@ -1,8 +1,7 @@
-import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 
-export const AdminGuard: React.FC = () => {
+export const AdminGuard = () => {
   const user = useAuthStore((s) => s.user);
 
   if (user && user.role !== 'admin') {

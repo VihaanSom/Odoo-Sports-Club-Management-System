@@ -5,7 +5,7 @@ import { FaGear, FaSliders, FaFloppyDisk } from 'react-icons/fa6';
 import { Card, Button } from '@/components/ui';
 import { ThemeSettingsSection, ErpSettingsSection } from './components';
 
-export const SettingsPage: React.FC = () => {
+export const SettingsPage = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success('Settings successfully updated!');

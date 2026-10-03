@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaIdCard } from 'react-icons/fa6';
@@ -6,7 +6,7 @@ import { mockPlans } from '@/mock';
 import type { MembershipPlan } from '@/types';
 import { MembershipPlanCard } from './components';
 
-export const MembershipsPage: React.FC = () => {
+export const MembershipsPage = () => {
   const [plans] = useState<MembershipPlan[]>(mockPlans);
 
   const handleSelectPlan = (plan: MembershipPlan) => {

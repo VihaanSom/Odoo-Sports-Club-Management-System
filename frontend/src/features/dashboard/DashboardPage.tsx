@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaUsers, FaSun, FaMoon } from 'react-icons/fa6';
@@ -11,7 +10,7 @@ import {
   RecentBookingsTable,
 } from './components';
 
-export const DashboardPage: React.FC = () => {
+export const DashboardPage = () => {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const isDark = theme === 'black';
