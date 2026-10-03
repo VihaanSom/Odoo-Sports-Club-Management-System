@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import {  useEffect, useState  } from 'react';
 import { FaClock, FaCheck, FaChevronDown } from 'react-icons/fa6';
 import { courtService } from '@/services/courtService';
 import { formatDate } from '@/lib/utils';
@@ -15,14 +15,14 @@ interface SlotPickerProps {
   onSelectCourt: (courtId: number) => void;
 }
 
-export const SlotPicker: React.FC<SlotPickerProps> = ({
+export const SlotPicker = ({
   selectedCourtId,
   selectedDate,
   selectedSlotStart,
   onSelectSlot,
   onSelectDate,
   onSelectCourt,
-}) => {
+}: SlotPickerProps) => {
   const [courts, setCourts] = useState<Court[]>([]);
   const [slots, setSlots] = useState<SlotAvailabilityItem[]>([]);
   const [loading, setLoading] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +21,7 @@ import toast from 'react-hot-toast';
 
 type SignupStep = 1 | 2 | 3;
 
-export const SignupPage: React.FC = () => {
+export const SignupPage = () => {
   const [currentStep, setCurrentStep] = useState<SignupStep>(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

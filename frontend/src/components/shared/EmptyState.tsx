@@ -10,13 +10,13 @@ export interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
+export const EmptyState = ({
   title = 'No records found',
   description = 'There are currently no items matching your criteria.',
   icon,
   actionText,
   onAction,
-}) => {
+}: EmptyStateProps) => {
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center bg-base-200/30 border border-dashed border-base-300 rounded-2xl min-h-[220px]">
       <div className="size-12 rounded-full bg-base-300/60 flex items-center justify-center text-base-content/50 mb-3">

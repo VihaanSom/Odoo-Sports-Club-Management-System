@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { FaTriangleExclamation, FaXmark } from 'react-icons/fa6';
 
 interface BookingCancelModalProps {
@@ -8,12 +8,12 @@ interface BookingCancelModalProps {
   onConfirm: (reason: string) => Promise<void>;
 }
 
-export const BookingCancelModal: React.FC<BookingCancelModalProps> = ({
+export const BookingCancelModal = ({
   isOpen,
   bookingId,
   onClose,
   onConfirm,
-}) => {
+}: BookingCancelModalProps) => {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaPenToSquare, FaFolderOpen, FaTriangleExclamation } from 'react-icons/fa6';
 import { formatPaise } from '@/lib/utils';
@@ -10,11 +9,11 @@ interface MenuItemsTableProps {
   onToggleAvailability: (item: MenuItem) => void;
 }
 
-export const MenuItemsTable: React.FC<MenuItemsTableProps> = ({
+export const MenuItemsTable = ({
   items,
   onEdit,
   onToggleAvailability,
-}) => {
+}: MenuItemsTableProps) => {
   if (items.length === 0) {
     return (
       <div className="text-center py-16 bg-base-100 border border-base-300 rounded-2xl">

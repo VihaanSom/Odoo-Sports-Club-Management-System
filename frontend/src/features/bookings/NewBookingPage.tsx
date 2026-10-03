@@ -1,10 +1,9 @@
-import React from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { FaCalendarPlus, FaArrowLeft, FaCalendarDays } from 'react-icons/fa6';
 import { BookingWizard } from './components/BookingWizard';
 
-export const NewBookingPage: React.FC = () => {
+export const NewBookingPage = () => {
   const [searchParams] = useSearchParams();
   const courtId = searchParams.get('courtId')
     ? parseInt(searchParams.get('courtId')!, 10)

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -13,12 +13,14 @@ import { FacilitiesPage } from './features/facilities/FacilitiesPage';
 import { EquipmentPage } from './features/equipment/EquipmentPage';
 import { bookingRoutes } from './features/bookings/routes';
 import { commerceJsxRoutes } from './features/commerce/routes';
+import { crmJsxRoutes } from './features/crm/routes';
+import { adminJsxRoutes, publicJsxRoutes } from './features/adminPublic/routes';
 import { MembershipsPage } from './features/memberships/MembershipsPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { LoginPage, SignupPage, ForgotPasswordPage } from './features/auth';
 import { NotFoundPage } from './features/errors/NotFoundPage';
 
-export const App: React.FC = () => {
+export const App = () => {
   const theme = useThemeStore((s) => s.theme);
 
   useEffect(() => {
@@ -36,6 +38,9 @@ export const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           </Route>
 
+          {/* Public Website Portal */}
+          {publicJsxRoutes}
+
           {/* Main AppShell Layout Routes */}
           <Route path="/" element={<AppShell />}>
             <Route index element={<DashboardPage />} />
@@ -44,6 +49,8 @@ export const App: React.FC = () => {
             <Route path="equipment" element={<EquipmentPage />} />
             {bookingRoutes}
             {commerceJsxRoutes}
+            {crmJsxRoutes}
+            {adminJsxRoutes}
             <Route path="memberships" element={<MembershipsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="404" element={<NotFoundPage />} />

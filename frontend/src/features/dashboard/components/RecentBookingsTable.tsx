@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaVolleyball, FaBasketball, FaTableTennisPaddleBall, FaPersonSwimming } from 'react-icons/fa6';
 
@@ -41,7 +40,7 @@ const recentBookings = [
   },
 ];
 
-export const RecentBookingsTable: React.FC = () => {
+export const RecentBookingsTable = () => {
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs">
       <div className="card-body p-5 sm:p-6">

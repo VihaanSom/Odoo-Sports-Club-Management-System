@@ -1,4 +1,3 @@
-import React from 'react';
 
 interface EquipmentCategoryTabsProps {
   categories: string[];
@@ -6,11 +5,11 @@ interface EquipmentCategoryTabsProps {
   onSelectCategory: (cat: string) => void;
 }
 
-export const EquipmentCategoryTabs: React.FC<EquipmentCategoryTabsProps> = ({
+export const EquipmentCategoryTabs = ({
   categories,
   selectedCategory,
   onSelectCategory,
-}) => {
+}: EquipmentCategoryTabsProps) => {
   return (
     <div className="flex flex-wrap gap-2">
       {categories.map((cat) => (

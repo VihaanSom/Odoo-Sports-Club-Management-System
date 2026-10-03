@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaTrophy, FaBoxesStacked, FaPlus } from 'react-icons/fa6';
@@ -10,7 +10,7 @@ import type { CreateEquipmentPayload, UpdateEquipmentPayload } from '@/types/equ
 import { equipmentService } from '@/services/equipmentService';
 import { EquipmentTable, EquipmentCategoryTabs, EquipmentFormModal } from './components';
 
-export const EquipmentPage: React.FC = () => {
+export const EquipmentPage = () => {
   const [items, setItems] = useState<Equipment[]>(mockEquipment);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);

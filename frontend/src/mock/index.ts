@@ -8,4 +8,9 @@ export * from './barTables';
 export * from './barTabs';
 export * from './menuItems';
 export * from './orders';
-
+export * from './leads';
+export * from './invoices';
+export * from './staff';
+export * from './shifts';
+export * from './payments';
+export * from './reports';

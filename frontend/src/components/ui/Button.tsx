@@ -9,7 +9,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   rightIcon?: React.ReactNode;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button = ({
   children,
   className,
   variant = 'primary',
@@ -19,7 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
   rightIcon,
   disabled,
   ...props
-}) => {
+}: ButtonProps) => {
   const variantClass = {
     primary: 'btn-primary',
     secondary: 'btn-secondary',

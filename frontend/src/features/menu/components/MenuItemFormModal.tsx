@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,12 +33,12 @@ interface MenuItemFormModalProps {
   onSubmit: (payload: CreateMenuItemPayload | UpdateMenuItemPayload) => Promise<void>;
 }
 
-export const MenuItemFormModal: React.FC<MenuItemFormModalProps> = ({
+export const MenuItemFormModal = ({
   isOpen,
   item,
   onClose,
   onSubmit,
-}) => {
+}: MenuItemFormModalProps) => {
   const isEdit = Boolean(item);
 
   const {

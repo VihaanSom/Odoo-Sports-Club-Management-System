@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { motion } from 'motion/react';
 import {
   FaTrophy,
@@ -15,7 +15,7 @@ import { menuService } from '@/services/menuService';
 import type { MenuItem, CreateMenuItemPayload, UpdateMenuItemPayload } from '@/types/menu';
 import { MenuItemsTable, MenuItemFormModal } from './components';
 
-export const MenuItemsPage: React.FC = () => {
+export const MenuItemsPage = () => {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

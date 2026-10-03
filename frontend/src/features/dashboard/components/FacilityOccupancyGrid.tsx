@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { Link } from 'react-router-dom';
 import { FaClock, FaCheck } from 'react-icons/fa6';
 
-export const FacilityOccupancyGrid: React.FC = () => {
+export const FacilityOccupancyGrid = () => {
   const [selectedCourtTab, setSelectedCourtTab] = useState<'All' | 'Tennis' | 'Badminton' | 'Squash'>('All');
 
   return (

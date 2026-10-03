@@ -6,13 +6,13 @@ export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImag
   fallbackSrc?: string;
 }
 
-export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
+export const ImageWithFallback = ({
   src,
   alt,
   className,
   fallbackSrc,
   ...props
-}) => {
+}: ImageWithFallbackProps) => {
   const [error, setError] = useState(false);
 
   if (error || !src) {

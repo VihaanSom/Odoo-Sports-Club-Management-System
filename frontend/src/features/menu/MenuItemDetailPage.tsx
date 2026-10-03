@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -16,7 +16,7 @@ import { formatPaise } from '@/lib/utils';
 import type { MenuItem, UpdateMenuItemPayload } from '@/types/menu';
 import { MenuItemFormModal } from './components';
 
-export const MenuItemDetailPage: React.FC = () => {
+export const MenuItemDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

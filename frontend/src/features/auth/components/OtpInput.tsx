@@ -9,13 +9,13 @@ interface OtpInputProps {
   disabled?: boolean;
 }
 
-export const OtpInput: React.FC<OtpInputProps> = ({
+export const OtpInput = ({
   value,
   onChange,
   length = 6,
   hasError = false,
   disabled = false,
-}) => {
+}: OtpInputProps) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Split value into array of characters

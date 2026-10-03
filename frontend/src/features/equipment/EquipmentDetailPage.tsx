@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -19,7 +19,7 @@ import { formatPaise } from '@/lib/utils';
 import type { EquipmentItem, UpdateEquipmentPayload } from '@/types/equipment';
 import { EquipmentFormModal } from './components';
 
-export const EquipmentDetailPage: React.FC = () => {
+export const EquipmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaMoneyBill1, FaCreditCard, FaMobileScreenButton, FaIdCard, FaCircleInfo } from 'react-icons/fa6';
 import type { BookingPaymentMethod, BookingType } from '@/types/bookings';
 
@@ -10,13 +9,13 @@ interface BookingPaymentSectionProps {
   onChangeNotes: (notes: string) => void;
 }
 
-export const BookingPaymentSection: React.FC<BookingPaymentSectionProps> = ({
+export const BookingPaymentSection = ({
   bookingType,
   paymentMethod,
   onChangePaymentMethod,
   notes,
   onChangeNotes,
-}) => {
+}: BookingPaymentSectionProps) => {
   const isMember = bookingType === 'member';
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -16,7 +16,7 @@ import { formatPaise } from '@/lib/utils';
 import type { BarTab, BarTable, CreateBarTabPayload } from '@/types/bar';
 import { OpenTabModal, AddTabItemForm, SettleTabModal } from './components';
 
-export const OpenTabsPage: React.FC = () => {
+export const OpenTabsPage = () => {
   const [tabs, setTabs] = useState<BarTab[]>([]);
   const [tables, setTables] = useState<BarTable[]>([]);
   const [loading, setLoading] = useState(true);

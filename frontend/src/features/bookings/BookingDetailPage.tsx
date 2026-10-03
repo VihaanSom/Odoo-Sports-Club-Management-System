@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -20,7 +20,7 @@ import { formatDate } from '@/lib/utils';
 import type { BookingDetail } from '@/types/bookings';
 import { BookingCancelModal } from './components/BookingCancelModal';
 
-export const BookingDetailPage: React.FC = () => {
+export const BookingDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const numericId = parseInt(id || '0', 10);
 
