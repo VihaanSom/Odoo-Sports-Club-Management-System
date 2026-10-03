@@ -68,8 +68,40 @@ export function normalizeShift(s: any): Shift {
   const endTime =
     s.endTime ||
     (s.shiftEnd ? new Date(s.shiftEnd).toISOString().slice(11, 16) : '17:00');
-  const status: ShiftStatus =
-    s.status || (!s.shiftEnd ? 'in_progress' : 'completed');
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const notes = s.notes || '';
+  const isClockedIn = notes.includes('[Clocked In]');
+  const isClockedOut = notes.includes('[Clocked Out]');
+
+  let status: ShiftStatus = s.status;
+  if (!status) {
+    if (isClockedOut) {
+      status = 'completed';
+    } else if (s.shiftEnd === null || isClockedIn) {
+      status = 'in_progress';
+    } else if (dateStr > todayStr || (s.shiftStart && new Date(s.shiftStart).getTime() > now.getTime())) {
+      status = 'scheduled';
+    } else if (dateStr === todayStr) {
+      status = 'scheduled';
+    } else {
+      status = 'completed';
+    }
+  }
+
+  let clockInTime = s.clockInTime;
+  let clockOutTime = s.clockOutTime;
+
+  if (status === 'scheduled') {
+    clockInTime = undefined;
+    clockOutTime = undefined;
+  } else if (status === 'in_progress') {
+    clockOutTime = undefined;
+    if (!clockInTime && s.shiftStart) {
+      clockInTime = new Date(s.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  }
 
   return {
     id: String(s.id),
@@ -82,16 +114,8 @@ export function normalizeShift(s: any): Shift {
     startTime,
     endTime,
     status,
-    clockInTime:
-      s.clockInTime ||
-      (s.shiftStart
-        ? new Date(s.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : undefined),
-    clockOutTime:
-      s.clockOutTime ||
-      (s.shiftEnd
-        ? new Date(s.shiftEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : undefined),
+    clockInTime,
+    clockOutTime,
     facility: s.facility,
     notes: s.notes || undefined,
   };

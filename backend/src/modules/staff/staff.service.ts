@@ -58,7 +58,48 @@ export const formatShift = (shift: Shift & { staff?: any }) => {
   const dateStr = shift.shiftDate.toISOString().split('T')[0];
   const startTime = shift.shiftStart ? new Date(shift.shiftStart).toISOString().slice(11, 16) : '08:00';
   const endTime = shift.shiftEnd ? new Date(shift.shiftEnd).toISOString().slice(11, 16) : '17:00';
-  const status = !shift.shiftEnd ? 'in_progress' : 'completed';
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const notes = shift.notes || '';
+  const isClockedIn = notes.includes('[Clocked In]');
+  const isClockedOut = notes.includes('[Clocked Out]');
+
+  let status: 'scheduled' | 'in_progress' | 'completed' = 'scheduled';
+  let clockInTime: string | undefined = undefined;
+  let clockOutTime: string | undefined = undefined;
+
+  if (isClockedOut) {
+    status = 'completed';
+    clockInTime = shift.shiftStart
+      ? new Date(shift.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : undefined;
+    clockOutTime = shift.shiftEnd
+      ? new Date(shift.shiftEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : undefined;
+  } else if (shift.shiftEnd === null || isClockedIn) {
+    status = 'in_progress';
+    clockInTime = shift.shiftStart
+      ? new Date(shift.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : undefined;
+    clockOutTime = undefined;
+  } else if (dateStr > todayStr || new Date(shift.shiftStart).getTime() > now.getTime()) {
+    status = 'scheduled';
+    clockInTime = undefined;
+    clockOutTime = undefined;
+  } else if (dateStr === todayStr) {
+    status = 'scheduled';
+    clockInTime = undefined;
+    clockOutTime = undefined;
+  } else {
+    status = 'completed';
+    clockInTime = shift.shiftStart
+      ? new Date(shift.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : undefined;
+    clockOutTime = shift.shiftEnd
+      ? new Date(shift.shiftEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : undefined;
+  }
 
   return {
     id: String(shift.id),
@@ -72,8 +113,8 @@ export const formatShift = (shift: Shift & { staff?: any }) => {
     shiftStart: shift.shiftStart.toISOString(),
     shiftEnd: shift.shiftEnd ? shift.shiftEnd.toISOString() : null,
     status,
-    clockInTime: shift.shiftStart ? new Date(shift.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
-    clockOutTime: shift.shiftEnd ? new Date(shift.shiftEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
+    clockInTime,
+    clockOutTime,
     notes: shift.notes,
     createdAt: shift.createdAt.toISOString(),
   };
@@ -619,12 +660,19 @@ export class StaffService {
 
     const now = new Date();
     const data: Prisma.ShiftUpdateInput = {};
+    const existingNotes = shift.notes || '';
 
     if (input.action === 'clock_in') {
       data.shiftStart = now;
       data.shiftEnd = null;
+      data.notes = existingNotes.includes('[Clocked In]')
+        ? existingNotes
+        : (existingNotes ? `${existingNotes} | [Clocked In]` : '[Clocked In]');
     } else {
       data.shiftEnd = now;
+      data.notes = existingNotes.includes('[Clocked Out]')
+        ? existingNotes
+        : (existingNotes ? `${existingNotes} | [Clocked Out]` : '[Clocked Out]');
     }
 
     const updated = await prisma.shift.update({
