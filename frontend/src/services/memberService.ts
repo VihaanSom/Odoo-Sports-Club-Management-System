@@ -118,9 +118,33 @@ export const memberService = {
     else if (tier === 'Junior') validTier = 'Junior';
     else validTier = 'Gold';
 
-    // Default planId if not explicitly provided: Gold 1mo = 1, Silver 1mo = 4, Junior 1mo = 7
-    const defaultPlanId = validTier === 'Gold' ? 1 : validTier === 'Silver' ? 4 : 7;
-    const planId = (member as any).planId ? Number((member as any).planId) : defaultPlanId;
+    // Determine active planId for the selected tier
+    let planId = (member as any).planId ? Number((member as any).planId) : undefined;
+    if (!planId) {
+      try {
+        const plansRes = await apiClient.get('/public/plans');
+        const tierGroups: Array<{
+          tier: string;
+          plans: Array<{ id: number; durationMonths: number }>;
+        }> = plansRes.data.data;
+
+        const group = tierGroups?.find(
+          (g) => g.tier.toLowerCase() === validTier.toLowerCase()
+        );
+
+        if (group && group.plans && group.plans.length > 0) {
+          const monthlyPlan = group.plans.find((p) => p.durationMonths === 1);
+          planId = monthlyPlan ? monthlyPlan.id : group.plans[0].id;
+        }
+      } catch {
+        // Fallback to active DB seed range (Gold: 37, Silver: 40, Junior: 43)
+        planId = validTier === 'Gold' ? 37 : validTier === 'Silver' ? 40 : 43;
+      }
+    }
+
+    if (!planId) {
+      planId = validTier === 'Gold' ? 37 : validTier === 'Silver' ? 40 : 43;
+    }
 
     const payload: Record<string, any> = {
       firstName: firstName || 'New',

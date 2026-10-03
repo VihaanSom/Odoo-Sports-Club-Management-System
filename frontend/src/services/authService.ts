@@ -66,7 +66,12 @@ export const authService = {
         }
       } catch {
         // Fallback plan ID if query fails
-        planId = 1;
+        planId =
+          payload.tier.toLowerCase() === 'junior'
+            ? 43
+            : payload.tier.toLowerCase() === 'silver'
+            ? 40
+            : 37;
       }
     }
 
