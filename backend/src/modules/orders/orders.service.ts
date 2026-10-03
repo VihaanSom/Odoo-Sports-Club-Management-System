@@ -1,4 +1,15 @@
-import { Prisma, Order, OrderItemEquipment, OrderStatus, OrderType, PaymentMethod, Equipment } from '@prisma/client';
+import {
+  Prisma,
+  Order,
+  OrderItemEquipment,
+  OrderItemMenu,
+  OrderStatus,
+  OrderType,
+  PaymentMethod,
+  Equipment,
+  MenuItem,
+  Member,
+} from '@prisma/client';
 import { prisma } from '../../config/prisma';
 import {
   NotFoundError,
@@ -14,21 +25,32 @@ import {
 
 export interface OrderItemResponse {
   id: number;
-  equipmentId: number;
-  equipmentName: string;
+  itemType: 'equipment' | 'menu';
+  itemId: number;
+  equipmentId?: number;
+  menuItemId?: number;
+  equipmentName?: string;
+  name: string;
   qty: number;
   unitPricePaise: number;
   subtotalPaise: number;
+  imageUrl?: string | null;
 }
 
 export interface OrderResponse {
   id: number;
+  orderNumber: string;
   memberId: number | null;
+  memberName: string | null;
+  memberEmail: string | null;
+  memberPhone: string | null;
   orderType: OrderType;
   status: OrderStatus;
   subtotalPaise: number;
   discountAmountPaise: number;
+  discountPaise: number;
   totalAmountPaise: number;
+  totalPaise: number;
   paymentMethod: PaymentMethod | null;
   deliveryAddress: string | null;
   items?: OrderItemResponse[];
@@ -43,28 +65,59 @@ export interface OrderResponse {
 export const formatOrder = (
   order: Order & {
     equipmentItems?: (OrderItemEquipment & { equipment?: Equipment })[];
+    menuItems?: (OrderItemMenu & { menuItem?: MenuItem })[];
+    member?: Pick<Member, 'firstName' | 'lastName' | 'email' | 'phone'> | null;
   }
 ): OrderResponse => {
-  const items: OrderItemResponse[] | undefined = order.equipmentItems?.map((item) => ({
+  const equipmentItems: OrderItemResponse[] = (order.equipmentItems || []).map((item) => ({
     id: item.id,
+    itemType: 'equipment' as const,
+    itemId: item.equipmentId,
     equipmentId: item.equipmentId,
     equipmentName: item.equipment?.name || 'Equipment',
+    name: item.equipment?.name || 'Equipment',
     qty: item.qty,
     unitPricePaise: Math.round(Number(item.unitPrice) * 100),
     subtotalPaise: Math.round(Number(item.subtotal) * 100),
+    imageUrl: item.equipment?.imageUrl ?? null,
   }));
+
+  const menuItems: OrderItemResponse[] = (order.menuItems || []).map((item) => ({
+    id: item.id,
+    itemType: 'menu' as const,
+    itemId: item.menuItemId,
+    menuItemId: item.menuItemId,
+    name: item.menuItem?.name || 'Menu Item',
+    qty: item.qty,
+    unitPricePaise: Math.round(Number(item.unitPrice) * 100),
+    subtotalPaise: Math.round(Number(item.subtotal) * 100),
+    imageUrl: item.menuItem?.imageUrl ?? null,
+  }));
+
+  const allItems = [...equipmentItems, ...menuItems];
+  const subtotalPaise = Math.round(Number(order.subtotal) * 100);
+  const discountAmountPaise = Math.round(Number(order.discountAmount) * 100);
+  const totalAmountPaise = Math.round(Number(order.totalAmount) * 100);
 
   return {
     id: order.id,
+    orderNumber: `ORD-2026-${order.id}`,
     memberId: order.memberId,
+    memberName: order.member
+      ? `${order.member.firstName} ${order.member.lastName}`.trim()
+      : null,
+    memberEmail: order.member?.email ?? null,
+    memberPhone: order.member?.phone ?? null,
     orderType: order.orderType,
     status: order.status,
-    subtotalPaise: Math.round(Number(order.subtotal) * 100),
-    discountAmountPaise: Math.round(Number(order.discountAmount) * 100),
-    totalAmountPaise: Math.round(Number(order.totalAmount) * 100),
+    subtotalPaise,
+    discountAmountPaise,
+    discountPaise: discountAmountPaise,
+    totalAmountPaise,
+    totalPaise: totalAmountPaise,
     paymentMethod: order.paymentMethod,
     deliveryAddress: order.deliveryAddress,
-    ...(items !== undefined && { items }),
+    items: allItems,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
@@ -90,6 +143,15 @@ export class OrdersService {
 
     if (query.status) {
       where.status = query.status;
+    }
+
+    if (query.search) {
+      where.OR = [
+        { deliveryAddress: { contains: query.search, mode: 'insensitive' } },
+        { member: { firstName: { contains: query.search, mode: 'insensitive' } } },
+        { member: { lastName: { contains: query.search, mode: 'insensitive' } } },
+        { member: { email: { contains: query.search, mode: 'insensitive' } } },
+      ];
     }
 
     if (query.from || query.to) {
@@ -118,6 +180,12 @@ export class OrdersService {
         include: {
           equipmentItems: {
             include: { equipment: true },
+          },
+          menuItems: {
+            include: { menuItem: true },
+          },
+          member: {
+            select: { firstName: true, lastName: true, email: true, phone: true },
           },
         },
         orderBy: { [sortField]: query.sortOrder },
@@ -155,15 +223,22 @@ export class OrdersService {
     }
 
     return await prisma.$transaction(async (tx) => {
-      // 1. Verify equipment existence, active status, and stock availability
-      const itemDetails: {
+      // 1. Verify existence, active status, and stock availability
+      const equipmentDetails: {
         equipment: Equipment;
         qty: number;
         subtotalPaise: number;
       }[] = [];
 
+      const menuDetails: {
+        menuItem: MenuItem;
+        qty: number;
+        subtotalPaise: number;
+      }[] = [];
+
       const insufficientItems: {
-        equipmentId: number;
+        id: number;
+        name: string;
         requested: number;
         available: number;
       }[] = [];
@@ -171,34 +246,67 @@ export class OrdersService {
       let subtotalPaise = 0;
 
       for (const item of input.items) {
-        const equipment = await tx.equipment.findUnique({
-          where: { id: item.equipmentId },
-        });
+        if (item.equipmentId) {
+          const equipment = await tx.equipment.findUnique({
+            where: { id: item.equipmentId },
+          });
 
-        if (!equipment || !equipment.isActive) {
-          throw new NotFoundError(
-            'EQUIPMENT_NOT_FOUND',
-            `Equipment item with ID ${item.equipmentId} does not exist or is inactive.`
-          );
-        }
+          if (!equipment || !equipment.isActive) {
+            throw new NotFoundError(
+              'EQUIPMENT_NOT_FOUND',
+              `Equipment item with ID ${item.equipmentId} does not exist or is inactive.`
+            );
+          }
 
-        if (equipment.stockQty < item.qty) {
-          insufficientItems.push({
-            equipmentId: equipment.id,
-            requested: item.qty,
-            available: equipment.stockQty,
+          if (equipment.stockQty < item.qty) {
+            insufficientItems.push({
+              id: equipment.id,
+              name: equipment.name,
+              requested: item.qty,
+              available: equipment.stockQty,
+            });
+          }
+
+          const unitPricePaise = Math.round(Number(equipment.price) * 100);
+          const lineSubtotalPaise = unitPricePaise * item.qty;
+          subtotalPaise += lineSubtotalPaise;
+
+          equipmentDetails.push({
+            equipment,
+            qty: item.qty,
+            subtotalPaise: lineSubtotalPaise,
+          });
+        } else if (item.menuItemId) {
+          const menuItem = await tx.menuItem.findUnique({
+            where: { id: item.menuItemId },
+          });
+
+          if (!menuItem || !menuItem.isAvailable) {
+            throw new NotFoundError(
+              'MENU_ITEM_NOT_FOUND',
+              `Menu item with ID ${item.menuItemId} does not exist or is unavailable.`
+            );
+          }
+
+          if (menuItem.stockQty < item.qty) {
+            insufficientItems.push({
+              id: menuItem.id,
+              name: menuItem.name,
+              requested: item.qty,
+              available: menuItem.stockQty,
+            });
+          }
+
+          const unitPricePaise = Math.round(Number(menuItem.price) * 100);
+          const lineSubtotalPaise = unitPricePaise * item.qty;
+          subtotalPaise += lineSubtotalPaise;
+
+          menuDetails.push({
+            menuItem,
+            qty: item.qty,
+            subtotalPaise: lineSubtotalPaise,
           });
         }
-
-        const unitPricePaise = Math.round(Number(equipment.price) * 100);
-        const lineSubtotalPaise = unitPricePaise * item.qty;
-        subtotalPaise += lineSubtotalPaise;
-
-        itemDetails.push({
-          equipment,
-          qty: item.qty,
-          subtotalPaise: lineSubtotalPaise,
-        });
       }
 
       // If any items lack stock, abort transaction with 409 INSUFFICIENT_STOCK
@@ -242,8 +350,8 @@ export class OrdersService {
         },
       });
 
-      // 4. Create OrderItemEquipment and atomically decrement stock
-      for (const detail of itemDetails) {
+      // 4. Create OrderItemEquipment / OrderItemMenu and atomically decrement stock
+      for (const detail of equipmentDetails) {
         await tx.orderItemEquipment.create({
           data: {
             orderId: order.id,
@@ -262,6 +370,25 @@ export class OrdersService {
         });
       }
 
+      for (const detail of menuDetails) {
+        await tx.orderItemMenu.create({
+          data: {
+            orderId: order.id,
+            menuItemId: detail.menuItem.id,
+            qty: detail.qty,
+            unitPrice: detail.menuItem.price,
+            subtotal: new Prisma.Decimal(detail.subtotalPaise / 100),
+          },
+        });
+
+        await tx.menuItem.update({
+          where: { id: detail.menuItem.id },
+          data: {
+            stockQty: { decrement: detail.qty },
+          },
+        });
+      }
+
       // 5. Create linked payment record
       await tx.payment.create({
         data: {
@@ -273,12 +400,18 @@ export class OrdersService {
         },
       });
 
-      // 6. Refetch complete order with line items
+      // 6. Refetch complete order with line items and member info
       const fullOrder = await tx.order.findUnique({
         where: { id: order.id },
         include: {
           equipmentItems: {
             include: { equipment: true },
+          },
+          menuItems: {
+            include: { menuItem: true },
+          },
+          member: {
+            select: { firstName: true, lastName: true, email: true, phone: true },
           },
         },
       });
@@ -296,6 +429,12 @@ export class OrdersService {
       include: {
         equipmentItems: {
           include: { equipment: true },
+        },
+        menuItems: {
+          include: { menuItem: true },
+        },
+        member: {
+          select: { firstName: true, lastName: true, email: true, phone: true },
         },
       },
     });
@@ -322,6 +461,7 @@ export class OrdersService {
       where: { id },
       include: {
         equipmentItems: true,
+        menuItems: true,
       },
     });
 
@@ -359,6 +499,14 @@ export class OrdersService {
             },
           });
         }
+        for (const item of order.menuItems) {
+          await tx.menuItem.update({
+            where: { id: item.menuItemId },
+            data: {
+              stockQty: { increment: item.qty },
+            },
+          });
+        }
       }
 
       const updated = await tx.order.update({
@@ -369,6 +517,12 @@ export class OrdersService {
         include: {
           equipmentItems: {
             include: { equipment: true },
+          },
+          menuItems: {
+            include: { menuItem: true },
+          },
+          member: {
+            select: { firstName: true, lastName: true, email: true, phone: true },
           },
         },
       });

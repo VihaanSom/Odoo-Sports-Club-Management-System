@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { mockEquipment, mockEquipmentItems } from '@/mock/equipment';
+import type { ApiResponse } from '@/types/api';
 import type { Equipment } from '@/types/models';
 import type {
   EquipmentItem,
@@ -8,98 +8,74 @@ import type {
   AdjustStockPayload,
 } from '@/types/equipment';
 
-let localEquipmentItems: EquipmentItem[] = JSON.parse(JSON.stringify(mockEquipmentItems));
+/**
+ * Normalizes EquipmentItem to legacy Equipment interface for EquipmentPage and components.
+ */
+export const formatLegacyEquipment = (item: EquipmentItem): Equipment => ({
+  id: item.id,
+  name: item.name,
+  category: item.category,
+  quantityTotal: item.stockQty,
+  quantityAvailable: item.stockQty,
+  stockQty: item.stockQty,
+  condition: (item.condition || 'Excellent') as any,
+  pricePaise: item.pricePaise,
+  rentalRate: Math.round((item.rentalRatePaise || Math.round(item.pricePaise * 0.05)) / 100),
+});
 
 export const equipmentService = {
   // Legacy support for existing equipment page
   getAll: async (): Promise<Equipment[]> => {
-    try {
-      const response = await apiClient.get<Equipment[]>('/equipment');
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      return mockEquipment;
-    } catch {
-      return mockEquipment;
-    }
-  },
-
-  rentItem: async (id: string): Promise<boolean> => {
-    try {
-      await apiClient.post(`/equipment/${id}/rent`);
-      return true;
-    } catch {
-      return true;
-    }
-  },
-
-  returnItem: async (id: string): Promise<boolean> => {
-    try {
-      await apiClient.post(`/equipment/${id}/return`);
-      return true;
-    } catch {
-      return true;
-    }
+    const response = await apiClient.get<ApiResponse<EquipmentItem[]>>('/equipment', {
+      params: { pageSize: 100 },
+    });
+    const items = response.data?.data || (Array.isArray(response.data) ? (response.data as unknown as EquipmentItem[]) : []);
+    return items.map(formatLegacyEquipment);
   },
 
   // EQ-01: List equipment items with filters
   getEquipmentList: async (params?: {
     category?: string;
     search?: string;
+    page?: number;
+    pageSize?: number;
   }): Promise<EquipmentItem[]> => {
-    try {
-      const response = await apiClient.get<EquipmentItem[]>('/equipment', { params });
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      return filterLocalEquipment(params);
-    } catch {
-      return filterLocalEquipment(params);
+    const cleanParams: Record<string, any> = {};
+    if (params?.category && params.category !== 'all' && params.category !== 'All') {
+      cleanParams.category = params.category.toLowerCase();
     }
+    if (params?.search) {
+      cleanParams.search = params.search;
+    }
+    if (params?.page) cleanParams.page = params.page;
+    if (params?.pageSize) cleanParams.pageSize = params.pageSize;
+
+    const response = await apiClient.get<ApiResponse<EquipmentItem[]>>('/equipment', {
+      params: cleanParams,
+    });
+    return response.data?.data || (Array.isArray(response.data) ? (response.data as unknown as EquipmentItem[]) : []);
   },
 
   // EQ-02: Get equipment item by ID
   getEquipmentById: async (id: number | string): Promise<EquipmentItem> => {
-    try {
-      const response = await apiClient.get<EquipmentItem>(`/equipment/${id}`);
-      return response.data;
-    } catch {
-      const item = localEquipmentItems.find((e) => String(e.id) === String(id));
-      if (!item) throw new Error('Equipment item not found');
-      return item;
-    }
+    const response = await apiClient.get<ApiResponse<EquipmentItem>>(`/equipment/${id}`);
+    return response.data?.data || (response.data as unknown as EquipmentItem);
   },
 
   // EQ-03: Create equipment item
   createEquipment: async (payload: CreateEquipmentPayload): Promise<EquipmentItem> => {
-    try {
-      const response = await apiClient.post<EquipmentItem>('/equipment', payload);
-      return response.data;
-    } catch {
-      const nextId =
-        localEquipmentItems.length > 0
-          ? Math.max(...localEquipmentItems.map((e) => Number(e.id))) + 1
-          : 1;
-
-      const newItem: EquipmentItem = {
-        id: nextId,
-        name: payload.name,
-        category: payload.category,
-        brand: payload.brand || null,
-        description: payload.description || null,
-        pricePaise: payload.pricePaise,
-        stockQty: payload.stockQty,
-        lowStockThreshold: payload.lowStockThreshold ?? 5,
-        isActive: payload.isActive ?? true,
-        imageUrl: payload.imageUrl || null,
-        condition: payload.condition || 'Excellent',
-        rentalRatePaise: payload.rentalRatePaise ?? 0,
-        createdAt: new Date().toISOString(),
-      };
-
-      localEquipmentItems.unshift(newItem);
-      return newItem;
-    }
+    const cleanPayload = {
+      name: payload.name,
+      category: payload.category.toLowerCase(),
+      brand: payload.brand || null,
+      description: payload.description || null,
+      pricePaise: payload.pricePaise,
+      stockQty: payload.stockQty,
+      lowStockThreshold: payload.lowStockThreshold ?? 5,
+      imageUrl: payload.imageUrl || null,
+    };
+    const response = await apiClient.post<ApiResponse<EquipmentItem>>('/equipment', cleanPayload);
+    return response.data?.data || (response.data as unknown as EquipmentItem);
   },
 
   // EQ-04: Update equipment item
@@ -107,77 +83,44 @@ export const equipmentService = {
     id: number | string,
     payload: UpdateEquipmentPayload
   ): Promise<EquipmentItem> => {
-    try {
-      const response = await apiClient.put<EquipmentItem>(`/equipment/${id}`, payload);
-      return response.data;
-    } catch {
-      const index = localEquipmentItems.findIndex((e) => String(e.id) === String(id));
-      if (index === -1) throw new Error('Equipment item not found');
+    const cleanPayload: Record<string, any> = {};
+    if (payload.name !== undefined) cleanPayload.name = payload.name;
+    if (payload.category !== undefined) cleanPayload.category = payload.category.toLowerCase();
+    if (payload.brand !== undefined) cleanPayload.brand = payload.brand;
+    if (payload.description !== undefined) cleanPayload.description = payload.description;
+    if (payload.pricePaise !== undefined) cleanPayload.pricePaise = payload.pricePaise;
+    if (payload.stockQty !== undefined) cleanPayload.stockQty = payload.stockQty;
+    if (payload.lowStockThreshold !== undefined) cleanPayload.lowStockThreshold = payload.lowStockThreshold;
+    if (payload.isActive !== undefined) cleanPayload.isActive = payload.isActive;
+    if (payload.imageUrl !== undefined) cleanPayload.imageUrl = payload.imageUrl;
 
-      localEquipmentItems[index] = {
-        ...localEquipmentItems[index],
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      };
-      return localEquipmentItems[index];
-    }
+    const response = await apiClient.put<ApiResponse<EquipmentItem>>(`/equipment/${id}`, cleanPayload);
+    return response.data?.data || (response.data as unknown as EquipmentItem);
   },
 
-  // IV-01: Adjust stock level with reason
+  // EQ-05: Adjust stock level with reason
   adjustStock: async (
     id: number | string,
     payload: AdjustStockPayload
   ): Promise<EquipmentItem> => {
-    try {
-      const response = await apiClient.post<EquipmentItem>(
-        `/equipment/${id}/adjust-stock`,
-        payload
-      );
-      return response.data;
-    } catch {
-      const index = localEquipmentItems.findIndex((e) => String(e.id) === String(id));
-      if (index === -1) throw new Error('Equipment item not found');
-
-      const updatedQty = Math.max(0, localEquipmentItems[index].stockQty + payload.adjustmentQty);
-      localEquipmentItems[index].stockQty = updatedQty;
-      localEquipmentItems[index].updatedAt = new Date().toISOString();
-      return localEquipmentItems[index];
-    }
+    const response = await apiClient.post<ApiResponse<EquipmentItem>>(
+      `/equipment/${id}/adjust-stock`,
+      payload
+    );
+    return response.data?.data || (response.data as unknown as EquipmentItem);
   },
 
-  // Low stock alerts
+  // EQ-06: Low stock alerts
   getLowStockAlerts: async (): Promise<EquipmentItem[]> => {
-    try {
-      const response = await apiClient.get<EquipmentItem[]>('/equipment/alerts/low-stock');
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      return localEquipmentItems.filter((e) => e.stockQty <= e.lowStockThreshold);
-    } catch {
-      return localEquipmentItems.filter((e) => e.stockQty <= e.lowStockThreshold);
-    }
+    const response = await apiClient.get<ApiResponse<EquipmentItem[]>>('/equipment/alerts/low-stock');
+    return response.data?.data || (Array.isArray(response.data) ? (response.data as unknown as EquipmentItem[]) : []);
+  },
+
+  rentItem: async (id: number | string): Promise<EquipmentItem> => {
+    return equipmentService.adjustStock(id, { adjustmentQty: -1, reason: 'Member rental' });
+  },
+
+  returnItem: async (id: number | string): Promise<EquipmentItem> => {
+    return equipmentService.adjustStock(id, { adjustmentQty: 1, reason: 'Return to stock' });
   },
 };
-
-function filterLocalEquipment(params?: { category?: string; search?: string }): EquipmentItem[] {
-  let result = [...localEquipmentItems];
-  if (!params) return result;
-
-  if (params.category && params.category !== 'all') {
-    result = result.filter(
-      (e) => e.category.toLowerCase() === params.category!.toLowerCase()
-    );
-  }
-
-  if (params.search && params.search.trim()) {
-    const q = params.search.toLowerCase().trim();
-    result = result.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        (e.brand && e.brand.toLowerCase().includes(q)) ||
-        (e.description && e.description.toLowerCase().includes(q))
-    );
-  }
-
-  return result;
-}

@@ -36,6 +36,24 @@ export class EquipmentController {
     const updated = await equipmentService.updateEquipment(id, req.body);
     return sendSuccess(res, updated, 'Equipment updated successfully');
   }
+
+  /**
+   * EQ-05: POST /api/v1/equipment/:id/adjust-stock
+   */
+  async adjustStock(req: Request, res: Response): Promise<Response> {
+    const id = parseInt(req.params.id as string, 10);
+    const adjustmentQty = Number(req.body.adjustmentQty) || 0;
+    const updated = await equipmentService.adjustStock(id, adjustmentQty);
+    return sendSuccess(res, updated, 'Stock adjusted successfully');
+  }
+
+  /**
+   * EQ-06: GET /api/v1/equipment/alerts/low-stock
+   */
+  async getLowStockAlerts(_req: Request, res: Response): Promise<Response> {
+    const alerts = await equipmentService.getLowStockAlerts();
+    return sendSuccess(res, alerts);
+  }
 }
 
 export const equipmentController = new EquipmentController();

@@ -101,6 +101,12 @@ export const updateEquipmentSchema = z
     { message: 'At least one field must be provided to update' }
   );
 
+export const adjustStockSchema = z.object({
+  adjustmentQty: z.coerce.number().int({ message: 'adjustmentQty must be an integer' }),
+  reason: z.string().max(250).optional(),
+});
+
 export type ListEquipmentQuery = z.infer<typeof listEquipmentQuerySchema>;
 export type CreateEquipmentInput = z.infer<typeof createEquipmentSchema>;
 export type UpdateEquipmentInput = z.infer<typeof updateEquipmentSchema>;
+export type AdjustStockInput = z.infer<typeof adjustStockSchema>;

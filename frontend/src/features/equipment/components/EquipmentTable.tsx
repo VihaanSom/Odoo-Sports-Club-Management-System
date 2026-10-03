@@ -7,12 +7,13 @@ import {
 } from 'react-icons/fa6';
 
 import { Badge, Button, ProgressBar } from '@/components/ui';
+import { formatPaise } from '@/lib/utils';
 import type { Equipment } from '@/types';
 
 interface EquipmentTableProps {
   items: Equipment[];
-  onRent: (id: string, name: string) => void;
-  onReturn: (id: string, name: string) => void;
+  onRent: (id: string | number, name: string) => void;
+  onReturn: (id: string | number, name: string) => void;
 }
 
 export const EquipmentTable = ({
@@ -30,37 +31,40 @@ export const EquipmentTable = ({
               <th>Category</th>
               <th>Availability</th>
               <th>Condition</th>
-              <th>Rental / Slot</th>
+              <th>Price / Rate</th>
               <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item) => {
-              const percent = Math.round((item.quantityAvailable / item.quantityTotal) * 100);
+              const qtyAvail = item.quantityAvailable ?? item.stockQty ?? 0;
+              const qtyTotal = item.quantityTotal ?? item.stockQty ?? 1;
+              const percent = qtyTotal > 0 ? Math.round((qtyAvail / qtyTotal) * 100) : 0;
+              const itemId = String(item.id);
 
               return (
-                <tr key={item.id} className="hover:bg-base-300/30">
+                <tr key={itemId} className="hover:bg-base-300/30">
                   <td>
                     <div>
                       <Link
-                        to={`/equipment/${item.id.replace(/\D/g, '') || item.id}`}
+                        to={`/equipment/${itemId}`}
                         className="font-bold hover:underline hover:text-primary transition-colors text-base-content"
                       >
                         {item.name}
                       </Link>
-                      <span className="text-xs text-base-content/50 font-mono block">{item.id}</span>
+                      <span className="text-xs text-base-content/50 font-mono block">#{itemId}</span>
                     </div>
                   </td>
                   <td>
-                    <Badge variant="outline" size="sm">
+                    <Badge variant="outline" size="sm" className="capitalize">
                       {item.category}
                     </Badge>
                   </td>
                   <td>
                     <div className="w-36">
                       <ProgressBar
-                        value={item.quantityAvailable}
-                        max={item.quantityTotal}
+                        value={qtyAvail}
+                        max={qtyTotal}
                         variant={percent > 50 ? 'success' : percent > 20 ? 'warning' : 'error'}
                         showLabel
                       />
@@ -83,17 +87,19 @@ export const EquipmentTable = ({
                       ) : (
                         <FaTriangleExclamation className="size-2.5" />
                       )}
-                      {item.condition}
+                      {item.condition || 'Good'}
                     </Badge>
                   </td>
                   <td>
-                    <span className="font-semibold">${item.rentalRate}</span>
-                    <span className="text-xs text-base-content/60"> / booking</span>
+                    <span className="font-semibold">
+                      {formatPaise(item.pricePaise || (item.rentalRate ? item.rentalRate * 100 : 0))}
+                    </span>
+                    <span className="text-xs text-base-content/60"> retail</span>
                   </td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Link
-                        to={`/equipment/${item.id.replace(/\D/g, '') || item.id}`}
+                        to={`/equipment/${itemId}`}
                         className="btn btn-ghost btn-xs"
                       >
                         View
@@ -101,7 +107,7 @@ export const EquipmentTable = ({
                       <Button
                         size="xs"
                         variant="primary"
-                        disabled={item.quantityAvailable <= 0}
+                        disabled={qtyAvail <= 0}
                         onClick={() => onRent(item.id, item.name)}
                         leftIcon={<FaHandHoldingHand className="size-3" />}
                         title="Issue to member"
@@ -111,7 +117,7 @@ export const EquipmentTable = ({
                       <Button
                         size="xs"
                         variant="ghost"
-                        disabled={item.quantityAvailable >= item.quantityTotal}
+                        disabled={qtyAvail >= qtyTotal}
                         onClick={() => onReturn(item.id, item.name)}
                         leftIcon={<FaRotateLeft className="size-3" />}
                         title="Return to stock"
@@ -120,7 +126,6 @@ export const EquipmentTable = ({
                       </Button>
                     </div>
                   </td>
-
                 </tr>
               );
             })}
