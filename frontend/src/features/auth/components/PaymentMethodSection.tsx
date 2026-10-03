@@ -240,7 +240,7 @@ export const PaymentMethodSection: React.FC<PaymentMethodSectionProps> = ({
               </label>
               <input
                 type="text"
-                placeholder="Full Name"
+                placeholder="e.g. JOHN HACKATHON"
                 value={cardHolder}
                 onChange={(e) => onCardHolderChange?.(e.target.value.toUpperCase())}
                 className={cn(

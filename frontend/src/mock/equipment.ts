@@ -1,4 +1,5 @@
 import type { Equipment } from '@/types';
+import type { EquipmentItem } from '@/types/equipment';
 
 export const mockEquipment: Equipment[] = [
   {
@@ -63,5 +64,128 @@ export const mockEquipment: Equipment[] = [
     quantityAvailable: 5,
     condition: 'Fair',
     rentalRate: 15,
+  },
+];
+
+export const mockEquipmentItems: EquipmentItem[] = [
+  {
+    id: 1,
+    name: 'Wilson Pro Staff 97 v14 Racket',
+    category: 'racket',
+    brand: 'Wilson',
+    description: 'Precision feel and pinpoint control designed for competitive tennis players.',
+    pricePaise: 2499900, // ₹24,999.00
+    stockQty: 18,
+    lowStockThreshold: 5,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 80000, // ₹800.00 / session
+    imageUrl: 'https://images.unsplash.com/photo-1617083934555-ac7d4fed8889?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-10T10:00:00Z',
+  },
+  {
+    id: 2,
+    name: 'Babolat Pure Drive 2024',
+    category: 'racket',
+    brand: 'Babolat',
+    description: 'Explosive power and versatile spin profile for baseline attack.',
+    pricePaise: 2199900, // ₹21,999.00
+    stockQty: 4, // low stock flag
+    lowStockThreshold: 5,
+    isActive: true,
+    condition: 'Good',
+    rentalRatePaise: 75000, // ₹750.00
+    imageUrl: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-11T10:00:00Z',
+  },
+  {
+    id: 3,
+    name: 'Slazenger Wimbledon Tennis Balls (Can of 4)',
+    category: 'ball',
+    brand: 'Slazenger',
+    description: 'Tour official pressurized tennis balls with Hydroguard moisture repelling felt.',
+    pricePaise: 89900, // ₹899.00
+    stockQty: 140,
+    lowStockThreshold: 30,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 25000, // ₹250.00
+    imageUrl: 'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-12T10:00:00Z',
+  },
+  {
+    id: 4,
+    name: 'Kookaburra Turf Match Cricket Ball',
+    category: 'ball',
+    brand: 'Kookaburra',
+    description: 'Hand stitched 4-piece alum tanned steerhide leather cricket ball.',
+    pricePaise: 449900, // ₹4,499.00
+    stockQty: 3, // low stock flag
+    lowStockThreshold: 6,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 50000,
+    imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-12T10:00:00Z',
+  },
+  {
+    id: 5,
+    name: 'Asics Gel-Resolution 9 Clay Court Shoes',
+    category: 'shoe',
+    brand: 'Asics',
+    description: 'Dynawall support and Gel cushioning engineered for aggressive clay movement.',
+    pricePaise: 1399900, // ₹13,999.00
+    stockQty: 12,
+    lowStockThreshold: 4,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 0,
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-15T10:00:00Z',
+  },
+  {
+    id: 6,
+    name: 'Nike Court Dri-FIT Club Polo',
+    category: 'apparel',
+    brand: 'Nike',
+    description: 'Sweat-wicking pique fabric with ribbed collar and tailored athletic silhouette.',
+    pricePaise: 349500, // ₹3,495.00
+    stockQty: 25,
+    lowStockThreshold: 8,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 0,
+    imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-18T10:00:00Z',
+  },
+  {
+    id: 7,
+    name: 'Tourna Grip Original Overgrip (Pack of 10)',
+    category: 'accessory',
+    brand: 'Tourna',
+    description: 'Dry feel moisture absorbing sweat overgrips used by world class touring pros.',
+    pricePaise: 189900, // ₹1,899.00
+    stockQty: 45,
+    lowStockThreshold: 10,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 0,
+    imageUrl: 'https://images.unsplash.com/photo-1599586120429-48281b6f0ece?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-20T10:00:00Z',
+  },
+  {
+    id: 8,
+    name: 'Champions Club Insulated Steel Flask (1000ml)',
+    category: 'accessory',
+    brand: 'Champions Club',
+    description: 'Double walled vacuum insulated 304 food-grade stainless steel club water bottle.',
+    pricePaise: 149900, // ₹1,499.00
+    stockQty: 2, // low stock flag
+    lowStockThreshold: 5,
+    isActive: true,
+    condition: 'Excellent',
+    rentalRatePaise: 0,
+    imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60',
+    createdAt: '2026-08-22T10:00:00Z',
   },
 ];

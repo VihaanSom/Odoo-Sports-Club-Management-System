@@ -3,9 +3,12 @@ import { NavLink } from 'react-router-dom';
 import {
   FaChartPie,
   FaUsers,
-  FaBasketball,
+  FaTrophy,
   FaCalendarCheck,
   FaDumbbell,
+  FaWineGlass,
+  FaUtensils,
+  FaReceipt,
   FaIdCard,
   FaGear,
   FaLayerGroup,
@@ -34,7 +37,7 @@ const navItems: NavItem[] = [
   {
     label: 'Courts & Facilities',
     path: '/facilities',
-    icon: <FaBasketball className="size-4" />,
+    icon: <FaTrophy className="size-4 text-amber-500" />,
   },
   {
     label: 'Bookings & Slots',
@@ -43,7 +46,22 @@ const navItems: NavItem[] = [
     badge: 'Live',
   },
   {
-    label: 'Equipment Inventory',
+    label: 'Bar & Floor POS',
+    path: '/bar',
+    icon: <FaWineGlass className="size-4" />,
+  },
+  {
+    label: 'F&B Menu',
+    path: '/menu',
+    icon: <FaUtensils className="size-4" />,
+  },
+  {
+    label: 'Orders & POS',
+    path: '/orders',
+    icon: <FaReceipt className="size-4" />,
+  },
+  {
+    label: 'Equipment Store',
     path: '/equipment',
     icon: <FaDumbbell className="size-4" />,
   },
@@ -58,6 +76,7 @@ const navItems: NavItem[] = [
     icon: <FaGear className="size-4" />,
   },
 ];
+
 
 interface SidebarProps {
   isOpen?: boolean;

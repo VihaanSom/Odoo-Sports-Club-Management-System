@@ -84,3 +84,11 @@ export class UnprocessableError extends AppError {
     super(message, 422, code, details);
   }
 }
+
+export class UnprocessableError extends AppError {
+  constructor(arg1?: string, arg2?: string, details?: any) {
+    const { message, code } = parseMessageAndCode(arg1, arg2, 'Unprocessable entity', 'UNPROCESSABLE_ENTITY');
+    super(message, 422, code, details);
+  }
+}
+

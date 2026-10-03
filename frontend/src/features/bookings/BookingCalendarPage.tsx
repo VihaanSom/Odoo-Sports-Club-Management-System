@@ -1,0 +1,53 @@
+import React from 'react';
+import { motion } from 'motion/react';
+import { FaCalendarDays, FaPlus, FaListUl, FaArrowLeft } from 'react-icons/fa6';
+import { Link } from 'react-router-dom';
+import { CourtAvailabilityMatrix } from './components/CourtAvailabilityMatrix';
+import { TodaysBookingsView } from './components/TodaysBookingsView';
+
+export const BookingCalendarPage: React.FC = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Link
+              to="/bookings"
+              className="btn btn-ghost btn-xs gap-1 text-base-content/60 hover:text-base-content"
+            >
+              <FaArrowLeft className="size-3" /> Back to Bookings List
+            </Link>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+            <FaCalendarDays className="size-7 text-primary" /> Court Schedule & Matrix
+          </h1>
+          <p className="text-sm text-base-content/70 mt-1">
+            Real-time court grid with hourly slot occupancy across sports.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link to="/bookings" className="btn btn-ghost btn-sm gap-1.5">
+            <FaListUl className="size-3.5" /> List View
+          </Link>
+          <Link to="/bookings/new" className="btn btn-primary btn-sm gap-2">
+            <FaPlus className="size-3.5" /> Book Court
+          </Link>
+        </div>
+      </div>
+
+      {/* Today's quick snapshot */}
+      <TodaysBookingsView />
+
+      {/* Full interactive availability matrix */}
+      <CourtAvailabilityMatrix />
+    </motion.div>
+  );
+};
+
+export default BookingCalendarPage;

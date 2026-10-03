@@ -19,9 +19,11 @@ export const authenticate = (
     const decoded = verifyAccessToken(token);
     req.user = {
       id: decoded.sub,
+      sub: decoded.sub,
       email: decoded.email,
       role: decoded.role,
       tier: decoded.tier,
+      type: decoded.role === 'member' ? 'member' : 'staff',
     };
     next();
   } catch (error) {
@@ -29,7 +31,7 @@ export const authenticate = (
   }
 };
 
-export const requireRoles = (...roles: UserRole[]) => {
+export const requireRoles = (...roles: (UserRole | string)[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       sendError(res, 'Authentication required', 401);
@@ -41,6 +43,28 @@ export const requireRoles = (...roles: UserRole[]) => {
       return;
     }
     next();
+  };
+};
+
+export const requireSelfOrRole = (...allowedRoles: (UserRole | string)[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      sendError(res, 'Authentication required', 401);
+      return;
+    }
+
+    if (allowedRoles.includes(req.user.role)) {
+      return next();
+    }
+
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const targetId = parseInt(rawId, 10);
+    const userId = req.user.sub ?? req.user.id;
+    if (req.user.role === 'member' && userId === targetId) {
+      return next();
+    }
+
+    sendError(res, 'Access denied. You can only view or modify your own resources.', 403);
   };
 };
 
@@ -94,3 +118,6 @@ export const requireSelfOrRole = (...allowedRoles: string[]) => {
   };
 };
 
+// Aliases for cross-module compatibility (Dev A & Dev B)
+export const verifyToken = authenticate;
+export const requireRole = requireRoles;

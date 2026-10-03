@@ -55,3 +55,12 @@ export const validate = (
   return validateBody(schema);
 };
 
+// Generic validate helper for Dev B modules
+export const validate = (
+  schema: ZodSchema,
+  target: 'body' | 'query' | 'params' = 'body'
+) => {
+  if (target === 'query') return validateQuery(schema);
+  if (target === 'params') return validateParams(schema);
+  return validateBody(schema);
+};
