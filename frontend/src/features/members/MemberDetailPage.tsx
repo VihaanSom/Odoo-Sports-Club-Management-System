@@ -68,8 +68,14 @@ export const MemberDetailPage = () => {
 
   const handleSaveAddress = async (newAddress: MemberAddress) => {
     if (!id || !member) return;
-    const updated = await memberService.updateAddress(id, newAddress);
-    setMember({ ...member, address: updated });
+    try {
+      const updated = await memberService.updateAddress(id, newAddress);
+      setMember({ ...member, address: updated });
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Failed to save address';
+      toast.error(msg);
+      throw err;
+    }
   };
 
   const handleUpdateProfile = async (data: MemberUpdatePayload) => {
@@ -79,8 +85,9 @@ export const MemberDetailPage = () => {
       setMember(updated);
       toast.success('Member profile updated');
       setIsEditModalOpen(false);
-    } catch {
-      toast.error('Failed to update member');
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Failed to update member';
+      toast.error(msg);
     }
   };
 
@@ -92,13 +99,14 @@ export const MemberDetailPage = () => {
       if (history) {
         setHistory({
           ...history,
-          ledger: [res.ledgerEntry, ...history.ledger],
+          ledger: [res.ledgerEntry, ...(history.ledger || [])],
         });
       }
       toast.success('Membership renewed successfully');
       setIsRenewModalOpen(false);
-    } catch {
-      toast.error('Failed to renew membership');
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Failed to renew membership';
+      toast.error(msg);
     }
   };
 

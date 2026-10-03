@@ -37,19 +37,25 @@ export const MemberRenewalModal = ({
   onClose,
   onSubmit,
 }: MemberRenewalModalProps) => {
-  // Monthly rates in paise per tier
+  // Monthly rates in paise per tier matching backend seeds
   const tierMonthlyRatePaise: Record<string, number> = {
-    Junior: 290000,
-    Standard: 490000,
-    Premium: 890000,
-    VIP: 1490000,
+    Gold: 500000,
+    Silver: 300000,
+    Junior: 200000,
+    Standard: 300000,
+    Premium: 500000,
+    VIP: 500000,
   };
 
-  const monthlyRate = tierMonthlyRatePaise[member.tier] || 490000;
+  const monthlyRate = tierMonthlyRatePaise[member.tier] || 500000;
+  const displayName =
+    member.name ||
+    `${member.firstName || ''} ${member.lastName || ''}`.trim() ||
+    'Club Member';
 
   // Card form state
   const [cardNumber, setCardNumber] = useState('');
-  const [cardHolder, setCardHolder] = useState(member.name || '');
+  const [cardHolder, setCardHolder] = useState(displayName);
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardErrors, setCardErrors] = useState<{
@@ -198,7 +204,7 @@ export const MemberRenewalModal = ({
         <div className="bg-base-200/60 p-3.5 rounded-xl flex items-center justify-between text-xs border border-base-300">
           <div>
             <span className="text-base-content/60 block">Member</span>
-            <span className="font-bold text-sm text-base-content">{member.name}</span>
+            <span className="font-bold text-sm text-base-content">{displayName}</span>
           </div>
           <div className="text-right">
             <span className="text-base-content/60 block">Current Plan Tier</span>

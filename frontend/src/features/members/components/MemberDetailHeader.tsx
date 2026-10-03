@@ -38,6 +38,11 @@ export const MemberDetailHeader = ({
   const isExpiringSoon = daysRemaining > 0 && daysRemaining <= 30;
   const isExpired = daysRemaining <= 0 || member.status === 'expired';
 
+  const displayName =
+    member.name ||
+    `${member.firstName || ''} ${member.lastName || ''}`.trim() ||
+    'Club Member';
+
   return (
     <div className="card bg-base-200/50 border border-base-300 p-6 shadow-xs space-y-6">
       {/* Top action row */}
@@ -64,7 +69,7 @@ export const MemberDetailHeader = ({
           <Button
             variant="primary"
             size="sm"
-            leftIcon={<FaRotateRight className="size-3.5" />}
+            leftIcon={<FaRotateRight className="size-3.5 border-rounded" />}
             onClick={onOpenRenew}
           >
             Renew
@@ -77,7 +82,7 @@ export const MemberDetailHeader = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Avatar
             src={member.photoUrl || member.avatarUrl}
-            fallbackText={member.name}
+            fallbackText={displayName}
             size="xl"
             className="ring-2 ring-primary/30"
           />
@@ -85,10 +90,10 @@ export const MemberDetailHeader = ({
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-base-content">
-                {member.name}
+                {displayName}
               </h1>
               <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-base-300 text-base-content/80 font-bold">
-                {member.id}
+                #{member.id}
               </span>
             </div>
 
@@ -97,15 +102,21 @@ export const MemberDetailHeader = ({
               <Badge
                 size="sm"
                 variant={
-                  member.tier === 'VIP'
+                  member.tier === 'Gold' || member.tier === 'VIP'
                     ? 'warning'
-                    : member.tier === 'Premium'
-                    ? 'secondary'
-                    : 'ghost'
+                    : member.tier === 'Silver' || member.tier === 'Premium'
+                      ? 'secondary'
+                      : 'ghost'
                 }
                 className="gap-1.5 font-bold"
               >
-                <FaTrophy className="size-3 text-amber-500" />
+                <FaTrophy className={
+                  member.tier === 'Gold' || member.tier === 'VIP'
+                    ? 'size-3 text-amber-500'
+                    : member.tier === 'Silver' || member.tier === 'Premium'
+                      ? 'size-3 text-slate-400'
+                      : 'size-3 text-info'
+                } />
                 {member.tier || member.membershipPlan}
               </Badge>
 
@@ -116,8 +127,8 @@ export const MemberDetailHeader = ({
                   member.status === 'active'
                     ? 'success'
                     : member.status === 'suspended'
-                    ? 'warning'
-                    : 'error'
+                      ? 'warning'
+                      : 'error'
                 }
                 className="capitalize gap-1.5"
               >
@@ -127,13 +138,12 @@ export const MemberDetailHeader = ({
 
               {/* Days remaining badge */}
               <span
-                className={`badge badge-sm font-medium ${
-                  isExpired
+                className={`badge badge-sm font-medium ${isExpired
                     ? 'badge-error text-error-content'
                     : isExpiringSoon
-                    ? 'badge-warning text-warning-content'
-                    : 'badge-ghost text-base-content/70'
-                }`}
+                      ? 'badge-warning text-warning-content'
+                      : 'badge-ghost text-base-content/70'
+                  }`}
               >
                 <FaClock className="size-2.5 mr-1" />
                 {isExpired
