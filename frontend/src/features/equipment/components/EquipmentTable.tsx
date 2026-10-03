@@ -1,10 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   FaCircleCheck,
   FaTriangleExclamation,
   FaHandHoldingHand,
   FaRotateLeft,
 } from 'react-icons/fa6';
+
 import { Badge, Button, ProgressBar } from '@/components/ui';
 import type { Equipment } from '@/types';
 
@@ -41,8 +43,13 @@ export const EquipmentTable: React.FC<EquipmentTableProps> = ({
                 <tr key={item.id} className="hover:bg-base-300/30">
                   <td>
                     <div>
-                      <div className="font-bold">{item.name}</div>
-                      <span className="text-xs text-base-content/50 font-mono">{item.id}</span>
+                      <Link
+                        to={`/equipment/${item.id.replace(/\D/g, '') || item.id}`}
+                        className="font-bold hover:underline hover:text-primary transition-colors text-base-content"
+                      >
+                        {item.name}
+                      </Link>
+                      <span className="text-xs text-base-content/50 font-mono block">{item.id}</span>
                     </div>
                   </td>
                   <td>
@@ -86,6 +93,12 @@ export const EquipmentTable: React.FC<EquipmentTableProps> = ({
                   </td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
+                      <Link
+                        to={`/equipment/${item.id.replace(/\D/g, '') || item.id}`}
+                        className="btn btn-ghost btn-xs"
+                      >
+                        View
+                      </Link>
                       <Button
                         size="xs"
                         variant="primary"
@@ -108,6 +121,7 @@ export const EquipmentTable: React.FC<EquipmentTableProps> = ({
                       </Button>
                     </div>
                   </td>
+
                 </tr>
               );
             })}

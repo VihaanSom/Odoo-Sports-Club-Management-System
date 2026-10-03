@@ -5,8 +5,13 @@ import type { Member } from '@/types';
 export const memberService = {
   getAll: async (): Promise<Member[]> => {
     try {
-      const response = await apiClient.get<Member[]>('/members');
-      return response.data;
+      const response = await apiClient.get<Member[] | { data: Member[] }>('/members');
+      const data = response.data;
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object' && 'data' in data && Array.isArray((data as { data: Member[] }).data)) {
+        return (data as { data: Member[] }).data;
+      }
+      return mockMembers;
     } catch {
       return mockMembers;
     }
