@@ -25,48 +25,36 @@ export const KpiStatsGrid = ({ kpis, loading }: KpiStatsGridProps) => {
       value: formatRupees(kpis?.totalRevenuePaise ?? 485000000),
       desc: '↗︎ 14.8% growth vs last month',
       icon: <FaIndianRupeeSign className="size-5 text-emerald-500" />,
-      badge: 'MTD',
-      badgeClass: 'badge-success',
     },
     {
       title: 'Active Members',
       value: String(kpis?.activeMembersCount ?? 524),
       desc: '↗︎ 34 enrolled this month',
       icon: <FaUsers className="size-5 text-primary" />,
-      badge: '99.4% Retained',
-      badgeClass: 'badge-primary',
     },
     {
       title: "Today's Bookings",
       value: String(kpis?.todayBookingsCount ?? 38),
       desc: '32 Member • 6 Walk-in / Social',
       icon: <FaCalendarCheck className="size-5 text-secondary" />,
-      badge: 'Active Today',
-      badgeClass: 'badge-secondary',
     },
     {
       title: 'Court Occupancy',
       value: `${kpis?.courtUtilizationRate ? kpis.courtUtilizationRate.toFixed(1) : '78.4'}%`,
       desc: 'Peak times: 06-10h & 18-22h',
       icon: <FaTableTennisPaddleBall className="size-5 text-amber-500" />,
-      badge: 'Live',
-      badgeClass: 'badge-warning',
     },
     {
       title: 'Bar & Cafe Sales',
       value: formatRupees(kpis?.barRevenuePaise ?? 55000000),
       desc: '8 open tabs currently active',
       icon: <FaWineGlass className="size-5 text-purple-500" />,
-      badge: 'Bistro',
-      badgeClass: 'badge-info',
     },
     {
       title: 'Staff On Duty',
       value: `${kpis?.staffOnDutyCount ?? 6} Staff`,
       desc: `${kpis?.pendingLeavesCount ?? 2} leave requests pending`,
       icon: <FaUserTie className="size-5 text-blue-500" />,
-      badge: 'Shift Roster',
-      badgeClass: 'badge-neutral',
     },
   ];
 
@@ -91,9 +79,6 @@ export const KpiStatsGrid = ({ kpis, loading }: KpiStatsGridProps) => {
             <div className="p-2 rounded-xl bg-base-300/50">
               {stat.icon}
             </div>
-            <span className={`badge badge-xs font-semibold ${stat.badgeClass}`}>
-              {stat.badge}
-            </span>
           </div>
 
           <div>

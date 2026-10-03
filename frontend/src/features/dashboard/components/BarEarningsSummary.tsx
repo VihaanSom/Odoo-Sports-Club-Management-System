@@ -61,7 +61,7 @@ export const BarEarningsSummary = ({ data: initialData }: BarEarningsSummaryProp
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-bold tracking-tight">Bar & Bistro Pulse</h3>
-                <p className="text-[11px] text-base-content/60">Live table tabs & today's F&B performance</p>
+                <p className="text-[11px] text-base-content/60">Table tabs & today's F&B performance</p>
               </div>
             </div>
 

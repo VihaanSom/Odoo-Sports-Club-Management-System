@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type AppTheme = 'corporate' | 'black';
+export type AppTheme = 'corporate';
 
 interface ThemeState {
   theme: AppTheme;
@@ -8,33 +8,25 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
-const getInitialTheme = (): AppTheme => {
-  const stored = typeof window !== 'undefined' ? localStorage.getItem('sports_club_theme') : null;
-  if (stored === 'corporate' || stored === 'black') {
-    return stored as AppTheme;
-  }
-  // Default to light mode (corporate) and persist
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('sports_club_theme', 'corporate');
-  }
-  return 'corporate';
-};
+const DEFAULT_THEME: AppTheme = 'corporate';
 
-const initialTheme = getInitialTheme();
+if (typeof window !== 'undefined') {
+  localStorage.setItem('sports_club_theme', DEFAULT_THEME);
+}
 if (typeof document !== 'undefined') {
-  document.documentElement.setAttribute('data-theme', initialTheme);
+  document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
 }
 
-export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: initialTheme,
-  setTheme: (theme: AppTheme) => {
-    localStorage.setItem('sports_club_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    set({ theme });
+export const useThemeStore = create<ThemeState>((set) => ({
+  theme: DEFAULT_THEME,
+  setTheme: () => {
+    // Locked to light mode
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
+    }
+    set({ theme: DEFAULT_THEME });
   },
   toggleTheme: () => {
-    const current = get().theme;
-    const next: AppTheme = current === 'corporate' ? 'black' : 'corporate';
-    get().setTheme(next);
+    // No-op: dark mode removed
   },
 }));

@@ -25,7 +25,6 @@ interface NavItem {
   label: string;
   path: string;
   icon: React.ReactNode;
-  badge?: string;
 }
 
 const navItems: NavItem[] = [
@@ -38,18 +37,16 @@ const navItems: NavItem[] = [
     label: 'Members',
     path: '/members',
     icon: <FaUsers className="size-4" />,
-    badge: '142',
   },
   {
     label: 'Courts & Facilities',
     path: '/facilities',
-    icon: <FaTrophy className="size-4 text-amber-500" />,
+    icon: <FaTrophy className="size-4" />,
   },
   {
     label: 'Bookings & Slots',
     path: '/bookings',
     icon: <FaCalendarCheck className="size-4" />,
-    badge: 'Live',
   },
   {
     label: 'Bar & Floor POS',
@@ -79,35 +76,32 @@ const navItems: NavItem[] = [
   {
     label: 'CRM Leads',
     path: '/leads',
-    icon: <FaUserTie className="size-4 text-accent" />,
-    badge: 'CRM',
+    icon: <FaUserTie className="size-4" />,
   },
   {
     label: 'Renewal Invoices',
     path: '/invoices',
-    icon: <FaFileInvoiceDollar className="size-4 text-warning" />,
+    icon: <FaFileInvoiceDollar className="size-4" />,
   },
   {
     label: 'Staff & Shifts',
     path: '/staff',
-    icon: <FaUserGroup className="size-4 text-primary" />,
+    icon: <FaUserGroup className="size-4" />,
   },
   {
     label: 'Payments Ledger',
     path: '/payments',
-    icon: <FaMoneyBillTransfer className="size-4 text-success" />,
+    icon: <FaMoneyBillTransfer className="size-4" />,
   },
   {
     label: 'Club Reports',
     path: '/reports',
-    icon: <FaChartLine className="size-4 text-info" />,
-    badge: 'BI',
+    icon: <FaChartLine className="size-4" />,
   },
   {
     label: 'Public Website',
     path: '/public',
-    icon: <FaGlobe className="size-4 text-amber-500" />,
-    badge: 'Guest',
+    icon: <FaGlobe className="size-4" />,
   },
   {
     label: 'Settings',
@@ -115,7 +109,6 @@ const navItems: NavItem[] = [
     icon: <FaGear className="size-4" />,
   },
 ];
-
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -136,14 +129,14 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
 
       <aside
         className={cn(
-          'fixed top-16 bottom-0 left-0 z-40 w-64 bg-base-200 border-r border-base-300 transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col justify-between p-4',
+          'fixed top-16 bottom-0 left-0 z-40 w-64 bg-base-200 border-r border-base-300 transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col justify-between py-4 px-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex flex-col gap-4 overflow-y-auto flex-1 pr-1">
+        <div className="flex flex-col gap-4 overflow-y-auto flex-1 pl-3 pr-2 scrollbar-thin">
           <div className="px-2">
             <span className="text-xs font-bold text-base-content/50 uppercase tracking-widest flex items-center gap-2">
-              <FaLayerGroup className="size-3 text-primary" /> Management
+              <FaLayerGroup className="size-3 text-base-content/50" /> Management
             </span>
           </div>
 
@@ -166,26 +159,10 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
                     {item.icon}
                     <span>{item.label}</span>
                   </div>
-                  {item.badge && (
-                    <span className="badge badge-sm badge-secondary font-semibold">
-                      {item.badge}
-                    </span>
-                  )}
                 </NavLink>
               </li>
             ))}
           </ul>
-        </div>
-
-        {/* Club Quick Status Card */}
-        <div className="card bg-base-100 border border-base-300 p-4 shadow-sm rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-base-content/70">Club Status</span>
-            <span className="badge badge-xs badge-success gap-1">Open</span>
-          </div>
-          <p className="text-xs text-base-content/60 mt-1">Operating Hours: 06:00 - 23:00</p>
-          <progress className="progress progress-primary w-full h-1.5 mt-3" value={78} max={100} />
-          <span className="text-[10px] text-base-content/50 mt-1 block text-right">78% Court Capacity</span>
         </div>
       </aside>
     </>

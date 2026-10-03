@@ -69,15 +69,9 @@ export const FacilityOccupancyGrid = () => {
       <div className="card-body p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-base-300">
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-bold tracking-tight">Facility Live Occupancy</h2>
-              <span className="badge badge-success badge-sm gap-1 font-semibold">
-                <span className="size-2 rounded-full bg-success animate-pulse" />
-                Live Status
-              </span>
-            </div>
+            <h2 className="text-base sm:text-lg font-bold tracking-tight">Facility Occupancy</h2>
             <p className="text-xs text-base-content/60">
-              Real-time court availability, surface condition, and today's reservations
+              Court availability, surface condition, and today's reservations
             </p>
           </div>
 

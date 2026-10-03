@@ -1,8 +1,7 @@
 import type { AppTheme } from '@/types';
 
 export const AVAILABLE_THEMES: { id: AppTheme; label: string; isDark: boolean }[] = [
-  { id: 'corporate', label: 'Light', isDark: false },
-  { id: 'black', label: 'Dark', isDark: true },
+  { id: 'corporate', label: 'Corporate (Light)', isDark: false },
 ];
 
 export const THEME_STORAGE_KEY = 'sports_club_theme';

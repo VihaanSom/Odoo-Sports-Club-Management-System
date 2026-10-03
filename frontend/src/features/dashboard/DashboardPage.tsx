@@ -5,8 +5,6 @@ import {
   FaTrophy,
   FaCalendarPlus,
   FaUserPlus,
-  FaSun,
-  FaMoon,
   FaRotate,
   FaFileInvoiceDollar,
   FaBullhorn,
@@ -14,7 +12,6 @@ import {
   FaDumbbell,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
-import { useThemeStore } from '@/stores/themeStore';
 import { reportService } from '@/services/reportService';
 import type {
   ClubSummaryKPIs,
@@ -39,10 +36,6 @@ import {
 } from './components';
 
 export const DashboardPage = () => {
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
-  const isDark = theme === 'black';
-
   const [kpis, setKpis] = useState<ClubSummaryKPIs | null>(null);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
   const [heatmap, setHeatmap] = useState<CourtHeatmapPoint[]>([]);
@@ -73,8 +66,11 @@ export const DashboardPage = () => {
       if (showToast) {
         toast.success('Dashboard metrics updated');
       }
-    } catch {
-      toast.error('Could not refresh dashboard metrics');
+    } catch (error) {
+      console.error('Failed to fetch dashboard intelligence data:', error);
+      if (showToast) {
+        toast.error('Unable to refresh metrics');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,36 +81,30 @@ export const DashboardPage = () => {
     fetchDashboardData(false);
   }, [fetchDashboardData]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = () => {
     setRefreshing(true);
-    await fetchDashboardData(true);
+    fetchDashboardData(true);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="space-y-6 pb-8"
+      transition={{ duration: 0.3 }}
+      className="space-y-6 max-w-7xl mx-auto"
     >
-      {/* Header section with brand logo and prominent theme toggle */}
+      {/* Header section with brand logo */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-1">
         <div className="flex items-start gap-3">
           <div className="p-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 shrink-0 mt-0.5">
             <FaTrophy className="size-6 text-amber-500" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Champions Club Command Center
-              </h1>
-              <span className="badge badge-success badge-sm font-bold gap-1">
-                <span className="size-2 rounded-full bg-success animate-ping" />
-                Live
-              </span>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Champions Club Command Center
+            </h1>
             <p className="text-xs sm:text-sm text-base-content/70 mt-0.5">
-              Real-time court occupancy, membership growth, bookings ledger, and clubhouse operations.
+              Court occupancy, membership growth, bookings ledger, and clubhouse operations.
             </p>
           </div>
         </div>
@@ -130,27 +120,6 @@ export const DashboardPage = () => {
           >
             <FaRotate className={`size-3.5 ${refreshing ? 'animate-spin text-primary' : ''}`} />
             <span className="hidden sm:inline">Refresh</span>
-          </button>
-
-          {/* Prominent Dashboard Theme Toggle (Corporate Light / Black Dark) */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="btn btn-outline btn-sm gap-2"
-            aria-label="Toggle light and dark mode"
-            title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-          >
-            {isDark ? (
-              <>
-                <FaSun className="size-3.5 text-warning" />
-                <span className="text-xs font-semibold">Light</span>
-              </>
-            ) : (
-              <>
-                <FaMoon className="size-3.5 text-primary" />
-                <span className="text-xs font-semibold">Dark</span>
-              </>
-            )}
           </button>
 
           <Link to="/bookings/new" className="btn btn-primary btn-sm gap-1.5 shadow-xs font-semibold">
@@ -171,7 +140,7 @@ export const DashboardPage = () => {
       {/* KPI Stats Grid with real service data */}
       <KpiStatsGrid kpis={kpis} loading={loading} />
 
-      {/* Live Facilities Grid & Bar Earnings Snapshot */}
+      {/* Facilities Grid & Bar Earnings Snapshot */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <FacilityOccupancyGrid />
@@ -190,14 +159,33 @@ export const DashboardPage = () => {
       {/* Court Utilization Heatmap */}
       <CourtUtilizationChart data={heatmap} loading={loading} />
 
-      {/* Active Operations Hub: Recent Bookings & Dynamic Operations Watchlist */}
+      {/* Active Operations Hub: Recent Bookings & Operations Watchlist */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <RecentBookingsTable />
         </div>
 
-        {/* Tabbed Operations Watchlist: Renewals / Leads / Low Stock / Equipment */}
-        <div className="flex flex-col gap-3">
+        {/* Tabbed Operations Watchlist + Club Status Card */}
+        <div className="flex flex-col gap-4">
+          {/* Club Status Card (Moved from Sidebar) */}
+          <div className="card bg-base-200/50 border border-base-300 p-4 shadow-xs rounded-2xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">Club Status</span>
+                <p className="text-xs text-base-content/70 mt-0.5">Operating Hours: 06:00 - 23:00</p>
+              </div>
+              <span className="badge badge-sm badge-success font-semibold">Open</span>
+            </div>
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs text-base-content/70 mb-1">
+                <span>Court Capacity</span>
+                <span className="font-bold text-base-content">78%</span>
+              </div>
+              <progress className="progress progress-primary w-full h-2" value={78} max={100} />
+            </div>
+          </div>
+
+          {/* Operations Watchlist Tabs */}
           <div className="tabs tabs-box bg-base-300/60 p-1 rounded-xl self-start w-full grid grid-cols-4 text-xs font-semibold">
             <button
               type="button"

@@ -1,14 +1,11 @@
 import { Link } from 'react-router-dom';
 import {
   FaBars,
-  FaMoon,
-  FaSun,
   FaUserGear,
   FaArrowRightFromBracket,
   FaCircleUser,
 } from 'react-icons/fa6';
 import { Logo } from '@/components/ui';
-import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
 
 interface NavbarProps {
@@ -16,11 +13,8 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const isDark = theme === 'black';
 
   return (
     <header className="navbar bg-base-200/80 backdrop-blur-md sticky top-0 z-30 border-b border-base-300 px-4 lg:px-6">
@@ -46,21 +40,6 @@ export const Navbar = ({ onToggleSidebar }: NavbarProps) => {
       </div>
 
       <div className="navbar-end gap-2">
-        {/* Theme Toggle Button */}
-        <button
-          type="button"
-          className="btn btn-ghost btn-circle"
-          onClick={toggleTheme}
-          aria-label="Toggle light and dark theme"
-          title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-        >
-          {isDark ? (
-            <FaSun className="size-5 text-warning" />
-          ) : (
-            <FaMoon className="size-5 text-primary" />
-          )}
-        </button>
-
         {/* Profile Dropdown */}
         <div className="dropdown dropdown-end">
           <button
