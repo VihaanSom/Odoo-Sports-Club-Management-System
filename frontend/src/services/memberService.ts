@@ -368,56 +368,67 @@ export const membershipPlanService = {
    * MP-01: List all membership plans for admin review
    */
   getAll: async (): Promise<MembershipPlan[]> => {
+    let rawList: any[] = [];
     try {
       const response = await apiClient.get<ApiResponse<any[]>>('/membership-plans');
-      return (response.data.data || []).map((p) => ({
-        id: p.id,
-        name: `${p.tier} (${p.durationMonths} Mo)`,
-        tier: p.tier,
-        durationMonths: p.durationMonths,
-        pricePaise: p.pricePaise,
-        courtRatePaise: p.courtRatePaise,
-        shopDiscountPct: p.shopDiscountPct,
-        barDiscountPct: p.barDiscountPct,
-        isActive: p.isActive,
-        price: `₹${(p.pricePaise / 100).toLocaleString()}`,
-        period: `/ ${p.durationMonths} mo`,
-        desc: `${p.tier} tier subscription for ${p.durationMonths} months`,
-        popular: p.tier === 'Gold' && p.durationMonths === 12,
-        badge: p.tier === 'Gold' ? 'Best Value' : p.tier === 'Junior' ? 'Youth' : 'Popular',
-        features: [
-          `Court rate: ₹${(p.courtRatePaise / 100).toFixed(0)}/hr`,
-          `${p.shopDiscountPct}% Pro Shop discount`,
-          `${p.barDiscountPct}% Bar & Lounge discount`,
-          `${p.durationMonths} month duration`,
-        ],
-      }));
+      rawList = response.data.data || [];
     } catch {
       // Fallback to public plans if unauthorized
       const response = await apiClient.get<ApiResponse<any[]>>('/public/plans');
-      return (response.data.data || []).map((p) => ({
-        id: p.id,
-        name: `${p.tier} (${p.durationMonths} Mo)`,
-        tier: p.tier,
-        durationMonths: p.durationMonths,
-        pricePaise: p.pricePaise,
-        courtRatePaise: p.courtRatePaise,
-        shopDiscountPct: p.shopDiscountPct,
-        barDiscountPct: p.barDiscountPct,
-        isActive: p.isActive,
-        price: `₹${(p.pricePaise / 100).toLocaleString()}`,
-        period: `/ ${p.durationMonths} mo`,
-        desc: `${p.tier} tier subscription for ${p.durationMonths} months`,
-        popular: p.tier === 'Gold' && p.durationMonths === 12,
-        badge: p.tier === 'Gold' ? 'Best Value' : p.tier === 'Junior' ? 'Youth' : 'Popular',
-        features: [
-          `Court rate: ₹${(p.courtRatePaise / 100).toFixed(0)}/hr`,
-          `${p.shopDiscountPct}% Pro Shop discount`,
-          `${p.barDiscountPct}% Bar & Lounge discount`,
-          `${p.durationMonths} month duration`,
-        ],
-      }));
+      const data = response.data.data || [];
+      if (data.length > 0 && Array.isArray(data[0]?.plans)) {
+        rawList = data.flatMap((g: any) =>
+          (g.plans || []).map((p: any) => ({
+            ...p,
+            tier: g.tier || p.tier,
+          }))
+        );
+      } else {
+        rawList = data;
+      }
     }
+
+    // Handle nested tiers if present
+    if (rawList.length > 0 && Array.isArray(rawList[0]?.plans)) {
+      rawList = rawList.flatMap((g: any) =>
+        (g.plans || []).map((p: any) => ({
+          ...p,
+          tier: g.tier || p.tier,
+        }))
+      );
+    }
+
+    return rawList.map((p) => {
+      const duration = p.durationMonths ?? p.duration_months ?? 1;
+      const paise = p.pricePaise ?? (p.price ? Math.round(Number(p.price) * 100) : 0);
+      const courtRate = p.courtRatePaise ?? (p.courtRate ? Math.round(Number(p.courtRate) * 100) : 0);
+      const shopDisc = p.shopDiscountPct ?? p.shop_discount_pct ?? 0;
+      const barDisc = p.barDiscountPct ?? p.bar_discount_pct ?? 0;
+      const tier = p.tier || 'Gold';
+
+      return {
+        id: p.id || Math.random(),
+        name: `${tier} (${duration} Mo)`,
+        tier,
+        durationMonths: duration,
+        pricePaise: paise,
+        courtRatePaise: courtRate,
+        shopDiscountPct: shopDisc,
+        barDiscountPct: barDisc,
+        isActive: p.isActive ?? true,
+        price: `₹${(paise / 100).toLocaleString()}`,
+        period: `/ ${duration} mo`,
+        desc: `${tier} tier subscription for ${duration} months`,
+        popular: tier === 'Gold' && duration === 12,
+        badge: tier === 'Gold' ? 'Best Value' : tier === 'Junior' ? 'Youth' : 'Popular',
+        features: [
+          `Court rate: ₹${(courtRate / 100).toFixed(0)}/hr`,
+          `${shopDisc}% Pro Shop discount`,
+          `${barDisc}% Bar & Lounge discount`,
+          `${duration} month duration`,
+        ],
+      };
+    });
   },
 
   /**

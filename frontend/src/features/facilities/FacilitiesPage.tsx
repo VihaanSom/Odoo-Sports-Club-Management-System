@@ -21,14 +21,29 @@ export const FacilitiesPage = () => {
   const fetchCourts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await courtService.getCourts();
-      setCourts(data);
+      if (user?.role === 'member') {
+        const today = new Date().toISOString().split('T')[0];
+        const avail = await courtService.getAvailability(today);
+        setCourts(
+          avail.map((a) => ({
+            id: a.courtId,
+            name: a.courtName,
+            sport: a.sport,
+            openTime: '06:00',
+            closeTime: '23:00',
+            isActive: true,
+          }))
+        );
+      } else {
+        const data = await courtService.getCourts();
+        setCourts(data);
+      }
     } catch {
       toast.error('Failed to load courts from server');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => {
     fetchCourts();

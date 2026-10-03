@@ -6,14 +6,11 @@ import { createPlanSchema, updatePlanSchema, planIdParamSchema } from './plans.v
 
 const router = Router();
 
-// All membership-plans routes require Bearer JWT and 'admin' role
-router.use(verifyToken, requireRole('admin'));
-
 /**
- * MP-01: List all membership plans (admin view)
+ * MP-01: List all membership plans
  * GET /api/v1/membership-plans
  */
-router.get('/', (req, res) => plansController.getPlans(req, res));
+router.get('/', verifyToken, (req, res) => plansController.getPlans(req, res));
 
 /**
  * MP-02: Create new membership plan
@@ -21,6 +18,8 @@ router.get('/', (req, res) => plansController.getPlans(req, res));
  */
 router.post(
   '/',
+  verifyToken,
+  requireRole('admin'),
   validate(createPlanSchema, 'body'),
   (req, res) => plansController.createPlan(req, res)
 );
@@ -31,6 +30,8 @@ router.post(
  */
 router.put(
   '/:id',
+  verifyToken,
+  requireRole('admin'),
   validate(planIdParamSchema, 'params'),
   validate(updatePlanSchema, 'body'),
   (req, res) => plansController.updatePlan(req, res)

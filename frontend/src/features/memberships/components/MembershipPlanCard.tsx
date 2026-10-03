@@ -16,9 +16,22 @@ export const MembershipPlanCard = ({
   onEdit,
   isAdmin = false,
 }: MembershipPlanCardProps) => {
-  const displayPrice = plan.price || (plan.pricePaise ? formatPaise(plan.pricePaise) : '₹0');
-  const displayPeriod = plan.period || (plan.durationMonths ? `/ ${plan.durationMonths} mo` : '');
-  const displayName = plan.name || `${plan.tier} Plan (${plan.durationMonths} Months)`;
+  const duration = plan.durationMonths ?? (plan as any).duration_months ?? 1;
+  const pricePaise = plan.pricePaise ?? (plan.price ? Math.round(Number(plan.price) * 100) : 0);
+  const displayPrice =
+    plan.price && typeof plan.price === 'string' && !plan.price.includes('NaN')
+      ? plan.price
+      : pricePaise > 0
+      ? formatPaise(pricePaise)
+      : '₹0';
+  const displayPeriod =
+    plan.period && !plan.period.includes('undefined')
+      ? plan.period
+      : `/ ${duration} mo`;
+  const displayName =
+    plan.name && !plan.name.includes('undefined')
+      ? plan.name
+      : `${plan.tier || 'Club'} Plan (${duration} Months)`;
 
   const features =
     plan.features && plan.features.length > 0
@@ -27,7 +40,7 @@ export const MembershipPlanCard = ({
           `Court rate: ${plan.courtRatePaise ? formatPaise(plan.courtRatePaise) : 'Standard'}/hr`,
           `${plan.shopDiscountPct ?? 0}% Pro Shop discount`,
           `${plan.barDiscountPct ?? 0}% Bar discount`,
-          `${plan.durationMonths} month membership access`,
+          `${duration} month membership access`,
         ];
 
   const badgeText =

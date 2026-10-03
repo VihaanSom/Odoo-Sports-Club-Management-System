@@ -73,20 +73,39 @@ export const MembershipsPage = () => {
       const shopDiscountPct = parseInt(newShopDiscount, 10);
       const barDiscountPct = parseInt(newBarDiscount, 10);
 
-      await membershipPlanService.create({
-        tier: newTier,
-        durationMonths: newDuration,
-        pricePaise,
-        courtRatePaise,
-        shopDiscountPct,
-        barDiscountPct,
-      });
+      // Check if a plan for this tier and duration already exists
+      const existing = plans.find(
+        (p) => p.tier === newTier && p.durationMonths === newDuration
+      );
 
-      toast.success('Membership plan created successfully');
+      if (existing) {
+        await membershipPlanService.update(existing.id, {
+          pricePaise,
+          courtRatePaise,
+          shopDiscountPct,
+          barDiscountPct,
+          isActive: true,
+        });
+        toast.success(`Updated existing ${newTier} (${newDuration} Mo) plan rates!`);
+      } else {
+        await membershipPlanService.create({
+          tier: newTier,
+          durationMonths: newDuration,
+          pricePaise,
+          courtRatePaise,
+          shopDiscountPct,
+          barDiscountPct,
+        });
+        toast.success('Membership plan created successfully');
+      }
+
       setIsCreateModalOpen(false);
       fetchPlans();
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || 'Failed to create plan';
+      const msg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        'Failed to save membership plan. Ensure you are logged in as admin.';
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -226,6 +245,14 @@ export const MembershipsPage = () => {
                 </select>
               </div>
             </div>
+
+            {plans.some((p) => p.tier === newTier && p.durationMonths === newDuration) && (
+              <div className="p-2.5 bg-info/10 text-info border border-info/20 rounded-xl text-xs flex items-center gap-2">
+                <span>
+                  A <strong>{newTier} ({newDuration} Month)</strong> plan already exists. Saving will update its pricing and discounts.
+                </span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
