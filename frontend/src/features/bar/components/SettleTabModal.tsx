@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,12 +25,12 @@ interface SettleTabModalProps {
   onSettled: () => Promise<void>;
 }
 
-export const SettleTabModal: React.FC<SettleTabModalProps> = ({
+export const SettleTabModal = ({
   isOpen,
   tab,
   onClose,
   onSettled,
-}) => {
+}: SettleTabModalProps) => {
   const {
     register,
     handleSubmit,

@@ -83,7 +83,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   return (
     <>
       {/* Mobile Backdrop */}

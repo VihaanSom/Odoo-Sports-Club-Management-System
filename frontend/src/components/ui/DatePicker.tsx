@@ -19,7 +19,7 @@ export interface DatePickerProps {
   id?: string;
 }
 
-export const DatePicker: React.FC<DatePickerProps> = ({
+export const DatePicker = ({
   value = '',
   onChange,
   label,
@@ -31,7 +31,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   disabled = false,
   className,
   id,
-}) => {
+}: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,12 +23,12 @@ interface MemberRenewalModalProps {
   onSubmit: (data: MemberRenewalPayload) => Promise<void>;
 }
 
-export const MemberRenewalModal: React.FC<MemberRenewalModalProps> = ({
+export const MemberRenewalModal = ({
   isOpen,
   member,
   onClose,
   onSubmit,
-}) => {
+}: MemberRenewalModalProps) => {
   // Monthly rates in paise per tier
   const tierMonthlyRatePaise: Record<string, number> = {
     Junior: 290000,

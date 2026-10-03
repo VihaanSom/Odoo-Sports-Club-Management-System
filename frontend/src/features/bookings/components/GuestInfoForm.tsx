@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaUser, FaPhone } from 'react-icons/fa6';
 
 interface GuestInfoFormProps {
@@ -9,13 +8,13 @@ interface GuestInfoFormProps {
   errors?: { guestName?: string; guestPhone?: string };
 }
 
-export const GuestInfoForm: React.FC<GuestInfoFormProps> = ({
+export const GuestInfoForm = ({
   guestName,
   guestPhone,
   onChangeName,
   onChangePhone,
   errors,
-}) => {
+}: GuestInfoFormProps) => {
   return (
     <div className="space-y-4">
       <div className="form-control">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,7 +29,7 @@ const newOrderSchema = z.object({
 
 type NewOrderFormData = z.infer<typeof newOrderSchema>;
 
-export const NewOrderPage: React.FC = () => {
+export const NewOrderPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedItems, setSelectedItems] = useState<SelectedOrderItem[]>([]);

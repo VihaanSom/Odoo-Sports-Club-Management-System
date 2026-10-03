@@ -1,4 +1,3 @@
-import React from 'react';
 import { newtonsCradle } from 'ldrs';
 
 newtonsCradle.register();
@@ -9,11 +8,11 @@ export interface GlobalLoaderProps {
   color?: string;
 }
 
-export const GlobalLoader: React.FC<GlobalLoaderProps> = ({
+export const GlobalLoader = ({
   message = 'Loading sports club data...',
   size = 78,
   color = '#6366f1',
-}) => {
+}: GlobalLoaderProps) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[300px] p-8 gap-4">
       <l-newtons-cradle

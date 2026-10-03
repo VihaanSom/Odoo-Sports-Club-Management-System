@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaPhone } from 'react-icons/fa6';
 import { Avatar, Badge } from '@/components/ui';
@@ -8,7 +7,7 @@ interface MembersTableProps {
   members: Member[];
 }
 
-export const MembersTable: React.FC<MembersTableProps> = ({ members }) => {
+export const MembersTable = ({ members }: MembersTableProps) => {
   const navigate = useNavigate();
 
   return (

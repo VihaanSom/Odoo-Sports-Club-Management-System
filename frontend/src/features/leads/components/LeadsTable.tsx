@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaPhone, FaUserTie } from 'react-icons/fa6';
 import { Badge, Button } from '@/components/ui';
@@ -9,7 +8,7 @@ interface LeadsTableProps {
   leads: Lead[];
 }
 
-export const LeadsTable: React.FC<LeadsTableProps> = ({ leads }) => {
+export const LeadsTable = ({ leads }: LeadsTableProps) => {
   const navigate = useNavigate();
 
   return (

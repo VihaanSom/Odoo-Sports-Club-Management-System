@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 
-export const AppShell: React.FC = () => {
+export const AppShell = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (

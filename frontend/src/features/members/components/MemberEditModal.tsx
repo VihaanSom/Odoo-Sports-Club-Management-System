@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,12 +22,12 @@ interface MemberEditModalProps {
   onSubmit: (data: MemberUpdatePayload) => Promise<void>;
 }
 
-export const MemberEditModal: React.FC<MemberEditModalProps> = ({
+export const MemberEditModal = ({
   isOpen,
   member,
   onClose,
   onSubmit,
-}) => {
+}: MemberEditModalProps) => {
   // Forms: React Hook Form + Zod (mode: 'onTouched').
   // Strict rule: Phone 10 digits regex (^\d{10}$)
   const {

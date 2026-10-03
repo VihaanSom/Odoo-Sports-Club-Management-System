@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import {  useEffect  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,13 +22,13 @@ interface OpenTabModalProps {
   onSubmit: (payload: CreateBarTabPayload) => Promise<void>;
 }
 
-export const OpenTabModal: React.FC<OpenTabModalProps> = ({
+export const OpenTabModal = ({
   isOpen,
   tables,
   preselectedTableId,
   onClose,
   onSubmit,
-}) => {
+}: OpenTabModalProps) => {
   const availableTables = tables.filter((t) => t.isActive && !t.activeTab);
 
   const {

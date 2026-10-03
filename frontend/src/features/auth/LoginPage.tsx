@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +17,7 @@ import { loginSchema, type LoginDto } from '@/types';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-export const LoginPage: React.FC = () => {
+export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const login = useAuthStore((s) => s.login);

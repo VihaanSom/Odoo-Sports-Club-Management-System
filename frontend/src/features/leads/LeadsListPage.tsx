@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import {  useEffect, useState, useCallback  } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import {
@@ -18,7 +18,7 @@ import {
   LeadCaptureModal,
 } from './components';
 
-export const LeadsListPage: React.FC = () => {
+export const LeadsListPage = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'board' | 'table'>('board');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaUsers, FaUserPlus } from 'react-icons/fa6';
@@ -8,7 +8,7 @@ import { mockMembers } from '@/mock';
 import type { Member } from '@/types';
 import { MemberFormModal, MembersTable, type MemberFormData } from './components';
 
-export const MembersPage: React.FC = () => {
+export const MembersPage = () => {
   const [members, setMembers] = useState<Member[]>(mockMembers);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');

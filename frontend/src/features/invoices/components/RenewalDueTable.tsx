@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaClock, FaTrophy, FaEye } from 'react-icons/fa6';
 import { Badge } from '@/components/ui';
@@ -12,11 +11,11 @@ interface RenewalDueTableProps {
   onPreviewInvoice?: (invoiceNumber: string) => void;
 }
 
-export const RenewalDueTable: React.FC<RenewalDueTableProps> = ({
+export const RenewalDueTable = ({
   renewalDues,
   onInvoiceGenerated,
   onPreviewInvoice,
-}) => {
+}: RenewalDueTableProps) => {
   const navigate = useNavigate();
 
   return (

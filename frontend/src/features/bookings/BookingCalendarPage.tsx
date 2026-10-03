@@ -1,11 +1,10 @@
-import React from 'react';
 import { motion } from 'motion/react';
 import { FaCalendarDays, FaPlus, FaListUl, FaArrowLeft } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import { CourtAvailabilityMatrix } from './components/CourtAvailabilityMatrix';
 import { TodaysBookingsView } from './components/TodaysBookingsView';
 
-export const BookingCalendarPage: React.FC = () => {
+export const BookingCalendarPage = () => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}

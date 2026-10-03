@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface LogoProps {
@@ -6,10 +5,10 @@ export interface LogoProps {
   alt?: string;
 }
 
-export const Logo: React.FC<LogoProps> = ({
+export const Logo = ({
   className,
   alt = 'Champions Club Logo',
-}) => {
+}: LogoProps) => {
   return (
     <img
       src="/favicon.svg"

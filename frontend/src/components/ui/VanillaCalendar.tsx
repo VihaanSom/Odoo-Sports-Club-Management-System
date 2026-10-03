@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import {  useEffect, useRef  } from 'react';
 import { Calendar, type Options } from 'vanilla-calendar-pro';
 import 'vanilla-calendar-pro/styles/index.css';
 import { useThemeStore } from '@/stores/themeStore';
@@ -12,13 +12,13 @@ export interface VanillaCalendarProps {
   options?: Partial<Options>;
 }
 
-export const VanillaCalendar: React.FC<VanillaCalendarProps> = ({
+export const VanillaCalendar = ({
   id = 'calendar',
   selectedDate,
   onSelectDate,
   className,
   options = {},
-}) => {
+}: VanillaCalendarProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<Calendar | null>(null);
   const onSelectDateRef = useRef(onSelectDate);

@@ -13,13 +13,13 @@ interface GenerateInvoiceButtonProps {
   size?: 'xs' | 'sm' | 'md';
 }
 
-export const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
+export const GenerateInvoiceButton = ({
   memberId,
   memberName,
   hasExistingInvoice = false,
   onInvoiceGenerated,
   size = 'xs',
-}) => {
+}: GenerateInvoiceButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async (e: React.MouseEvent) => {

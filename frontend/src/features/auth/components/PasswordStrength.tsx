@@ -1,11 +1,10 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface PasswordStrengthProps {
   password?: string;
 }
 
-export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ password = '' }) => {
+export const PasswordStrength = ({ password = '' }: PasswordStrengthProps) => {
   if (!password) return null;
 
   const hasMinLength = password.length >= 8;

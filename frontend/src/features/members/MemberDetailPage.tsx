@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import {  useEffect, useState, useCallback  } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
@@ -28,7 +28,7 @@ import {
   MemberLedgerTable,
 } from './components';
 
-export const MemberDetailPage: React.FC = () => {
+export const MemberDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

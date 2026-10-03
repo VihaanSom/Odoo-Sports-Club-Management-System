@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaBookBookmark } from 'react-icons/fa6';
 import { formatPaise, formatDate } from '@/lib/utils';
 import type { MemberLedgerEntry } from '@/types/members';
@@ -7,7 +6,7 @@ interface MemberLedgerTableProps {
   ledger: MemberLedgerEntry[];
 }
 
-export const MemberLedgerTable: React.FC<MemberLedgerTableProps> = ({ ledger }) => {
+export const MemberLedgerTable = ({ ledger }: MemberLedgerTableProps) => {
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="p-4 border-b border-base-300 flex items-center justify-between">

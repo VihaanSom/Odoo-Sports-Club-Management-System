@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaCalendarCheck } from 'react-icons/fa6';
 import { Badge } from '@/components/ui';
 import { formatPaise, formatDate } from '@/lib/utils';
@@ -8,7 +7,7 @@ interface MemberBookingHistoryProps {
   bookings: MemberHistoryBooking[];
 }
 
-export const MemberBookingHistory: React.FC<MemberBookingHistoryProps> = ({ bookings }) => {
+export const MemberBookingHistory = ({ bookings }: MemberBookingHistoryProps) => {
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="p-4 border-b border-base-300 flex items-center justify-between">

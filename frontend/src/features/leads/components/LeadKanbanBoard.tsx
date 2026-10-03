@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaUserTie,
@@ -50,10 +49,10 @@ const columns: ColumnDef[] = [
   },
 ];
 
-export const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
+export const LeadKanbanBoard = ({
   leads,
   onTransitionStage,
-}) => {
+}: LeadKanbanBoardProps) => {
   const navigate = useNavigate();
 
   return (

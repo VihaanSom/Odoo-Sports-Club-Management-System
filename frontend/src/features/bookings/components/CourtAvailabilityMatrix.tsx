@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaFilter,
@@ -18,11 +18,11 @@ interface CourtAvailabilityMatrixProps {
   onSelectSlot?: (courtId: number, slotStart: string, slotEnd: string) => void;
 }
 
-export const CourtAvailabilityMatrix: React.FC<CourtAvailabilityMatrixProps> = ({
+export const CourtAvailabilityMatrix = ({
   initialDate,
   initialSport,
   onSelectSlot,
-}) => {
+}: CourtAvailabilityMatrixProps) => {
   const navigate = useNavigate();
   const todayStr = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState<string>(initialDate || todayStr);

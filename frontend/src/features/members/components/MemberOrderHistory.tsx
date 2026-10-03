@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaReceipt, FaWineGlass } from 'react-icons/fa6';
 import { Badge } from '@/components/ui';
 import { formatPaise, formatDate } from '@/lib/utils';
@@ -9,10 +8,10 @@ interface MemberOrderHistoryProps {
   barTabs: MemberHistoryBarTab[];
 }
 
-export const MemberOrderHistory: React.FC<MemberOrderHistoryProps> = ({
+export const MemberOrderHistory = ({
   orders,
   barTabs,
-}) => {
+}: MemberOrderHistoryProps) => {
   return (
     <div className="space-y-6">
       {/* Orders Table */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {  useState  } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,10 +23,10 @@ interface MemberAddressCardProps {
   onSaveAddress: (address: MemberAddress) => Promise<void>;
 }
 
-export const MemberAddressCard: React.FC<MemberAddressCardProps> = ({
+export const MemberAddressCard = ({
   address,
   onSaveAddress,
-}) => {
+}: MemberAddressCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
   // Forms: React Hook Form + Zod (mode: 'onTouched').

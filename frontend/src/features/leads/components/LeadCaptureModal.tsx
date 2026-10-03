@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,11 +21,11 @@ interface LeadCaptureModalProps {
   onSubmit: (data: CreateLeadPayload) => Promise<void>;
 }
 
-export const LeadCaptureModal: React.FC<LeadCaptureModalProps> = ({
+export const LeadCaptureModal = ({
   isOpen,
   onClose,
   onSubmit,
-}) => {
+}: LeadCaptureModalProps) => {
   // Forms: React Hook Form + Zod (mode: 'onTouched'). Fields start empty, no mock autofill.
   // Strict rule: Phone 10 digits regex (^\d{10}$)
   const {

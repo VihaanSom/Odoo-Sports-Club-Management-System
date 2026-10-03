@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import {  useEffect, useState, useCallback  } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import {
@@ -16,7 +16,7 @@ import {
   InvoicePreviewModal,
 } from './components';
 
-export const RenewalInvoicesPage: React.FC = () => {
+export const RenewalInvoicesPage = () => {
   const [renewalDues, setRenewalDues] = useState<RenewalDueMember[]>([]);
   const [invoices, setInvoices] = useState<MemberInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FaVolleyball,
   FaTableTennisPaddleBall,
@@ -13,11 +12,11 @@ interface FacilityFilterBarProps {
   onSelectSport: (sport: string) => void;
 }
 
-export const FacilityFilterBar: React.FC<FacilityFilterBarProps> = ({
+export const FacilityFilterBar = ({
   sports,
   selectedSport,
   onSelectSport,
-}) => {
+}: FacilityFilterBarProps) => {
   return (
     <div className="flex flex-wrap gap-2">
       {sports.map((sport) => (

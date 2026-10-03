@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import {  useEffect, useState, useCallback  } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
@@ -19,7 +19,7 @@ import { leadService } from '@/services/leadService';
 import type { Lead, UpdateLeadPayload } from '@/types/leads';
 import { LeadStatusUpdateForm } from './components/LeadStatusUpdateForm';
 
-export const LeadDetailPage: React.FC = () => {
+export const LeadDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

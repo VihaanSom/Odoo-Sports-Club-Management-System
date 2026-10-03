@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaTrophy, FaPrint, FaReceipt } from 'react-icons/fa6';
 import { Modal, Button, Badge } from '@/components/ui';
 import { formatPaise, formatDate } from '@/lib/utils';
@@ -10,11 +9,11 @@ interface InvoicePreviewModalProps {
   onClose: () => void;
 }
 
-export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
+export const InvoicePreviewModal = ({
   invoice,
   isOpen,
   onClose,
-}) => {
+}: InvoicePreviewModalProps) => {
   if (!invoice) return null;
 
   return (

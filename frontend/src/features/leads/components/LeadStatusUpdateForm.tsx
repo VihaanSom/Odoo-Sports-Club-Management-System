@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,10 +18,10 @@ interface LeadStatusUpdateFormProps {
   onSubmit: (data: UpdateLeadPayload) => Promise<void>;
 }
 
-export const LeadStatusUpdateForm: React.FC<LeadStatusUpdateFormProps> = ({
+export const LeadStatusUpdateForm = ({
   lead,
   onSubmit,
-}) => {
+}: LeadStatusUpdateFormProps) => {
   // Forms: React Hook Form + Zod (mode: 'onTouched').
   const {
     register,

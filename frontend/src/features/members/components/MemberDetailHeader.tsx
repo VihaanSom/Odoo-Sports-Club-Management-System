@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaTrophy,
@@ -20,11 +19,11 @@ interface MemberDetailHeaderProps {
   onOpenRenew: () => void;
 }
 
-export const MemberDetailHeader: React.FC<MemberDetailHeaderProps> = ({
+export const MemberDetailHeader = ({
   member,
   onOpenEdit,
   onOpenRenew,
-}) => {
+}: MemberDetailHeaderProps) => {
   const navigate = useNavigate();
 
   // Compute days remaining
