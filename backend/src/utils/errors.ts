@@ -1,11 +1,13 @@
 export class AppError extends Error {
   public statusCode: number;
   public code?: string;
+  public details?: any;
 
-  constructor(message: string, statusCode = 400, code?: string) {
+  constructor(message: string, statusCode = 400, code?: string, details?: any) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
+    this.details = details;
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
@@ -42,43 +44,44 @@ function parseMessageAndCode(
 }
 
 export class ValidationError extends AppError {
-  constructor(arg1?: string, arg2?: string) {
+  constructor(arg1?: string, arg2?: string, details?: any) {
     const { message, code } = parseMessageAndCode(arg1, arg2, 'Validation failed', 'VALIDATION_ERROR');
-    super(message, 400, code);
+    super(message, 400, code, details);
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(arg1?: string, arg2?: string) {
+  constructor(arg1?: string, arg2?: string, details?: any) {
     const { message, code } = parseMessageAndCode(arg1, arg2, 'Unauthorized', 'UNAUTHENTICATED');
-    super(message, 401, code);
+    super(message, 401, code, details);
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(arg1?: string, arg2?: string) {
+  constructor(arg1?: string, arg2?: string, details?: any) {
     const { message, code } = parseMessageAndCode(arg1, arg2, 'Forbidden', 'FORBIDDEN');
-    super(message, 403, code);
+    super(message, 403, code, details);
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(arg1?: string, arg2?: string) {
+  constructor(arg1?: string, arg2?: string, details?: any) {
     const { message, code } = parseMessageAndCode(arg1, arg2, 'Resource not found', 'NOT_FOUND');
-    super(message, 404, code);
+    super(message, 404, code, details);
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(arg1?: string, arg2?: string) {
+  constructor(arg1?: string, arg2?: string, details?: any) {
     const { message, code } = parseMessageAndCode(arg1, arg2, 'Resource conflict', 'CONFLICT');
-    super(message, 409, code);
+    super(message, 409, code, details);
   }
 }
 
 export class UnprocessableError extends AppError {
-  constructor(arg1?: string, arg2?: string) {
+  constructor(arg1?: string, arg2?: string, details?: any) {
     const { message, code } = parseMessageAndCode(arg1, arg2, 'Unprocessable entity', 'UNPROCESSABLE_ENTITY');
-    super(message, 422, code);
+    super(message, 422, code, details);
   }
 }
+
