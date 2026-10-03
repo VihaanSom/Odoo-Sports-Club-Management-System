@@ -93,7 +93,7 @@ export const RecentBookingsTable = () => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold tracking-tight">Recent & Today's Reservations</h2>
-              <p className="text-xs text-base-content/60">Live feed of court bookings across the club</p>
+              <p className="text-xs text-base-content/60">Court bookings across the club</p>
             </div>
           </div>
 

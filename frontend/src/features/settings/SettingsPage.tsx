@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaGear, FaSliders, FaFloppyDisk } from 'react-icons/fa6';
 import { Card, Button } from '@/components/ui';
-import { ThemeSettingsSection, ErpSettingsSection } from './components';
+import { ErpSettingsSection } from './components';
 
 export const SettingsPage = () => {
   const handleSave = (e: React.FormEvent) => {
@@ -23,12 +23,11 @@ export const SettingsPage = () => {
           <FaGear className="size-7 text-primary" /> Club System Settings
         </h1>
         <p className="text-sm text-base-content/70 mt-1">
-          Configure ERP connection parameters, themes, and club operating rules.
+          Configure ERP connection parameters and club operating rules.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        <ThemeSettingsSection />
         <ErpSettingsSection />
 
         {/* Operating Rules */}
