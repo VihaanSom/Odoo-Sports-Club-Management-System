@@ -15,7 +15,7 @@ export const errorHandler = (
 
   // Handle Domain AppError
   if (err instanceof AppError) {
-    sendError(res, err.message, err.statusCode, undefined, err.code);
+    sendError(res, err.message, err.statusCode, err.details, err.code);
     return;
   }
 
