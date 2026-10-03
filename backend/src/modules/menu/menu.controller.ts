@@ -12,20 +12,20 @@ export class MenuController {
   }
 
   /**
-   * MI-02: POST /api/v1/menu-items
-   */
-  async createMenuItem(req: Request, res: Response): Promise<Response> {
-    const created = await menuService.createMenuItem(req.body);
-    return sendSuccess(res, created, 'Menu item created successfully', 201);
-  }
-
-  /**
    * MI-03: GET /api/v1/menu-items/:id
    */
   async getMenuItem(req: Request, res: Response): Promise<Response> {
     const id = parseInt(req.params.id as string, 10);
     const item = await menuService.getMenuItemById(id);
     return sendSuccess(res, item);
+  }
+
+  /**
+   * MI-02: POST /api/v1/menu-items
+   */
+  async createMenuItem(req: Request, res: Response): Promise<Response> {
+    const item = await menuService.createMenuItem(req.body);
+    return sendSuccess(res, item, 'Menu item created successfully', 201);
   }
 
   /**
