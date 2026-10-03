@@ -87,6 +87,19 @@ router.post(
 );
 
 /**
+ * ME-07: Change or select membership plan
+ * POST /api/v1/members/:id/plan
+ * Auth: admin, front_desk, or self
+ */
+router.post(
+  '/:id/plan',
+  verifyToken,
+  requireSelfOrRole('admin', 'front_desk'),
+  validate(memberIdParamSchema, 'params'),
+  (req, res) => membersController.changePlan(req, res)
+);
+
+/**
  * ME-06: Member activity history
  * GET /api/v1/members/:id/history
  * Auth: admin, front_desk, or self

@@ -558,6 +558,7 @@ export class LeadsService {
           phone: input.phone ?? null,
           dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
           tier: input.tier,
+          planId: plan.id,
           membershipStart,
           membershipEnd,
           status: 'active',

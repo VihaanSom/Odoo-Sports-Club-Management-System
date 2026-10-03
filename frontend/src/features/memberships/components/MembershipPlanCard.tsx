@@ -8,6 +8,7 @@ interface MembershipPlanCardProps {
   onSelect: (plan: MembershipPlan) => void;
   onEdit?: (plan: MembershipPlan) => void;
   isAdmin?: boolean;
+  isCurrentPlan?: boolean;
 }
 
 export const MembershipPlanCard = ({
@@ -15,6 +16,7 @@ export const MembershipPlanCard = ({
   onSelect,
   onEdit,
   isAdmin = false,
+  isCurrentPlan = false,
 }: MembershipPlanCardProps) => {
   const duration = plan.durationMonths ?? (plan as any).duration_months ?? 1;
   const pricePaise = plan.pricePaise ?? (plan.price ? Math.round(Number(plan.price) * 100) : 0);
@@ -49,16 +51,24 @@ export const MembershipPlanCard = ({
   return (
     <Card
       className={`p-6 flex flex-col justify-between transition-all hover:border-primary/50 ${
-        plan.popular ? 'border-primary shadow-lg ring-1 ring-primary' : ''
+        isCurrentPlan
+          ? 'border-emerald-500 shadow-md ring-2 ring-emerald-500/20 bg-emerald-50/30'
+          : plan.popular
+          ? 'border-primary shadow-lg ring-1 ring-primary'
+          : ''
       }`}
     >
       <div>
         <div className="flex items-center justify-between mb-3">
-          <Badge size="sm" variant={plan.popular ? 'primary' : 'ghost'} className="gap-1 font-bold">
+          <Badge
+            size="sm"
+            variant={isCurrentPlan ? 'success' : plan.popular ? 'primary' : 'ghost'}
+            className="gap-1 font-bold"
+          >
             <FaTrophy className={plan.tier === 'Gold' ? 'text-amber-500' : 'text-slate-400'} />
-            {badgeText}
+            {isCurrentPlan ? 'Your Current Plan' : badgeText}
           </Badge>
-          {plan.popular && <FaCrown className="size-4 text-warning" />}
+          {plan.popular && !isCurrentPlan && <FaCrown className="size-4 text-warning" />}
         </div>
 
         <h3 className="text-xl font-bold text-base-content">{displayName}</h3>
@@ -84,11 +94,13 @@ export const MembershipPlanCard = ({
       <div className="mt-6 flex flex-col gap-2">
         <Button
           size="sm"
-          variant={plan.popular ? 'primary' : 'outline'}
-          className="w-full"
+          variant={isCurrentPlan ? 'outline' : plan.popular ? 'primary' : 'outline'}
+          className={`w-full font-bold ${
+            isCurrentPlan ? 'border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' : ''
+          }`}
           onClick={() => onSelect(plan)}
         >
-          Select Plan
+          {isCurrentPlan ? 'Active Plan (Current)' : 'Select Plan'}
         </Button>
 
         {isAdmin && onEdit && (

@@ -80,6 +80,7 @@ export class AuthService {
           lastName: member.lastName,
           role: 'member',
           tier: member.tier,
+          planId: member.planId,
           status: member.status,
         },
       };

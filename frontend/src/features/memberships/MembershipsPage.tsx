@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { FaIdCard, FaPlus, FaRotate } from 'react-icons/fa6';
 import { Button, Skeleton, Modal, Input } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { canManagePlans, isMemberRole } from '@/lib/permissions';
-import { membershipPlanService } from '@/services/memberService';
+import { membershipPlanService, memberService } from '@/services/memberService';
 import type { MembershipPlan } from '@/types';
 import { MembershipPlanCard } from './components';
 
 export const MembershipsPage = () => {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const canManage = canManagePlans(user?.role);
   const isMember = isMemberRole(user?.role);
 
@@ -51,8 +54,43 @@ export const MembershipsPage = () => {
     fetchPlans();
   }, [fetchPlans]);
 
-  const handleSelectPlan = (plan: MembershipPlan) => {
-    toast.success(`Selected ${plan.name || plan.tier} plan!`);
+  const handleSelectPlan = async (plan: MembershipPlan) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (isMember) {
+      if (user.planId === plan.id) {
+        toast.success(`You are currently on the ${plan.name || plan.tier} plan!`);
+        return;
+      }
+      try {
+        setIsSubmitting(true);
+        const res = await memberService.changePlan(user.id, plan.id);
+        setUser({
+          ...user,
+          tier: res.tier,
+          planId: res.planId,
+        });
+        toast.success(
+          `Membership updated! You are now subscribed to ${res.tier} (${plan.durationMonths || 1} Mo).`
+        );
+        fetchPlans();
+      } catch (err: any) {
+        const msg =
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          'Failed to update membership plan';
+        toast.error(msg);
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      toast('As club staff, you can configure plan rates or manage member subscriptions in Members directory.', {
+        icon: 'ℹ️',
+      });
+    }
   };
 
   const handleOpenEdit = (plan: MembershipPlan) => {
@@ -198,6 +236,12 @@ export const MembershipsPage = () => {
               onSelect={handleSelectPlan}
               onEdit={canManage ? handleOpenEdit : undefined}
               isAdmin={canManage}
+              isCurrentPlan={
+                isMember &&
+                (user?.planId
+                  ? user.planId === plan.id
+                  : user?.tier?.toLowerCase() === plan.tier?.toLowerCase())
+              }
             />
           ))}
 

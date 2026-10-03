@@ -266,6 +266,19 @@ export const memberService = {
   },
 
   /**
+   * ME-07: Change or select membership plan
+   */
+  changePlan: async (
+    id: string | number,
+    planId: number
+  ): Promise<any> => {
+    const response = await apiClient.post<ApiResponse<any>>(`/members/${id}/plan`, {
+      planId: Number(planId),
+    });
+    return response.data.data;
+  },
+
+  /**
    * ME-06: Activity history (bookings, orders, bar tabs, total spend)
    */
   getHistory: async (
