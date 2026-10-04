@@ -20,6 +20,7 @@ import type { BookingDetail } from '@/types/bookings';
 import type { Court } from '@/types/courts';
 import { MEMBERSHIP_TIERS } from '@/types/auth';
 import { formatDate, formatSlotRange } from '@/lib/utils';
+import { Skeleton } from '@/components/ui';
 
 export const MemberDashboardView = () => {
   const user = useAuthStore((s) => s.user);
@@ -195,8 +196,22 @@ export const MemberDashboardView = () => {
             </div>
 
             {loading ? (
-              <div className="py-12 flex justify-center">
-                <span className="loading loading-spinner loading-md text-primary" />
+              <div className="divide-y divide-base-200 mt-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="py-3 flex items-center justify-between gap-3 text-xs">
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton variant="text" height="14px" width="130px" />
+                      <div className="flex items-center gap-3">
+                        <Skeleton variant="text" height="11px" width="90px" />
+                        <Skeleton variant="text" height="11px" width="70px" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="rectangular" height="18px" width="60px" className="rounded-full" />
+                      <Skeleton variant="rectangular" height="24px" width="45px" className="rounded-lg" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : upcomingBookings.length === 0 ? (
               <div className="py-10 text-center space-y-2">
@@ -261,29 +276,46 @@ export const MemberDashboardView = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              {courts.map((court) => (
-                <div
-                  key={court.id}
-                  className="p-3 rounded-xl border border-base-300 bg-base-200/30 flex items-center justify-between"
-                >
-                  <div>
-                    <div className="font-bold text-xs text-base-content">
-                      {court.name}
-                    </div>
-                    <div className="text-[11px] text-base-content/60 uppercase font-mono mt-0.5">
-                      {court.sport} &bull; {court.openTime} - {court.closeTime}
-                    </div>
-                  </div>
-                  <Link
-                    to={`/bookings/calendar`}
-                    className="btn btn-xs btn-outline btn-primary"
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-xl border border-base-300 bg-base-200/30 flex items-center justify-between"
                   >
-                    View Slots
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="space-y-1.5 flex-1 min-w-0 pr-3">
+                      <Skeleton variant="text" height="14px" width="60%" />
+                      <Skeleton variant="text" height="11px" width="80%" />
+                    </div>
+                    <Skeleton variant="rectangular" height="24px" width="70px" className="rounded-lg shrink-0" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {courts.map((court) => (
+                  <div
+                    key={court.id}
+                    className="p-3 rounded-xl border border-base-300 bg-base-200/30 flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="font-bold text-xs text-base-content">
+                        {court.name}
+                      </div>
+                      <div className="text-[11px] text-base-content/60 uppercase font-mono mt-0.5">
+                        {court.sport} &bull; {court.openTime} - {court.closeTime}
+                      </div>
+                    </div>
+                    <Link
+                      to={`/bookings/calendar`}
+                      className="btn btn-xs btn-outline btn-primary"
+                    >
+                      View Slots
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

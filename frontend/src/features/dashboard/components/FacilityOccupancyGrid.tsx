@@ -13,6 +13,7 @@ import { courtService } from '@/services/courtService';
 import { bookingService } from '@/services/bookingService';
 import type { Court } from '@/types/courts';
 import type { TodaysBookingsResponse } from '@/types/bookings';
+import { Skeleton } from '@/components/ui';
 
 export const FacilityOccupancyGrid = () => {
   const [selectedSportTab, setSelectedSportTab] = useState<'All' | 'Tennis' | 'Cricket'>('All');
@@ -96,7 +97,25 @@ export const FacilityOccupancyGrid = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-28 rounded-xl bg-base-200/60 animate-pulse border border-base-200" />
+              <div
+                key={i}
+                className="p-3.5 rounded-xl border border-base-200/80 bg-base-100/50 flex flex-col justify-between gap-3 min-w-0"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <Skeleton variant="rectangular" height="36px" width="36px" className="rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      <Skeleton variant="text" height="14px" width="60%" />
+                      <Skeleton variant="text" height="11px" width="40%" />
+                    </div>
+                  </div>
+                  <Skeleton variant="rectangular" height="20px" width="64px" className="rounded-full shrink-0" />
+                </div>
+                <div className="flex items-center justify-between pt-2.5 border-t border-base-200/60 mt-1">
+                  <Skeleton variant="text" height="12px" width="110px" />
+                  <Skeleton variant="rectangular" height="24px" width="68px" className="rounded-lg shrink-0" />
+                </div>
+              </div>
             ))}
           </div>
         ) : (

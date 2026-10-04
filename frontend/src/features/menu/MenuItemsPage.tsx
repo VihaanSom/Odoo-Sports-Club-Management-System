@@ -209,16 +209,16 @@ export const MenuItemsPage = () => {
 
         {/* Search & Refresh */}
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <FaMagnifyingGlass className="absolute left-3 top-2.5 size-3.5 text-base-content/40" />
+          <label className="input input-bordered input-sm flex items-center gap-2 w-48 sm:w-64 text-xs">
+            <FaMagnifyingGlass className="size-3.5 shrink-0 text-base-content/40 pointer-events-none" />
             <input
               type="text"
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input input-bordered input-sm pl-9 w-48 sm:w-64 text-xs"
+              className="grow bg-transparent border-none outline-none text-xs placeholder:text-base-content/50"
             />
-          </div>
+          </label>
 
           <button
             type="button"

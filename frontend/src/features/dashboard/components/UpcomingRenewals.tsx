@@ -9,6 +9,7 @@ import {
 import toast from 'react-hot-toast';
 import { invoiceService } from '@/services/invoiceService';
 import type { RenewalDueMember } from '@/types/invoices';
+import { Skeleton } from '@/components/ui';
 
 export const UpcomingRenewals = () => {
   const [dues, setDues] = useState<RenewalDueMember[]>([]);
@@ -70,7 +71,7 @@ export const UpcomingRenewals = () => {
   };
 
   return (
-    <div className="card bg-base-200/50 border border-base-300 shadow-xs h-full flex flex-col justify-between">
+    <div className="card bg-base-100 border border-base-200/80 shadow-xs h-full flex flex-col justify-between rounded-2xl">
       <div className="card-body p-4 sm:p-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-base-300">
@@ -100,8 +101,26 @@ export const UpcomingRenewals = () => {
 
           {loading ? (
             <div className="space-y-2.5">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-12 bg-base-300/50 rounded-lg animate-pulse" />
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="p-2.5 rounded-xl border border-base-300 bg-base-100/70 flex items-center justify-between gap-2"
+                >
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="text" height="14px" width="110px" />
+                      <Skeleton variant="rectangular" height="16px" width="46px" className="rounded-full" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="text" height="10px" width="55px" />
+                      <Skeleton variant="text" height="10px" width="90px" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Skeleton variant="rectangular" height="20px" width="70px" className="rounded-full" />
+                    <Skeleton variant="rectangular" height="24px" width="60px" className="rounded-lg" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : dues.length === 0 ? (

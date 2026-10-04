@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { FaUsers, FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import type { MemberGrowthPoint } from '@/types/reports';
+import { Skeleton } from '@/components/ui';
 
 interface MemberGrowthChartProps {
   data?: MemberGrowthPoint[];
@@ -24,9 +25,23 @@ export const MemberGrowthChart = ({ data, loading }: MemberGrowthChartProps) => 
   if (loading) {
     return (
       <div className="card bg-base-200/50 border border-base-300 shadow-xs">
-        <div className="card-body p-5">
-          <div className="h-6 w-48 bg-base-300 rounded animate-pulse mb-4" />
-          <div className="h-64 bg-base-300/60 rounded-xl animate-pulse" />
+        <div className="card-body p-4 sm:p-6">
+          <div className="flex items-center justify-between pb-3 border-b border-base-300">
+            <div className="flex items-center gap-2.5">
+              <Skeleton variant="rectangular" height="36px" width="36px" className="rounded-xl" />
+              <div className="space-y-1.5">
+                <Skeleton variant="text" height="18px" width="180px" />
+                <Skeleton variant="text" height="11px" width="240px" />
+              </div>
+            </div>
+            <Skeleton variant="rectangular" height="28px" width="80px" className="rounded-lg" />
+          </div>
+          <Skeleton variant="rectangular" height="288px" className="w-full rounded-xl mt-3" />
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} variant="rectangular" height="52px" className="rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     );

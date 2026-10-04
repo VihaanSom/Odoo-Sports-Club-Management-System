@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa6';
 import { equipmentService } from '@/services/equipmentService';
 import { menuService } from '@/services/menuService';
+import { Skeleton } from '@/components/ui';
 
 interface LowStockItem {
   id: string | number;
@@ -69,7 +70,7 @@ export const LowStockAlerts = () => {
   }, []);
 
   return (
-    <div className="card bg-base-200/50 border border-base-300 shadow-xs h-full flex flex-col justify-between">
+    <div className="card bg-base-100 border border-base-200/80 shadow-xs h-full flex flex-col justify-between rounded-2xl">
       <div className="card-body p-4 sm:p-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-base-300">
@@ -99,8 +100,23 @@ export const LowStockAlerts = () => {
 
           {loading ? (
             <div className="space-y-2.5">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-11 bg-base-300/50 rounded-lg animate-pulse" />
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="p-2.5 rounded-xl border border-base-300 bg-base-100/70 flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Skeleton variant="rectangular" height="28px" width="28px" className="rounded-lg shrink-0" />
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <Skeleton variant="text" height="13px" width="110px" />
+                      <Skeleton variant="text" height="10px" width="60px" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Skeleton variant="rectangular" height="18px" width="46px" className="rounded-full" />
+                    <Skeleton variant="rectangular" height="24px" width="55px" className="rounded-lg" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : alerts.length === 0 ? (

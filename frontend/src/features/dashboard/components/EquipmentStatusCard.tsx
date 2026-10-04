@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaDumbbell, FaArrowUpRightFromSquare, FaBoxesStacked } from 'react-icons/fa6';
 import { equipmentService } from '@/services/equipmentService';
 import type { EquipmentItem } from '@/types/equipment';
+import { Skeleton } from '@/components/ui';
 
 export const EquipmentStatusCard = () => {
   const [items, setItems] = useState<EquipmentItem[]>([]);
@@ -36,7 +37,7 @@ export const EquipmentStatusCard = () => {
   };
 
   return (
-    <div className="card bg-base-200/50 border border-base-300 shadow-xs h-full flex flex-col justify-between">
+    <div className="card bg-base-100 border border-base-200/80 shadow-xs h-full flex flex-col justify-between rounded-2xl">
       <div className="card-body p-4 sm:p-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-base-300">
@@ -60,9 +61,15 @@ export const EquipmentStatusCard = () => {
           </div>
 
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 bg-base-300/50 rounded-lg animate-pulse" />
+                <div key={i} className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton variant="text" height="13px" width="130px" />
+                    <Skeleton variant="text" height="13px" width="60px" />
+                  </div>
+                  <Skeleton variant="rectangular" height="8px" className="w-full rounded-full" />
+                </div>
               ))}
             </div>
           ) : (

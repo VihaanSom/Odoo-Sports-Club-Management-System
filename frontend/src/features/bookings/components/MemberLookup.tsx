@@ -57,16 +57,16 @@ export const MemberLookup = ({
             Search Member <span className="text-error">*</span>
           </span>
         </label>
-        <div className="relative">
-          <FaMagnifyingGlass className="size-4 text-base-content/40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <label className="input input-bordered flex items-center gap-2 w-full text-sm">
+          <FaMagnifyingGlass className="size-4 shrink-0 text-base-content/40 pointer-events-none" />
           <input
             type="text"
-            className="input input-bordered w-full pl-9 text-sm"
+            className="grow bg-transparent border-none outline-none text-sm placeholder:text-base-content/50"
             placeholder="Search by name, email, or phone"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-        </div>
+        </label>
       </div>
 
       {selectedMemberId && (

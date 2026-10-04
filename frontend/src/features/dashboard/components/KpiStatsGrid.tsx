@@ -1,5 +1,6 @@
 import { FaUsers, FaCalendarCheck, FaTableTennisPaddleBall, FaIndianRupeeSign } from 'react-icons/fa6';
 import type { ClubSummaryKPIs } from '@/types/reports';
+import { Skeleton } from '@/components/ui';
 
 interface KpiStatsGridProps {
   kpis?: ClubSummaryKPIs | null;
@@ -50,7 +51,16 @@ export const KpiStatsGrid = ({ kpis, loading }: KpiStatsGridProps) => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-2xl bg-base-200/50 animate-pulse border border-base-200" />
+          <div key={i} className="bg-base-100 border border-base-200/80 rounded-2xl p-5 flex flex-col justify-between gap-3">
+            <div className="flex items-center justify-between">
+              <Skeleton variant="text" height="12px" width="60%" />
+              <Skeleton variant="rectangular" height="36px" width="36px" className="rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Skeleton variant="text" height="28px" width="50%" />
+              <Skeleton variant="text" height="11px" width="70%" />
+            </div>
+          </div>
         ))}
       </div>
     );

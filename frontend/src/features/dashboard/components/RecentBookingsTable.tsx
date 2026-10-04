@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa6';
 import { bookingService } from '@/services/bookingService';
 import type { BookingDetail } from '@/types/bookings';
+import { Skeleton } from '@/components/ui';
 
 export const RecentBookingsTable = () => {
   const [bookings, setBookings] = useState<BookingDetail[]>([]);
@@ -84,7 +85,7 @@ export const RecentBookingsTable = () => {
   };
 
   return (
-    <div className="card bg-base-200/50 border border-base-300 shadow-xs">
+    <div className="card bg-base-100 border border-base-200/80 shadow-xs rounded-2xl">
       <div className="card-body p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-base-300">
           <div className="flex items-center gap-2.5">
@@ -109,10 +110,52 @@ export const RecentBookingsTable = () => {
         </div>
 
         {loading ? (
-          <div className="space-y-2 mt-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-12 rounded-lg bg-base-300/50 animate-pulse" />
-            ))}
+          <div className="overflow-x-auto mt-3">
+            <table className="table table-zebra table-sm w-full text-xs">
+              <thead>
+                <tr className="border-base-300 text-base-content/70">
+                  <th>ID</th>
+                  <th>Player / Member</th>
+                  <th>Facility / Court</th>
+                  <th>Schedule</th>
+                  <th>Status</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i} className="border-base-200">
+                    <td>
+                      <Skeleton variant="text" height="14px" width="60px" />
+                    </td>
+                    <td>
+                      <div className="space-y-1">
+                        <Skeleton variant="text" height="14px" width="110px" />
+                        <Skeleton variant="rectangular" height="16px" width="55px" className="rounded-full" />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-1.5">
+                        <Skeleton variant="circular" width="16px" height="16px" />
+                        <Skeleton variant="text" height="14px" width="90px" />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="space-y-1">
+                        <Skeleton variant="text" height="13px" width="100px" />
+                        <Skeleton variant="text" height="11px" width="80px" />
+                      </div>
+                    </td>
+                    <td>
+                      <Skeleton variant="rectangular" height="18px" width="65px" className="rounded-full" />
+                    </td>
+                    <td className="text-right">
+                      <Skeleton variant="rectangular" height="24px" width="45px" className="rounded-lg ml-auto" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : bookings.length === 0 ? (
           <div className="text-center py-8 text-base-content/60 text-xs">

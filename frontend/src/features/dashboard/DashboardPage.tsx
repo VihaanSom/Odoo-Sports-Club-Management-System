@@ -9,6 +9,7 @@ import {
 import toast from 'react-hot-toast';
 import { reportService } from '@/services/reportService';
 import { formatPaise } from '@/lib/utils';
+import { Skeleton } from '@/components/ui';
 import type {
   ClubSummaryKPIs,
   RevenueSummary,
@@ -46,9 +47,6 @@ export const DashboardPage = () => {
 
   // Tab state for Analytics Hub (Revenue / Member Growth / Bistro)
   const [analyticsTab, setAnalyticsTab] = useState<'revenue' | 'members' | 'bar'>('revenue');
-
-  // Tab state for Operations Watchlist (Renewals / Leads / Alerts / Equipment)
-  const [activeOpsTab, setActiveOpsTab] = useState<'renewals' | 'leads' | 'stock' | 'equipment'>('renewals');
 
   const fetchDashboardData = useCallback(async (showToast = false) => {
     try {
@@ -142,56 +140,74 @@ export const DashboardPage = () => {
 
       {/* Earnings Overview Widgets: Today / This Week / This Month */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
-              Earnings Today
-            </span>
-            <span className="badge badge-xs badge-success">Today</span>
-          </div>
-          <div className="text-2xl font-black text-success mt-2 font-mono">
-            {formatPaise(earnings?.today.totalPaise ?? 0)}
-          </div>
-          <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
-            <span>Courts: {formatPaise(earnings?.today.courtsPaise ?? 0)}</span>
-            <span>·</span>
-            <span>Bar: {formatPaise(earnings?.today.barPaise ?? 0)}</span>
-          </div>
-        </div>
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton variant="text" height="12px" width="110px" />
+                <Skeleton variant="rectangular" height="18px" width="55px" className="rounded-full" />
+              </div>
+              <Skeleton variant="text" height="28px" width="120px" />
+              <div className="flex items-center gap-2">
+                <Skeleton variant="text" height="11px" width="70px" />
+                <Skeleton variant="text" height="11px" width="70px" />
+              </div>
+            </div>
+          ))
+        ) : (
+          <>
+            <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                  Earnings Today
+                </span>
+                <span className="badge badge-xs badge-success">Today</span>
+              </div>
+              <div className="text-2xl font-black text-success mt-2 font-mono">
+                {formatPaise(earnings?.today.totalPaise ?? 0)}
+              </div>
+              <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+                <span>Courts: {formatPaise(earnings?.today.courtsPaise ?? 0)}</span>
+                <span>·</span>
+                <span>Bar: {formatPaise(earnings?.today.barPaise ?? 0)}</span>
+              </div>
+            </div>
 
-        <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
-              Earnings This Week
-            </span>
-            <span className="badge badge-xs badge-primary">This Week</span>
-          </div>
-          <div className="text-2xl font-black text-primary mt-2 font-mono">
-            {formatPaise(earnings?.thisWeek.totalPaise ?? 0)}
-          </div>
-          <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
-            <span>Courts: {formatPaise(earnings?.thisWeek.courtsPaise ?? 0)}</span>
-            <span>·</span>
-            <span>Bar: {formatPaise(earnings?.thisWeek.barPaise ?? 0)}</span>
-          </div>
-        </div>
+            <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                  Earnings This Week
+                </span>
+                <span className="badge badge-xs badge-primary">This Week</span>
+              </div>
+              <div className="text-2xl font-black text-primary mt-2 font-mono">
+                {formatPaise(earnings?.thisWeek.totalPaise ?? 0)}
+              </div>
+              <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+                <span>Courts: {formatPaise(earnings?.thisWeek.courtsPaise ?? 0)}</span>
+                <span>·</span>
+                <span>Bar: {formatPaise(earnings?.thisWeek.barPaise ?? 0)}</span>
+              </div>
+            </div>
 
-        <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
-              Earnings This Month
-            </span>
-            <span className="badge badge-xs badge-secondary">This Month</span>
-          </div>
-          <div className="text-2xl font-black text-secondary mt-2 font-mono">
-            {formatPaise(earnings?.thisMonth.totalPaise ?? 0)}
-          </div>
-          <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
-            <span>Courts: {formatPaise(earnings?.thisMonth.courtsPaise ?? 0)}</span>
-            <span>·</span>
-            <span>Subs: {formatPaise(earnings?.thisMonth.membershipsPaise ?? 0)}</span>
-          </div>
-        </div>
+            <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                  Earnings This Month
+                </span>
+                <span className="badge badge-xs badge-secondary">This Month</span>
+              </div>
+              <div className="text-2xl font-black text-secondary mt-2 font-mono">
+                {formatPaise(earnings?.thisMonth.totalPaise ?? 0)}
+              </div>
+              <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+                <span>Courts: {formatPaise(earnings?.thisMonth.courtsPaise ?? 0)}</span>
+                <span>·</span>
+                <span>Subs: {formatPaise(earnings?.thisMonth.membershipsPaise ?? 0)}</span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Main Content Layout (2 Columns) */}
@@ -202,7 +218,7 @@ export const DashboardPage = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
-                Performance & Analytics
+                Performance &amp; Analytics
               </span>
               <div className="tabs tabs-box bg-base-200/80 p-0.5 rounded-xl text-xs font-medium">
                 <button
@@ -236,7 +252,7 @@ export const DashboardPage = () => {
                       : 'text-base-content/70'
                   }`}
                 >
-                  Bar & Bistro
+                  Bar &amp; Bistro
                 </button>
               </div>
             </div>
@@ -250,91 +266,75 @@ export const DashboardPage = () => {
 
           {/* Facility Occupancy Grid */}
           <FacilityOccupancyGrid />
-
-          {/* Recent Reservations Table */}
-          <RecentBookingsTable />
         </div>
 
-        {/* Sidebar Right Column: Club Status + Operations Watchlist */}
+        {/* Sidebar Right Column: Club Status */}
         <div className="xl:col-span-1 space-y-6">
           {/* Club Status Card */}
           <div className="card bg-base-100 border border-base-200/80 p-5 shadow-xs rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-base-content/60">Club Status</span>
-                <p className="text-xs text-base-content/50 mt-0.5">Operating Hours: 06:00 - 23:00</p>
+            {loading ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Skeleton variant="text" height="14px" width="90px" />
+                    <Skeleton variant="text" height="11px" width="140px" />
+                  </div>
+                  <Skeleton variant="rectangular" height="20px" width="46px" className="rounded-full" />
+                </div>
+                <div className="space-y-2 mt-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton variant="text" height="12px" width="120px" />
+                    <Skeleton variant="text" height="12px" width="30px" />
+                  </div>
+                  <Skeleton variant="rectangular" height="8px" className="w-full rounded-full" />
+                </div>
               </div>
-              <span className="badge badge-sm badge-success font-semibold">Open</span>
-            </div>
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-xs text-base-content/70 mb-1.5">
-                <span>Current Court Capacity</span>
-                <span className="font-bold text-base-content">78%</span>
-              </div>
-              <progress className="progress progress-primary w-full h-2" value={78} max={100} />
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-base-content/60">Club Status</span>
+                    <p className="text-xs text-base-content/50 mt-0.5">Operating Hours: 06:00 - 23:00</p>
+                  </div>
+                  <span className="badge badge-sm badge-success font-semibold">Open</span>
+                </div>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-base-content/70 mb-1.5">
+                    <span>Current Court Capacity</span>
+                    <span className="font-bold text-base-content">
+                      {kpis?.courtUtilizationRate ? `${kpis.courtUtilizationRate.toFixed(0)}%` : '78%'}
+                    </span>
+                  </div>
+                  <progress
+                    className="progress progress-primary w-full h-2"
+                    value={kpis?.courtUtilizationRate ? Math.round(kpis.courtUtilizationRate) : 78}
+                    max={100}
+                  />
+                </div>
+              </>
+            )}
           </div>
+          {/* Recent Inquiries (CRM Leads) */}
+          <RecentLeadsWidget />
 
-          {/* Operations Watchlist (Tabbed) */}
-          <div className="space-y-3">
-            <div className="tabs tabs-box bg-base-200/80 p-0.5 rounded-xl w-full grid grid-cols-4 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => setActiveOpsTab('renewals')}
-                className={`tab tab-xs rounded-lg transition-all ${
-                  activeOpsTab === 'renewals'
-                    ? 'tab-active bg-base-100 text-base-content font-semibold shadow-xs'
-                    : 'text-base-content/70'
-                }`}
-                title="Expiring Memberships"
-              >
-                Renewals
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOpsTab('leads')}
-                className={`tab tab-xs rounded-lg transition-all ${
-                  activeOpsTab === 'leads'
-                    ? 'tab-active bg-base-100 text-base-content font-semibold shadow-xs'
-                    : 'text-base-content/70'
-                }`}
-                title="Recent Inbound Leads"
-              >
-                Leads
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOpsTab('stock')}
-                className={`tab tab-xs rounded-lg transition-all ${
-                  activeOpsTab === 'stock'
-                    ? 'tab-active bg-base-100 text-base-content font-semibold shadow-xs'
-                    : 'text-base-content/70'
-                }`}
-                title="Low Stock Alerts"
-              >
-                Stock
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveOpsTab('equipment')}
-                className={`tab tab-xs rounded-lg transition-all ${
-                  activeOpsTab === 'equipment'
-                    ? 'tab-active bg-base-100 text-base-content font-semibold shadow-xs'
-                    : 'text-base-content/70'
-                }`}
-                title="Pro Shop Inventory"
-              >
-                Shop
-              </button>
-            </div>
+          {/* Pro Shop Inventory */}
+          <EquipmentStatusCard />
+        </div>
+      </div>
 
-            <div>
-              {activeOpsTab === 'renewals' && <UpcomingRenewals />}
-              {activeOpsTab === 'leads' && <RecentLeadsWidget />}
-              {activeOpsTab === 'stock' && <LowStockAlerts />}
-              {activeOpsTab === 'equipment' && <EquipmentStatusCard />}
-            </div>
-          </div>
+      {/* ── Recent Reservations (Full Webpage Width) ── */}
+      <RecentBookingsTable />
+
+      {/* ── Operations Watchlist: Renewals & Low Stock Alerts side by side ── */}
+      <div className="space-y-4">
+        <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+          Operations &amp; Watchlist
+        </span>
+
+        {/* Last 2 side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <UpcomingRenewals />
+          <LowStockAlerts />
         </div>
       </div>
     </motion.div>

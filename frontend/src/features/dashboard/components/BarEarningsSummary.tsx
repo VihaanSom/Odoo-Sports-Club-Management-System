@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa6';
 import { reportService } from '@/services/reportService';
 import type { BarAnalyticsSummary } from '@/types/reports';
+import { Skeleton } from '@/components/ui';
 
 interface BarEarningsSummaryProps {
   data?: BarAnalyticsSummary | null;
@@ -76,8 +77,16 @@ export const BarEarningsSummary = ({ data: initialData }: BarEarningsSummaryProp
 
           {loading ? (
             <div className="space-y-3">
-              <div className="h-12 bg-base-300/50 rounded-lg animate-pulse" />
-              <div className="h-20 bg-base-300/50 rounded-lg animate-pulse" />
+              <div className="grid grid-cols-2 gap-2">
+                <Skeleton variant="rectangular" height="72px" className="rounded-xl" />
+                <Skeleton variant="rectangular" height="72px" className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Skeleton variant="text" height="12px" width="40%" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} variant="rectangular" height="36px" className="rounded-lg" />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-3">

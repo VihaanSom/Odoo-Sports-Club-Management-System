@@ -157,16 +157,16 @@ export const OrdersListPage = () => {
               <option value="cancelled">Cancelled</option>
             </select>
 
-            <div className="relative flex-1 sm:w-60">
-              <FaMagnifyingGlass className="absolute left-2.5 top-2.5 size-3 text-base-content/40" />
+            <label className="input input-bordered input-xs sm:input-sm flex items-center gap-2 flex-1 sm:w-60 text-xs">
+              <FaMagnifyingGlass className="size-3 shrink-0 text-base-content/40 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="input input-bordered input-xs sm:input-sm pl-8 w-full text-xs"
+                className="grow bg-transparent border-none outline-none text-xs placeholder:text-base-content/50"
               />
-            </div>
+            </label>
 
             <button
               type="button"

@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fa6';
 import { leadService } from '@/services/leadService';
 import type { Lead } from '@/types/leads';
+import { Skeleton } from '@/components/ui';
 
 export const RecentLeadsWidget = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -48,7 +49,7 @@ export const RecentLeadsWidget = () => {
   };
 
   return (
-    <div className="card bg-base-200/50 border border-base-300 shadow-xs h-full flex flex-col justify-between">
+    <div className="card bg-base-100 border border-base-200/80 shadow-xs h-full flex flex-col justify-between rounded-2xl">
       <div className="card-body p-4 sm:p-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-base-300">
@@ -57,14 +58,7 @@ export const RecentLeadsWidget = () => {
                 <FaBullhorn className="size-4" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <h3 className="text-sm sm:text-base font-bold tracking-tight">Recent Enquiries</h3>
-                  {leads.filter((l) => l.status === 'new').length > 0 && (
-                    <span className="badge badge-error badge-xs font-bold">
-                      {leads.filter((l) => l.status === 'new').length} New
-                    </span>
-                  )}
-                </div>
+                <h3 className="text-sm sm:text-base font-bold tracking-tight">Recent Enquiries</h3>
                 <p className="text-[11px] text-base-content/60">Public website trials & membership leads</p>
               </div>
             </div>
@@ -80,8 +74,25 @@ export const RecentLeadsWidget = () => {
 
           {loading ? (
             <div className="space-y-2.5">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-12 bg-base-300/50 rounded-lg animate-pulse" />
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="p-2.5 rounded-xl border border-base-300 bg-base-100/70 flex items-center justify-between gap-2"
+                >
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="text" height="14px" width="110px" />
+                      <Skeleton variant="rectangular" height="16px" width="48px" className="rounded-full" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton variant="text" height="10px" width="55px" />
+                      <Skeleton variant="text" height="10px" width="80px" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Skeleton variant="rectangular" height="24px" width="60px" className="rounded-lg" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : leads.length === 0 ? (

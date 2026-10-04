@@ -13,23 +13,32 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="fieldset w-full">
         {label && <label className="fieldset-label font-medium text-xs text-base-content/80">{label}</label>}
-        <div className="relative w-full">
-          {leftIcon && (
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-base-content/50">
-              {leftIcon}
-            </div>
-          )}
+        {leftIcon ? (
+          <label
+            className={cn(
+              'input input-bordered flex items-center gap-2 w-full text-sm',
+              error && 'input-error',
+              className
+            )}
+          >
+            <span className="shrink-0 text-base-content/50 pointer-events-none">{leftIcon}</span>
+            <input
+              ref={ref}
+              className="grow bg-transparent border-none outline-none text-sm placeholder:text-base-content/50"
+              {...props}
+            />
+          </label>
+        ) : (
           <input
             ref={ref}
             className={cn(
               'input input-bordered w-full text-sm',
-              leftIcon && 'pl-10',
               error && 'input-error',
               className
             )}
             {...props}
           />
-        </div>
+        )}
         {error && <span className="text-error text-xs mt-1">{error}</span>}
         {helperText && !error && <span className="text-base-content/60 text-xs mt-1">{helperText}</span>}
       </div>
