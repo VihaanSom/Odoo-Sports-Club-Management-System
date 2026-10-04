@@ -15,7 +15,6 @@ import staffRoutes from '../modules/staff/staff.routes';
 import leaveRoutes from '../modules/staff/leave.routes';
 import paymentsRoutes from '../modules/payments/payments.routes';
 import reportsRoutes from '../modules/reports/reports.routes';
-import invoicesRoutes from '../modules/invoices/invoices.routes';
 import inventoryRoutes from '../modules/inventory/inventory.routes';
 import uploadsRoutes from '../modules/uploads/uploads.routes';
 
@@ -52,7 +51,6 @@ router.use('/staff', staffRoutes);
 router.use('/leave', leaveRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/reports', reportsRoutes);
-router.use('/invoices', invoicesRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/uploads', uploadsRoutes);
 

@@ -9,6 +9,8 @@ import {
   inventoryReportQuerySchema,
   barReportQuerySchema,
   staffReportQuerySchema,
+  earningsQuerySchema,
+  barAnalyticsQuerySchema,
 } from './reports.schema';
 
 const router = Router();
@@ -57,6 +59,20 @@ router.get(
   '/staff',
   validateQuery(staffReportQuerySchema),
   (req, res, next) => reportsController.getStaffReport(req, res, next)
+);
+
+// RP-07: Unified earnings report (today/week/month)
+router.get(
+  '/earnings',
+  validateQuery(earningsQuerySchema),
+  (req, res, next) => reportsController.getEarnings(req, res, next)
+);
+
+// RP-08: Unified bar analytics with real DB queries
+router.get(
+  '/bar-analytics',
+  validateQuery(barAnalyticsQuerySchema),
+  (req, res, next) => reportsController.getBarAnalytics(req, res, next)
 );
 
 export default router;

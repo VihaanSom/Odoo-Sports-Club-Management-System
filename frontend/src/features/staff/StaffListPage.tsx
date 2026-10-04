@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { StaffFormModal } from './components/StaffFormModal';
 import { staffService } from '@/services/staffService';
+import { useDebounce, usePagination } from '@/hooks';
 import type { StaffMember, StaffRole, CreateStaffPayload } from '@/types/staff';
 
 export const StaffListPage = () => {
@@ -14,15 +15,26 @@ export const StaffListPage = () => {
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStaffForEdit, setSelectedStaffForEdit] = useState<StaffMember | null>(null);
+
+  const {
+    page,
+    totalPages,
+    setPage,
+    startIndex,
+    endIndex,
+    paginateItems,
+  } = usePagination({ totalItems: staffList.length, pageSize: 10 });
+  const paginatedStaff = paginateItems(staffList);
 
   const fetchStaff = async () => {
     setLoading(true);
     try {
       const res = await staffService.getStaffMembers({
-        search: searchQuery,
+        search: debouncedSearch,
         role: roleFilter as StaffRole | 'all',
       });
       setStaffList(res.data);
@@ -35,7 +47,8 @@ export const StaffListPage = () => {
 
   useEffect(() => {
     fetchStaff();
-  }, [searchQuery, roleFilter]);
+    setPage(1);
+  }, [debouncedSearch, roleFilter]);
 
   const handleSaveStaff = async (payload: CreateStaffPayload) => {
     try {
@@ -184,7 +197,7 @@ export const StaffListPage = () => {
                 </td>
               </tr>
             ) : (
-              staffList.map((s) => (
+              paginatedStaff.map((s) => (
                 <tr key={s.id} className="hover:bg-base-200/40">
                   <td>
                     <div className="flex items-center gap-3">
@@ -251,6 +264,34 @@ export const StaffListPage = () => {
             )}
           </tbody>
         </table>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-base-300">
+            <span className="text-xs text-base-content/60">
+              Showing {startIndex}–{endIndex} of {staffList.length} staff members
+            </span>
+            <div className="join">
+              <button
+                className="join-item btn btn-xs"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                «
+              </button>
+              <button className="join-item btn btn-xs btn-active">
+                Page {page} of {totalPages}
+              </button>
+              <button
+                className="join-item btn btn-xs"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <StaffFormModal

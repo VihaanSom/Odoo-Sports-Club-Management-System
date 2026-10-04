@@ -87,6 +87,26 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * AU-05 / Bug #19: Update current authenticated user profile
+   */
+  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      const updatedProfile = await authService.updateProfile(
+        req.user.id,
+        req.user.role,
+        req.body
+      );
+      sendSuccess(res, updatedProfile, 'Profile updated successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const authController = new AuthController();

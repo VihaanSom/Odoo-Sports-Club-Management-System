@@ -224,4 +224,16 @@ export const authService = {
       name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
     };
   },
+
+  /**
+   * AU-05 / Bug #19: Update authenticated user profile (full name, phone).
+   */
+  updateProfile: async (payload: { fullName?: string; phone?: string }): Promise<User> => {
+    const response = await apiClient.patch('/auth/profile', payload);
+    const data = response.data.data;
+    return {
+      ...data,
+      name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email,
+    };
+  },
 };

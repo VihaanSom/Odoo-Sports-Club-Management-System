@@ -12,6 +12,8 @@ import {
 import toast from 'react-hot-toast';
 import { barService } from '@/services/barService';
 import { formatPaise } from '@/lib/utils';
+import { useDebounce, usePagination } from '@/hooks';
+import { SearchBar } from '@/components/shared';
 
 import type { BarTab, BarTable, CreateBarTabPayload } from '@/types/bar';
 import { OpenTabModal, AddTabItemForm, SettleTabModal } from './components';
@@ -20,6 +22,8 @@ export const OpenTabsPage = () => {
   const [tabs, setTabs] = useState<BarTab[]>([]);
   const [tables, setTables] = useState<BarTable[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Modals
   const [isOpenTabModalOpen, setIsOpenTabModalOpen] = useState(false);
@@ -28,6 +32,26 @@ export const OpenTabsPage = () => {
 
   const [isSettleModalOpen, setIsSettleModalOpen] = useState(false);
   const [activeTabForSettle, setActiveTabForSettle] = useState<BarTab | null>(null);
+
+  const filteredTabs = tabs.filter((t) => {
+    const q = debouncedSearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      (t.tableNo && t.tableNo.toLowerCase().includes(q)) ||
+      (t.memberName && t.memberName.toLowerCase().includes(q)) ||
+      String(t.id).includes(q)
+    );
+  });
+
+  const {
+    page,
+    totalPages,
+    setPage,
+    startIndex,
+    endIndex,
+    paginateItems,
+  } = usePagination({ totalItems: filteredTabs.length, pageSize: 10 });
+  const paginatedTabs = paginateItems(filteredTabs);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -137,34 +161,55 @@ export const OpenTabsPage = () => {
 
       {/* Tabs Table */}
       <div className="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-base-300 flex items-center justify-between">
-          <h2 className="font-bold text-sm tracking-wide uppercase text-base-content/80">
-            Open Tabs Register
-          </h2>
-          <button
-            type="button"
-            onClick={fetchData}
-            disabled={loading}
-            className="btn btn-ghost btn-xs gap-1"
-          >
-            <FaRotate className={`size-3 ${loading ? 'animate-spin' : ''}`} /> Refresh
-          </button>
+        <div className="p-4 border-b border-base-300 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="font-bold text-sm tracking-wide uppercase text-base-content/80">
+              Open Tabs Register
+            </h2>
+            <span className="badge badge-sm badge-neutral">{filteredTabs.length} active</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-full sm:w-64">
+              <SearchBar
+                value={searchQuery}
+                onChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(1);
+                }}
+                placeholder="Search table, member, tab #..."
+              />
+            </div>
+            <button
+              type="button"
+              onClick={fetchData}
+              disabled={loading}
+              className="btn btn-ghost btn-sm gap-1"
+            >
+              <FaRotate className={`size-3 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {loading ? (
           <div className="py-16 flex justify-center items-center">
             <span className="loading loading-spinner loading-md text-primary" />
           </div>
-        ) : tabs.length === 0 ? (
+        ) : filteredTabs.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-sm text-base-content/60">No open bar tabs currently active.</p>
-            <button
-              type="button"
-              onClick={() => setIsOpenTabModalOpen(true)}
-              className="btn btn-primary btn-xs mt-3 gap-1"
-            >
-              <FaPlus className="size-3" /> Open First Tab
-            </button>
+            <p className="text-sm text-base-content/60">
+              {tabs.length === 0
+                ? 'No open bar tabs currently active.'
+                : 'No open tabs match your search query.'}
+            </p>
+            {tabs.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setIsOpenTabModalOpen(true)}
+                className="btn btn-primary btn-xs mt-3 gap-1"
+              >
+                <FaPlus className="size-3" /> Open First Tab
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -183,7 +228,7 @@ export const OpenTabsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {tabs.map((tab) => (
+                {paginatedTabs.map((tab) => (
                   <tr key={tab.id} className="hover">
                     <td className="font-mono font-semibold text-xs">#{tab.id}</td>
                     <td>
@@ -244,6 +289,34 @@ export const OpenTabsPage = () => {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-base-300">
+                <span className="text-xs text-base-content/60">
+                  Showing {startIndex}–{endIndex} of {filteredTabs.length} tabs
+                </span>
+                <div className="join">
+                  <button
+                    className="join-item btn btn-xs"
+                    disabled={page <= 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    «
+                  </button>
+                  <button className="join-item btn btn-xs btn-active">
+                    Page {page} of {totalPages}
+                  </button>
+                  <button
+                    className="join-item btn btn-xs"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

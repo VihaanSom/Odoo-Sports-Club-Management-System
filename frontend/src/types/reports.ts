@@ -74,3 +74,20 @@ export interface ClubSummaryKPIs {
   staffOnDutyCount: number;
   pendingLeavesCount: number;
 }
+
+export interface EarningsPeriodData {
+  totalPaise: number;
+  totalRupees: number;
+  courtsPaise: number;
+  shopPaise: number;
+  barPaise: number;
+  membershipsPaise: number;
+}
+
+export interface OverallEarningsResponse {
+  today: EarningsPeriodData;
+  thisWeek: EarningsPeriodData;
+  thisMonth: EarningsPeriodData;
+  currentPeriod: string;
+  selectedPeriodData: EarningsPeriodData;
+}

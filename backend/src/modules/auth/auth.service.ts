@@ -247,6 +247,67 @@ export class AuthService {
       };
     }
   }
+
+  /**
+   * AU-05 / Bug #19: Update profile for current authenticated user (Member or Staff).
+   * Accepts fullName (or firstName/lastName) and phone.
+   */
+  async updateProfile(
+    userId: number,
+    role: UserRole,
+    payload: { fullName?: string; firstName?: string; lastName?: string; phone?: string | null }
+  ) {
+    let firstName = payload.firstName;
+    let lastName = payload.lastName;
+
+    if (payload.fullName !== undefined) {
+      const trimmed = payload.fullName.trim();
+      const parts = trimmed.split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ') || '';
+    }
+
+    const updateData: { firstName?: string; lastName?: string; phone?: string | null } = {};
+    if (firstName !== undefined && firstName !== '') updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (payload.phone !== undefined) updateData.phone = payload.phone;
+
+    if (role === 'member') {
+      const member = await prisma.member.update({
+        where: { id: userId },
+        data: updateData,
+      });
+
+      return {
+        id: member.id,
+        email: member.email,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        role: 'member',
+        tier: member.tier,
+        status: member.status,
+        phone: member.phone,
+        membershipStart: member.membershipStart,
+        membershipEnd: member.membershipEnd,
+      };
+    } else {
+      const staff = await prisma.staff.update({
+        where: { id: userId },
+        data: updateData,
+      });
+
+      return {
+        id: staff.id,
+        email: staff.email,
+        firstName: staff.firstName,
+        lastName: staff.lastName,
+        role: staff.role,
+        phone: staff.phone,
+        salary: staff.salary ? Number(staff.salary) : null,
+        isActive: staff.isActive,
+      };
+    }
+  }
 }
 
 export const authService = new AuthService();

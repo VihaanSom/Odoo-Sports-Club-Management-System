@@ -70,3 +70,10 @@ export interface UpdateBarTablePayload {
   capacity?: number;
   isActive?: boolean;
 }
+
+export interface BarTodayEarnings {
+  totalPaise: number;
+  totalRupees: number;
+  settledTabsCount: number;
+  date: string;
+}

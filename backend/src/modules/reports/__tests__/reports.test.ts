@@ -87,4 +87,31 @@ describe('Reports Module Logic Tests', () => {
       assert.ok(Array.isArray(result));
     });
   });
+
+  describe('RP-07: Unified Earnings (Today / Week / Month)', () => {
+    it('should return earnings broken down into today, thisWeek, and thisMonth', async () => {
+      const result = await reportsService.getEarnings({ period: 'today' });
+
+      assert.ok(result);
+      assert.strictEqual(typeof result.today.totalPaise, 'number');
+      assert.strictEqual(typeof result.thisWeek.totalPaise, 'number');
+      assert.strictEqual(typeof result.thisMonth.totalPaise, 'number');
+      assert.strictEqual(result.currentPeriod, 'today');
+      assert.ok(result.selectedPeriodData);
+    });
+  });
+
+  describe('RP-08: Unified Bar Analytics', () => {
+    it('should return real bar analytics with top sellers and hourly activity', async () => {
+      const result = await reportsService.getBarAnalytics();
+
+      assert.ok(result);
+      assert.strictEqual(typeof result.totalTabs, 'number');
+      assert.strictEqual(typeof result.openTabsCount, 'number');
+      assert.strictEqual(typeof result.averageTabPaise, 'number');
+      assert.strictEqual(typeof result.totalRevenuePaise, 'number');
+      assert.ok(Array.isArray(result.topSellers));
+      assert.ok(Array.isArray(result.hourlyActivity));
+    });
+  });
 });

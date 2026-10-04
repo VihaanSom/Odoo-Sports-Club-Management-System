@@ -22,9 +22,11 @@ export const leadIdParamSchema = z.object({
 export type LeadIdParam = z.infer<typeof leadIdParamSchema>;
 
 export const updateLeadSchema = z.object({
-  status: z.nativeEnum(LeadStatus, {
-    message: "status must be one of 'new', 'contacted', 'converted', 'lost'",
-  }),
+  status: z
+    .nativeEnum(LeadStatus, {
+      message: "status must be one of 'new', 'contacted', 'converted', 'lost'",
+    })
+    .optional(),
   assignedTo: z.coerce.number().int().positive().nullable().optional(),
 });
 

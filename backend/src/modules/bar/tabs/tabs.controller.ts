@@ -57,6 +57,14 @@ export class BarTabsController {
     const data = await barTabsService.updateItemQty(id, itemId, delta);
     return sendSuccess(res, data, 'Item quantity updated successfully');
   }
+
+  /**
+   * TB-07: GET /api/v1/bar/earnings/today or /api/v1/bar/tabs/earnings/today
+   */
+  async getTodayEarnings(_req: Request, res: Response): Promise<Response> {
+    const data = await barTabsService.getTodayEarnings();
+    return sendSuccess(res, data, 'Today earnings retrieved successfully');
+  }
 }
 
 export const barTabsController = new BarTabsController();

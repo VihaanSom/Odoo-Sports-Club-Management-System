@@ -175,4 +175,88 @@ describe('Auth Module (Contracts AU-01 to AU-04)', () => {
       assert.strictEqual(res.body.success, false);
     });
   });
+
+  describe('AU-05 / Bug #19 · PATCH /api/v1/auth/profile', () => {
+    it('should reject with 401 when unauthenticated', async () => {
+      const res = await request(app)
+        .patch('/api/v1/auth/profile')
+        .send({ fullName: 'Updated Name', phone: '+91 99999 88888' });
+
+      assert.strictEqual(res.status, 401);
+      assert.strictEqual(res.body.success, false);
+    });
+
+    it('should update staff profile successfully when authenticated as admin', async () => {
+      const mockToken = generateAccessToken({
+        sub: 1,
+        email: 'admin@championsclub.com',
+        role: 'admin',
+      });
+
+      const staffUpdate = prisma.staff.update;
+      (prisma.staff as any).update = async ({ data }: any) => ({
+        id: 1,
+        email: 'admin@championsclub.com',
+        firstName: data.firstName || 'Admin',
+        lastName: data.lastName || 'User',
+        role: 'admin',
+        phone: data.phone || '+91 98765 00000',
+        salary: null,
+        isActive: true,
+      });
+
+      try {
+        const res = await request(app)
+          .patch('/api/v1/auth/profile')
+          .set('Authorization', `Bearer ${mockToken}`)
+          .send({ fullName: 'Super Admin', phone: '+91 98765 00000' });
+
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.body.success, true);
+        assert.strictEqual(res.body.data.firstName, 'Super');
+        assert.strictEqual(res.body.data.lastName, 'Admin');
+        assert.strictEqual(res.body.data.phone, '+91 98765 00000');
+      } finally {
+        (prisma.staff as any).update = staffUpdate;
+      }
+    });
+
+    it('should update member profile successfully when authenticated as member', async () => {
+      const mockToken = generateAccessToken({
+        sub: 101,
+        email: 'member@test.com',
+        role: 'member',
+        tier: 'Gold',
+      });
+
+      const memberUpdate = prisma.member.update;
+      (prisma.member as any).update = async ({ data }: any) => ({
+        id: 101,
+        email: 'member@test.com',
+        firstName: data.firstName || 'Jane',
+        lastName: data.lastName || 'Doe',
+        role: 'member',
+        tier: 'Gold',
+        status: 'active',
+        phone: data.phone || '+91 91234 56789',
+        membershipStart: new Date(),
+        membershipEnd: new Date(),
+      });
+
+      try {
+        const res = await request(app)
+          .patch('/api/v1/auth/profile')
+          .set('Authorization', `Bearer ${mockToken}`)
+          .send({ fullName: 'Jane Doe', phone: '+91 91234 56789' });
+
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.body.success, true);
+        assert.strictEqual(res.body.data.firstName, 'Jane');
+        assert.strictEqual(res.body.data.lastName, 'Doe');
+        assert.strictEqual(res.body.data.phone, '+91 91234 56789');
+      } finally {
+        (prisma.member as any).update = memberUpdate;
+      }
+    });
+  });
 });

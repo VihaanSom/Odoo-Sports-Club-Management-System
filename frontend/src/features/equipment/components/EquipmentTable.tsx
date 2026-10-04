@@ -2,26 +2,21 @@ import { Link } from 'react-router-dom';
 import {
   FaCircleCheck,
   FaTriangleExclamation,
-  FaHandHoldingHand,
-  FaRotateLeft,
 } from 'react-icons/fa6';
 
-import { Badge, Button, ProgressBar } from '@/components/ui';
+import { Badge, ProgressBar } from '@/components/ui';
 import { formatPaise } from '@/lib/utils';
 import type { Equipment } from '@/types';
 
 interface EquipmentTableProps {
   items: Equipment[];
   canManage?: boolean;
-  onRent: (id: string | number, name: string) => void;
-  onReturn: (id: string | number, name: string) => void;
+  onRent?: (id: string | number, name: string) => void;
+  onReturn?: (id: string | number, name: string) => void;
 }
 
 export const EquipmentTable = ({
   items,
-  canManage = true,
-  onRent,
-  onReturn,
 }: EquipmentTableProps) => {
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
@@ -106,30 +101,6 @@ export const EquipmentTable = ({
                       >
                         View
                       </Link>
-                      {canManage && (
-                        <>
-                          <Button
-                            size="xs"
-                            variant="primary"
-                            disabled={qtyAvail <= 0}
-                            onClick={() => onRent(item.id, item.name)}
-                            leftIcon={<FaHandHoldingHand className="size-3" />}
-                            title="Issue to member"
-                          >
-                            Rent
-                          </Button>
-                          <Button
-                            size="xs"
-                            variant="ghost"
-                            disabled={qtyAvail >= qtyTotal}
-                            onClick={() => onReturn(item.id, item.name)}
-                            leftIcon={<FaRotateLeft className="size-3" />}
-                            title="Return to stock"
-                          >
-                            Return
-                          </Button>
-                        </>
-                      )}
                     </div>
                   </td>
                 </tr>

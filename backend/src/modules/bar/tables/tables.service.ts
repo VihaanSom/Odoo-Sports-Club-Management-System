@@ -1,14 +1,20 @@
 import { prisma } from '../../../config/prisma';
 import { NotFoundError, ConflictError } from '../../../utils/errors';
 import { CreateTableInput, UpdateTableInput } from './tables.validator';
-import { TabStatus } from '@prisma/client';
+import { TabStatus, MembershipTier } from '@prisma/client';
 
 export interface CurrentTabResponse {
   tabId: number;
   status: TabStatus;
   openedAt: string;
   itemCount: number;
+  subtotalPaise: number;
+  discountPaise: number;
+  totalPaise: number;
   runningTotalPaise: number;
+  memberId: number | null;
+  memberName: string | null;
+  memberTier: MembershipTier | null;
 }
 
 export interface BarTableResponse {
@@ -31,6 +37,7 @@ export class BarTablesService {
           where: { status: TabStatus.open },
           include: {
             items: true,
+            member: true,
           },
         },
       },
@@ -42,17 +49,33 @@ export class BarTablesService {
 
       if (openTab) {
         const itemCount = openTab.items.reduce((acc, it) => acc + it.qty, 0);
-        const runningTotalPaise = openTab.items.reduce(
+        const subtotalPaise = openTab.items.reduce(
           (acc, it) => acc + Math.round(Number(it.subtotal) * 100),
           0
         );
+
+        let discountPct = 0;
+        if (openTab.member) {
+          if (openTab.member.tier === MembershipTier.Gold) discountPct = 0.15;
+          else if (openTab.member.tier === MembershipTier.Silver) discountPct = 0.10;
+          else if (openTab.member.tier === MembershipTier.Junior) discountPct = 0.05;
+        }
+
+        const discountPaise = Math.round(subtotalPaise * discountPct);
+        const totalPaise = Math.max(0, subtotalPaise - discountPaise);
 
         currentTab = {
           tabId: openTab.id,
           status: openTab.status,
           openedAt: openTab.openedAt.toISOString(),
           itemCount,
-          runningTotalPaise,
+          subtotalPaise,
+          discountPaise,
+          totalPaise,
+          runningTotalPaise: totalPaise,
+          memberId: openTab.memberId,
+          memberName: openTab.member ? `${openTab.member.firstName} ${openTab.member.lastName}`.trim() : null,
+          memberTier: openTab.member?.tier || null,
         };
       }
 
@@ -132,7 +155,7 @@ export class BarTablesService {
       include: {
         tabs: {
           where: { status: TabStatus.open },
-          include: { items: true },
+          include: { items: true, member: true },
         },
       },
     });
@@ -141,17 +164,33 @@ export class BarTablesService {
     let currentTab: CurrentTabResponse | null = null;
     if (openTab) {
       const itemCount = openTab.items.reduce((acc, it) => acc + it.qty, 0);
-      const runningTotalPaise = openTab.items.reduce(
+      const subtotalPaise = openTab.items.reduce(
         (acc, it) => acc + Math.round(Number(it.subtotal) * 100),
         0
       );
+
+      let discountPct = 0;
+      if (openTab.member) {
+        if (openTab.member.tier === MembershipTier.Gold) discountPct = 0.15;
+        else if (openTab.member.tier === MembershipTier.Silver) discountPct = 0.10;
+        else if (openTab.member.tier === MembershipTier.Junior) discountPct = 0.05;
+      }
+
+      const discountPaise = Math.round(subtotalPaise * discountPct);
+      const totalPaise = Math.max(0, subtotalPaise - discountPaise);
 
       currentTab = {
         tabId: openTab.id,
         status: openTab.status,
         openedAt: openTab.openedAt.toISOString(),
         itemCount,
-        runningTotalPaise,
+        subtotalPaise,
+        discountPaise,
+        totalPaise,
+        runningTotalPaise: totalPaise,
+        memberId: openTab.memberId,
+        memberName: openTab.member ? `${openTab.member.firstName} ${openTab.member.lastName}`.trim() : null,
+        memberTier: openTab.member?.tier || null,
       };
     }
 

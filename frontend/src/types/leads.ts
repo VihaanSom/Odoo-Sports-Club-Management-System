@@ -30,7 +30,7 @@ export interface CreateLeadPayload {
 }
 
 export interface UpdateLeadPayload {
-  status: LeadStatus;
+  status?: LeadStatus;
   assignedTo?: number | null;
   notes?: string;
 }

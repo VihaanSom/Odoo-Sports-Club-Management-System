@@ -76,3 +76,23 @@ export const staffReportQuerySchema = z.object({
 });
 
 export type StaffReportQuery = z.infer<typeof staffReportQuerySchema>;
+
+export const earningsQuerySchema = z.object({
+  period: z.enum(['today', 'week', 'month', 'all']).default('today').optional(),
+});
+
+export type EarningsQuery = z.infer<typeof earningsQuerySchema>;
+
+export const barAnalyticsQuerySchema = z.object({
+  from: z
+    .string()
+    .regex(isoDateRegex, 'Invalid ISO date string')
+    .optional(),
+  to: z
+    .string()
+    .regex(isoDateRegex, 'Invalid ISO date string')
+    .optional(),
+  period: z.enum(['today', 'week', 'month', 'year', 'all']).optional(),
+});
+
+export type BarAnalyticsQuery = z.infer<typeof barAnalyticsQuerySchema>;

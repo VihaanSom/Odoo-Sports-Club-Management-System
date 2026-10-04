@@ -41,6 +41,18 @@ router.post(
 );
 
 /**
+ * TB-07: Get today's total bar earnings & settled count
+ * GET /api/v1/bar/tabs/earnings/today
+ * Auth: admin, bar
+ */
+router.get(
+  '/earnings/today',
+  verifyToken,
+  requireRole('admin', 'bar'),
+  (req, res) => barTabsController.getTodayEarnings(req, res)
+);
+
+/**
  * TB-03: Get tab detail
  * GET /api/v1/bar/tabs/:id
  * Auth: admin, bar, member (own only)
