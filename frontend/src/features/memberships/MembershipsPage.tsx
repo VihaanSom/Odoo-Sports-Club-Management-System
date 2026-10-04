@@ -21,6 +21,7 @@ export const MembershipsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<MembershipPlan | null>(null);
+  const [memberProfile, setMemberProfile] = useState<any>(null);
 
   // Form states for creating a plan
   const [newTier, setNewTier] = useState<'Gold' | 'Silver' | 'Junior'>('Gold');
@@ -53,6 +54,12 @@ export const MembershipsPage = () => {
   useEffect(() => {
     fetchPlans();
   }, [fetchPlans]);
+
+  useEffect(() => {
+    if (isMember && user?.id) {
+      memberService.getById(user.id).then(setMemberProfile).catch(() => {});
+    }
+  }, [isMember, user?.id]);
 
   const handleSelectPlan = async (plan: MembershipPlan) => {
     if (!user) {
@@ -229,21 +236,52 @@ export const MembershipsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.map((plan) => (
-            <MembershipPlanCard
-              key={plan.id}
-              plan={plan}
-              onSelect={handleSelectPlan}
-              onEdit={canManage ? handleOpenEdit : undefined}
-              isAdmin={canManage}
-              isCurrentPlan={
+          {(() => {
+            const activePlanTier = (
+              memberProfile?.plan?.tier ||
+              memberProfile?.tier ||
+              user?.tier ||
+              ''
+            ).toLowerCase();
+
+            const activeDurationMonths =
+              memberProfile?.plan?.durationMonths ||
+              (user as any)?.planDurationMonths ||
+              (memberProfile?.membershipStart && memberProfile?.membershipEnd
+                ? Math.max(
+                    1,
+                    Math.round(
+                      (new Date(memberProfile.membershipEnd).getTime() -
+                        new Date(memberProfile.membershipStart).getTime()) /
+                        (1000 * 60 * 60 * 24 * 30)
+                    )
+                  )
+                : 1);
+
+            const activePlanId = memberProfile?.planId || user?.planId;
+
+            return plans.map((plan) => {
+              const isCurrent =
                 isMember &&
-                (user?.planId
-                  ? user.planId === plan.id
-                  : user?.tier?.toLowerCase() === plan.tier?.toLowerCase())
-              }
-            />
-          ))}
+                (activePlanId && plan.id === activePlanId
+                  ? true
+                  : Boolean(activePlanTier) &&
+                    (plan.tier?.toLowerCase() === activePlanTier ||
+                      plan.name?.toLowerCase().includes(activePlanTier)) &&
+                    Number(plan.durationMonths) === Number(activeDurationMonths));
+
+              return (
+                <MembershipPlanCard
+                  key={plan.id}
+                  plan={plan}
+                  onSelect={handleSelectPlan}
+                  onEdit={canManage ? handleOpenEdit : undefined}
+                  isAdmin={canManage}
+                  isCurrentPlan={isCurrent}
+                />
+              );
+            });
+          })()}
 
           {plans.length === 0 && (
             <div className="col-span-full card bg-base-200/50 border border-base-300 p-12 text-center">

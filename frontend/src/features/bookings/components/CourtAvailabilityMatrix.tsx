@@ -1,14 +1,11 @@
-import {  useState, useEffect, useCallback  } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaFilter,
-  FaChevronLeft,
-  FaChevronRight,
   FaCheck,
   FaLock,
 } from 'react-icons/fa6';
 import { courtService } from '@/services/courtService';
-import { formatDate, formatSlotTime, formatSlotRange } from '@/lib/utils';
+import { formatSlotTime, formatSlotRange } from '@/lib/utils';
 import type { CourtAvailability } from '@/types/courts';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { useAuthStore } from '@/stores/authStore';
@@ -30,7 +27,7 @@ export const CourtAvailabilityMatrix = ({
   const isStaff = isStaffRole(user?.role);
   const todayStr = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState<string>(initialDate || todayStr);
-  const [sport, setSport] = useState<string>(initialSport || '');
+  const [sport] = useState<string>(initialSport || '');
   const [availability, setAvailability] = useState<CourtAvailability[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,12 +45,6 @@ export const CourtAvailabilityMatrix = ({
     fetchAvailability();
   }, [fetchAvailability]);
 
-  const handleDateShift = (days: number) => {
-    const current = new Date(date);
-    current.setDate(current.getDate() + days);
-    setDate(current.toISOString().split('T')[0]);
-  };
-
   const handleSlotClick = (courtId: number, slotStart: string, slotEnd: string, isFree: boolean) => {
     if (!isFree) return;
     if (onSelectSlot) {
@@ -69,89 +60,16 @@ export const CourtAvailabilityMatrix = ({
 
   return (
     <div className="card bg-base-100 border border-base-300 shadow-sm rounded-2xl p-5 space-y-5">
-      {/* Control Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-base-300">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="w-56">
-            <DatePicker
-              value={date}
-              onChange={(newDate) => {
-                if (newDate) setDate(newDate);
-              }}
-              placeholder="Select date"
-            />
-          </div>
-
-          <div className="join">
-            <div className="tooltip tooltip-top" data-tip="Previous Day">
-              <button
-                type="button"
-                onClick={() => handleDateShift(-1)}
-                className="join-item btn btn-sm btn-outline"
-              >
-                <FaChevronLeft className="size-3" />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setDate(todayStr)}
-              className="join-item btn btn-sm btn-outline font-semibold"
-            >
-              Today
-            </button>
-            <div className="tooltip tooltip-top" data-tip="Next Day">
-              <button
-                type="button"
-                onClick={() => handleDateShift(1)}
-                className="join-item btn btn-sm btn-outline"
-              >
-                <FaChevronRight className="size-3" />
-              </button>
-            </div>
-          </div>
-
-          <span className="badge badge-neutral font-mono text-xs px-2.5 py-1">
-            {formatDate(date)}
-          </span>
-        </div>
-
-        {/* DaisyUI Dropdown for Sport Filter */}
-        <div className="flex items-center gap-2">
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-sm btn-outline gap-2 capitalize">
-              <FaFilter className="size-3 text-primary" />
-              {sport ? sport : 'All Sports'}
-            </div>
-            <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-20 w-44 p-2 shadow-lg border border-base-300 text-xs">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setSport('')}
-                  className={sport === '' ? 'active font-bold' : ''}
-                >
-                  All Sports
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setSport('tennis')}
-                  className={sport === 'tennis' ? 'active font-bold' : ''}
-                >
-                  Tennis
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setSport('cricket')}
-                  className={sport === 'cricket' ? 'active font-bold' : ''}
-                >
-                  Cricket
-                </button>
-              </li>
-            </ul>
-          </div>
+      {/* Control Bar - Only Date Picker */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-base-300">
+        <div className="w-64 max-w-full">
+          <DatePicker
+            value={date}
+            onChange={(newDate) => {
+              if (newDate) setDate(newDate);
+            }}
+            placeholder="Select date"
+          />
         </div>
       </div>
 

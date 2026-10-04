@@ -7,7 +7,7 @@ export const orderIdParamSchema = z.object({
 
 export const listOrdersQuerySchema = z.object({
   page: z.coerce.number().int().min(1, 'page must be at least 1').default(1),
-  pageSize: z.coerce.number().int().min(1).max(100, 'pageSize cannot exceed 100').default(20),
+  pageSize: z.coerce.number().int().min(1).max(100, 'pageSize cannot exceed 100').default(10),
   orderType: z.enum([OrderType.in_store, OrderType.online, OrderType.bar]).optional(),
   status: z
     .enum([

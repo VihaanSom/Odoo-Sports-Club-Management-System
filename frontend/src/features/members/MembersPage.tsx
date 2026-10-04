@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { FaUsers, FaUserPlus, FaChevronLeft, FaChevronRight, FaRotate } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
+import { useDebounce } from '@/hooks';
 import { SearchBar, FilterToolbar } from '@/components/shared';
 import { Button, Skeleton } from '@/components/ui';
 import { memberService } from '@/services/memberService';
@@ -12,11 +13,12 @@ export const MembersPage = () => {
   const [members, setMembers] = useState<MemberDetail[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 15,
+    pageSize: 10,
     total: 0,
     totalPages: 1,
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +43,7 @@ export const MembersPage = () => {
       const res = await memberService.getAll({
         page: pageToFetch,
         pageSize: pagination.pageSize,
-        search: searchQuery.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
         tier: selectedPlanFilter !== 'all' ? selectedPlanFilter : undefined,
         status: selectedStatusFilter !== 'all' ? selectedStatusFilter : undefined,
       });
@@ -56,15 +58,12 @@ export const MembersPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.page, pagination.pageSize, searchQuery, selectedPlanFilter, selectedStatusFilter]);
+  }, [pagination.page, pagination.pageSize, debouncedSearch, selectedPlanFilter, selectedStatusFilter]);
 
   // Refetch when filters or search change (reset to page 1)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchMembers(1);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedPlanFilter, selectedStatusFilter]);
+    fetchMembers(1);
+  }, [debouncedSearch, selectedPlanFilter, selectedStatusFilter]);
 
   const handleCreateMember = async (payload: CreateMemberPayload) => {
     try {

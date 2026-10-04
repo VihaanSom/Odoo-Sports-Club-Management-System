@@ -1,4 +1,4 @@
-import {  useState, useEffect, useCallback  } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -12,6 +12,7 @@ import {
   FaWineGlass,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
+import { useDebounce, usePagination } from '@/hooks';
 import { orderService } from '@/services/orderService';
 import { formatPaise } from '@/lib/utils';
 import type { Order, OrderType, OrderStatus } from '@/types/orders';
@@ -22,6 +23,7 @@ export const OrdersListPage = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -29,7 +31,7 @@ export const OrdersListPage = () => {
       const response = await orderService.getOrders({
         type: typeFilter === 'all' ? undefined : typeFilter,
         status: statusFilter === 'all' ? undefined : statusFilter,
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
       });
       setOrders(response.data);
     } catch {
@@ -37,11 +39,22 @@ export const OrdersListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [typeFilter, statusFilter, searchQuery]);
+  }, [typeFilter, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: orders.length, pageSize: 10 });
+
+  const paginatedOrders = paginateItems(orders);
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -197,7 +210,7 @@ export const OrdersListPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
+                {paginatedOrders.map((order) => (
                   <tr key={order.id} className="hover">
                     <td className="font-mono font-bold text-xs">
                       <Link
@@ -263,6 +276,40 @@ export const OrdersListPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* DaisyUI Pagination Controls */}
+        {orders.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300">
+            <span className="text-xs text-base-content/60">
+              Showing {startIndex + 1} to {endIndex} of {orders.length} orders
+            </span>
+
+            <div className="join">
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+                className="join-item btn btn-xs sm:btn-sm btn-outline"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs sm:btn-sm btn-outline no-animation pointer-events-none font-mono"
+              >
+                {page} / {totalPages}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages}
+                className="join-item btn btn-xs sm:btn-sm btn-outline"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

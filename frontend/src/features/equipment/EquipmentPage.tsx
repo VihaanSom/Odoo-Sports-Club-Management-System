@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
-import { FaTrophy, FaBoxesStacked, FaPlus } from 'react-icons/fa6';
+import { FaTrophy, FaBoxesStacked, FaPlus, FaCartShopping } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
@@ -97,24 +98,32 @@ export const EquipmentPage = () => {
           </p>
         </div>
 
-        {canManage && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              leftIcon={<FaBoxesStacked className="size-4" />}
-              onClick={() => toast('Odoo inventory sync triggered')}
-            >
-              Sync Inventory
-            </Button>
-            <Button
-              variant="primary"
-              leftIcon={<FaPlus className="size-4" />}
-              onClick={() => setIsModalOpen(true)}
-            >
-              New Equipment
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isMember && (
+            <Link to="/orders/new" className="btn btn-primary btn-sm gap-2">
+              <FaCartShopping className="size-3.5" /> Order Gear
+            </Link>
+          )}
+
+          {canManage && (
+            <>
+              <Button
+                variant="outline"
+                leftIcon={<FaBoxesStacked className="size-4" />}
+                onClick={() => toast('Odoo inventory sync triggered')}
+              >
+                Sync Inventory
+              </Button>
+              <Button
+                variant="primary"
+                leftIcon={<FaPlus className="size-4" />}
+                onClick={() => setIsModalOpen(true)}
+              >
+                New Equipment
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <EquipmentCategoryTabs

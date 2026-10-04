@@ -1,4 +1,5 @@
-import {  useState, useEffect, useCallback  } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
   FaTrophy,
@@ -114,15 +115,23 @@ export const MenuItemsPage = () => {
           </p>
         </div>
 
-        {canEdit && (
-          <button
-            type="button"
-            onClick={handleOpenCreateModal}
-            className="btn btn-primary btn-sm gap-2"
-          >
-            <FaPlus className="size-4" /> New Menu Item
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isMember && (
+            <Link to="/orders/new" className="btn btn-primary btn-sm gap-2">
+              <FaUtensils className="size-3.5" /> Order Food & Drinks
+            </Link>
+          )}
+
+          {canEdit && (
+            <button
+              type="button"
+              onClick={handleOpenCreateModal}
+              className="btn btn-primary btn-sm gap-2"
+            >
+              <FaPlus className="size-4" /> New Menu Item
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Snapshot Cards */}

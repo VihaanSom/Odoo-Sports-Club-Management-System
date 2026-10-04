@@ -132,7 +132,7 @@ export class OrdersService {
 
     // Members see strictly their own orders
     if (caller.role === 'member') {
-      where.memberId = caller.id;
+      where.memberId = caller.sub ?? caller.id;
     } else if (query.memberId) {
       where.memberId = query.memberId;
     }
@@ -211,15 +211,16 @@ export class OrdersService {
    */
   async createOrder(input: CreateOrderInput, caller: AuthUser): Promise<OrderResponse> {
     // Member authorization check
+    const callerMemberId = caller.sub ?? caller.id;
     let targetMemberId = input.memberId ?? null;
     if (caller.role === 'member') {
-      if (targetMemberId && targetMemberId !== caller.id) {
+      if (targetMemberId && targetMemberId !== callerMemberId) {
         throw new ForbiddenError(
           'Members cannot create orders on behalf of other users.',
           'FORBIDDEN'
         );
       }
-      targetMemberId = caller.id;
+      targetMemberId = callerMemberId;
     }
 
     return await prisma.$transaction(async (tx) => {

@@ -69,6 +69,50 @@ export const BookingWizard = ({
   const [paymentMethod, setPaymentMethod] = useState<BookingPaymentMethod>('plan');
   const [notes, setNotes] = useState<string>('');
 
+  // Check if selected court slot is Friday night (Friday, 18:00 onwards)
+  const isFridayDate = (dStr: string) => {
+    if (!dStr) return false;
+    const [y, m, d] = dStr.split('-').map(Number);
+    const dayOfWeek = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    return dayOfWeek === 5; // 5 = Friday
+  };
+
+  const isNightSlot = (startIso: string) => {
+    if (!startIso) return true;
+    const startHour = new Date(startIso).getUTCHours();
+    return startHour >= 18;
+  };
+
+  const isFridayNight = isFridayDate(date) && isNightSlot(slotStart);
+
+  // Auto-switch away from social play if slot/date changes to non-Friday night
+  useEffect(() => {
+    if (!isFridayNight && bookingType === 'social') {
+      setBookingType(isMember ? 'member' : 'walk_in');
+    }
+  }, [isFridayNight, bookingType, isMember]);
+
+  // Calculate final payment price based on type, tier, and participant count
+  const calculateFinalPrice = (): number => {
+    if (bookingType === 'walk_in') {
+      return 500;
+    }
+    if (bookingType === 'social') {
+      return Math.max(participants.length, 2) * 150;
+    }
+    // Member booking
+    if (paymentMethod === 'plan') {
+      return 0;
+    }
+    const tier = user?.tier || 'Gold';
+    if (tier === 'Gold') return 0;
+    if (tier === 'Silver') return 200;
+    if (tier === 'Junior') return 100;
+    return 200;
+  };
+
+  const finalPrice = calculateFinalPrice();
+
   const handleNext = () => {
     if (step === 1) {
       if (!slotStart || !slotEnd) {
@@ -89,6 +133,10 @@ export const BookingWizard = ({
         }
         setStep2Errors({});
       } else if (bookingType === 'social') {
+        if (!isFridayNight) {
+          toast.error('Social Play is only available on Friday nights (6:00 PM onwards)');
+          return;
+        }
         if (participants.length < 2) {
           toast.error('Social bookings require at least 2 participants');
           return;
@@ -195,26 +243,58 @@ export const BookingWizard = ({
       {step === 2 && (
         <div className="space-y-5">
           {isMember ? (
-            <div className="card bg-base-200/50 border border-base-300 p-5 rounded-2xl space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
-                  Account Details
-                </span>
-                <span className="badge badge-primary font-bold">
-                  {user?.tier || 'Member'} Tier
-                </span>
-              </div>
-              <div className="space-y-1">
-                <div className="text-base font-bold text-base-content">
-                  {memberName}
+            <div className="space-y-4">
+              {isFridayNight && (
+                <div className="flex items-center gap-2 p-2 bg-base-200/60 rounded-xl border border-base-300 text-xs">
+                  <span className="font-semibold text-base-content/70">Friday Night Special:</span>
+                  <button
+                    type="button"
+                    onClick={() => setBookingType('member')}
+                    className={`btn btn-xs ${bookingType === 'member' ? 'btn-primary' : 'btn-ghost'}`}
+                  >
+                    Member Booking
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingType('social')}
+                    className={`btn btn-xs ${bookingType === 'social' ? 'btn-primary' : 'btn-ghost'}`}
+                  >
+                    🌟 Social Play Group
+                  </button>
                 </div>
-                <div className="text-xs text-base-content/60 font-mono">
-                  {user?.email} &bull; Member #{memberId}
+              )}
+
+              {bookingType === 'social' ? (
+                <SocialPlayForm
+                  participants={participants}
+                  onAddParticipant={(p) => setParticipants([...participants, p])}
+                  onRemoveParticipant={(idx) =>
+                    setParticipants(participants.filter((_, i) => i !== idx))
+                  }
+                />
+              ) : (
+                <div className="card bg-base-200/50 border border-base-300 p-5 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                      Account Details
+                    </span>
+                    <span className="badge badge-primary font-bold">
+                      {user?.tier || 'Member'} Tier
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-base font-bold text-base-content">
+                      {memberName}
+                    </div>
+                    <div className="text-xs text-base-content/60 font-mono">
+                      {user?.email} &bull; Member #{memberId}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-base-100 rounded-xl border border-base-300 text-xs text-base-content/70">
+                    This court reservation will be registered under your club membership account.
+                  </div>
                 </div>
-              </div>
-              <div className="p-3 bg-base-100 rounded-xl border border-base-300 text-xs text-base-content/70">
-                This court reservation will be registered under your club membership account.
-              </div>
+              )}
             </div>
           ) : (
             <>
@@ -224,7 +304,7 @@ export const BookingWizard = ({
                     Booking Type <span className="text-error">*</span>
                   </span>
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setBookingType('member')}
@@ -249,14 +329,26 @@ export const BookingWizard = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setBookingType('social')}
-                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                    disabled={!isFridayNight}
+                    onClick={() => {
+                      if (!isFridayNight) {
+                        toast.error('Social Play is only available on Friday nights (6:00 PM onwards).');
+                        return;
+                      }
+                      setBookingType('social');
+                    }}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
                       bookingType === 'social'
                         ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                        : !isFridayNight
+                        ? 'border-base-300 opacity-40 cursor-not-allowed bg-base-200/40 text-base-content/60'
                         : 'border-base-300 hover:bg-base-200/50'
                     }`}
                   >
-                    Social Play Group
+                    <span>Social Play Group</span>
+                    <span className="text-[10px] font-normal">
+                      {isFridayNight ? '🌟 Open Tonight' : 'Fri Nights Only (6 PM+)'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -303,6 +395,7 @@ export const BookingWizard = ({
           onChangePaymentMethod={setPaymentMethod}
           notes={notes}
           onChangeNotes={setNotes}
+          finalPrice={finalPrice}
         />
       )}
 
@@ -348,6 +441,12 @@ export const BookingWizard = ({
                 <span className="text-base-content/60 block">Payment Method</span>
                 <span className="badge badge-sm badge-primary uppercase font-semibold">
                   {paymentMethod}
+                </span>
+              </div>
+              <div className="col-span-2 pt-2 border-t border-base-300/60 flex items-center justify-between">
+                <span className="text-base-content/70 font-semibold">Final Payment Price</span>
+                <span className="text-lg font-extrabold text-primary">
+                  {finalPrice === 0 ? '₹0 (Included in Plan)' : `₹${finalPrice.toLocaleString('en-IN')}`}
                 </span>
               </div>
             </div>

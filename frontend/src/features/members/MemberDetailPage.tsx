@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa6';
 import { Button, Skeleton } from '@/components/ui';
 import { memberService } from '@/services/memberService';
+import { bookingService } from '@/services/bookingService';
 import type {
   MemberDetail,
   MemberActivityHistory,
@@ -44,16 +45,52 @@ export const MemberDetailPage = () => {
     if (!id) return;
     try {
       setIsLoading(true);
-      const [memberData, historyData] = await Promise.all([
+      const [memberData, historyData, directBookings] = await Promise.all([
         memberService.getById(id),
-        memberService.getHistory(id),
+        memberService.getHistory(id).catch(() => null),
+        bookingService.getBookings({ memberId: Number(id), pageSize: 50 }).catch(() => null),
       ]);
 
       if (memberData) {
         setMember(memberData);
       }
+
+      const directList = (directBookings?.data || []).map((b) => ({
+        id: b.id,
+        courtName: b.courtName,
+        sport: b.sport || 'court',
+        slotStart: b.slotStart,
+        slotEnd: b.slotEnd,
+        status: b.status,
+        amountPaidPaise: b.amountPaidPaise,
+      }));
+
+      // Combine and deduplicate bookings by ID
+      const historyList = historyData?.bookings || [];
+      const combinedMap = new Map<number, any>();
+      for (const b of [...historyList, ...directList]) {
+        const numId = Number(b.id);
+        if (!combinedMap.has(numId)) {
+          combinedMap.set(numId, { ...b, id: numId });
+        }
+      }
+      const allBookings = Array.from(combinedMap.values()).sort(
+        (a, b) => new Date(b.slotStart).getTime() - new Date(a.slotStart).getTime()
+      );
+
       if (historyData) {
-        setHistory(historyData);
+        setHistory({
+          ...historyData,
+          bookings: allBookings,
+        });
+      } else if (allBookings.length > 0) {
+        setHistory({
+          bookings: allBookings,
+          orders: [],
+          barTabs: [],
+          ledger: [],
+          totalSpentPaise: 0,
+        });
       }
     } catch {
       toast.error('Failed to load member profile');

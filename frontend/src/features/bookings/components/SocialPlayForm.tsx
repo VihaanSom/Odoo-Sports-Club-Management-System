@@ -46,6 +46,11 @@ export const SocialPlayForm = ({
         </span>
       </div>
 
+      <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-xs flex items-center justify-between">
+        <span className="font-bold text-primary">🌟 Friday Night Social Play Session</span>
+        <span className="font-semibold text-base-content/70">6:00 PM - 11:00 PM &bull; ₹150 / player</span>
+      </div>
+
       <div className="p-3 rounded-xl bg-base-200/50 border border-base-300 space-y-3">
         <div className="flex items-center gap-2">
           <button

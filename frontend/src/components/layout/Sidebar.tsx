@@ -80,6 +80,11 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
           icon: <FaDumbbell className="size-4" />,
         },
         {
+          label: 'My Orders',
+          path: '/orders',
+          icon: <FaReceipt className="size-4" />,
+        },
+        {
           label: 'Membership Plans',
           path: '/memberships',
           icon: <FaIdCard className="size-4" />,

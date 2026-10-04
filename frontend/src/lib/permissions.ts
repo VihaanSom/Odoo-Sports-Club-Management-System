@@ -49,7 +49,7 @@ export const canManageMenu = (role?: string): boolean =>
  * Check if the user can access Orders & Desk POS
  */
 export const canAccessOrdersPOS = (role?: string): boolean =>
-  ['admin', 'front_desk', 'shop'].includes(role || '');
+  ['admin', 'front_desk', 'shop', 'member'].includes(role || '');
 
 /**
  * Check if the user can create, update, or rent equipment in Pro Shop
