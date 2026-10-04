@@ -199,228 +199,228 @@ export const ReportsHubPage = () => {
           </div>
         </div>
 
-      {/* Top Level KPIs */}
-      {kpis && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
-            <div className="text-[11px] text-base-content/60 uppercase font-semibold">Total Revenue</div>
-            <div className="text-xl font-black text-primary mt-1 font-mono">
-              ₹{(kpis.totalRevenuePaise / 10000000).toFixed(2)} Cr
+        {/* Top Level KPIs */}
+        {kpis && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
+              <div className="text-[11px] text-base-content/60 uppercase font-semibold">Total Revenue</div>
+              <div className="text-xl font-black text-primary mt-1 font-mono">
+                ₹{(kpis.totalRevenuePaise / 10000000).toFixed(2)}L
+              </div>
+              <div className="text-[10px] text-success mt-0.5">₹{(kpis.totalRevenuePaise / 100).toLocaleString('en-IN')}</div>
             </div>
-            <div className="text-[10px] text-success mt-0.5">₹{(kpis.totalRevenuePaise / 100).toLocaleString('en-IN')}</div>
-          </div>
 
-          <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
-            <div className="text-[11px] text-base-content/60 uppercase font-semibold">Active Members</div>
-            <div className="text-xl font-black mt-1 font-mono">{kpis.activeMembersCount}</div>
-            <div className="text-[10px] text-success mt-0.5">99.4% retention</div>
-          </div>
-
-          <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
-            <div className="text-[11px] text-base-content/60 uppercase font-semibold">Today Bookings</div>
-            <div className="text-xl font-black mt-1 font-mono">{kpis.todayBookingsCount}</div>
-            <div className="text-[10px] text-base-content/60 mt-0.5">Across 12 courts</div>
-          </div>
-
-          <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
-            <div className="text-[11px] text-base-content/60 uppercase font-semibold">Court Utilization</div>
-            <div className="text-xl font-black text-warning mt-1 font-mono">
-              {kpis.courtUtilizationRate}%
+            <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
+              <div className="text-[11px] text-base-content/60 uppercase font-semibold">Active Members</div>
+              <div className="text-xl font-black mt-1 font-mono">{kpis.activeMembersCount}</div>
+              <div className="text-[10px] text-success mt-0.5">99.4% retention</div>
             </div>
-            <div className="text-[10px] text-base-content/60 mt-0.5">Peak @ 18:00 - 21:00</div>
-          </div>
 
-          <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
-            <div className="text-[11px] text-base-content/60 uppercase font-semibold">Bar & POS Rev</div>
-            <div className="text-xl font-black text-accent mt-1 font-mono">
-              ₹{(kpis.barRevenuePaise / 100000).toFixed(1)}L
+            <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
+              <div className="text-[11px] text-base-content/60 uppercase font-semibold">Today Bookings</div>
+              <div className="text-xl font-black mt-1 font-mono">{kpis.todayBookingsCount}</div>
+              <div className="text-[10px] text-base-content/60 mt-0.5">Across 12 courts</div>
             </div>
-            <div className="text-[10px] text-base-content/60 mt-0.5">342 tabs logged</div>
-          </div>
 
-          <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
-            <div className="text-[11px] text-base-content/60 uppercase font-semibold">Staff Duty / Leave</div>
-            <div className="text-xl font-black mt-1 font-mono">
-              {kpis.staffOnDutyCount} / {kpis.pendingLeavesCount}
+            <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
+              <div className="text-[11px] text-base-content/60 uppercase font-semibold">Court Utilization</div>
+              <div className="text-xl font-black text-warning mt-1 font-mono">
+                {kpis.courtUtilizationRate}%
+              </div>
+              <div className="text-[10px] text-base-content/60 mt-0.5">Peak @ 18:00 - 21:00</div>
             </div>
-            <div className="text-[10px] text-warning mt-0.5">{kpis.pendingLeavesCount} pending approval</div>
+
+            <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
+              <div className="text-[11px] text-base-content/60 uppercase font-semibold">Bar & POS Rev</div>
+              <div className="text-xl font-black text-accent mt-1 font-mono">
+                ₹{(kpis.barRevenuePaise / 100000).toFixed(1)}L
+              </div>
+              <div className="text-[10px] text-base-content/60 mt-0.5">342 tabs logged</div>
+            </div>
+
+            <div className="card bg-base-100 border border-base-300 p-3 shadow-xs">
+              <div className="text-[11px] text-base-content/60 uppercase font-semibold">Staff Duty / Leave</div>
+              <div className="text-xl font-black mt-1 font-mono">
+                {kpis.staffOnDutyCount} / {kpis.pendingLeavesCount}
+              </div>
+              <div className="text-[10px] text-warning mt-0.5">{kpis.pendingLeavesCount} pending approval</div>
+            </div>
           </div>
+        )}
+
+        {/* Analytics Tabs */}
+        <div className="tabs tabs-box bg-base-200/60 p-1 rounded-xl">
+          <button
+            type="button"
+            className={`tab gap-2 text-xs font-semibold ${activeTab === 'revenue' ? 'tab-active' : ''}`}
+            onClick={() => setActiveTab('revenue')}
+          >
+            <FaReceipt /> Revenue Streams
+          </button>
+          <button
+            type="button"
+            className={`tab gap-2 text-xs font-semibold ${activeTab === 'members' ? 'tab-active' : ''}`}
+            onClick={() => setActiveTab('members')}
+          >
+            <FaUsers /> Member Growth & Churn
+          </button>
+          <button
+            type="button"
+            className={`tab gap-2 text-xs font-semibold ${activeTab === 'bar' ? 'tab-active' : ''}`}
+            onClick={() => setActiveTab('bar')}
+          >
+            <FaWineGlass /> Bar & Bistro Analytics
+          </button>
         </div>
-      )}
 
-      {/* Analytics Tabs */}
-      <div className="tabs tabs-box bg-base-200/60 p-1 rounded-xl">
-        <button
-          type="button"
-          className={`tab gap-2 text-xs font-semibold ${activeTab === 'revenue' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('revenue')}
-        >
-          <FaReceipt /> Revenue Streams
-        </button>
-        <button
-          type="button"
-          className={`tab gap-2 text-xs font-semibold ${activeTab === 'members' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('members')}
-        >
-          <FaUsers /> Member Growth & Churn
-        </button>
-        <button
-          type="button"
-          className={`tab gap-2 text-xs font-semibold ${activeTab === 'bar' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('bar')}
-        >
-          <FaWineGlass /> Bar & Bistro Analytics
-        </button>
-      </div>
-
-      {/* Tab 1: Revenue Streams */}
-      {activeTab === 'revenue' && revenue && (
-        <div className="space-y-6">
-          <div className="card bg-base-100 border border-base-300 p-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-              <div>
-                <h3 className="font-bold text-base">Monthly Revenue Breakdown</h3>
-                <p className="text-xs text-base-content/60">
-                  Performance across memberships, court rentals, bistro POS, and sports gear.
-                </p>
-              </div>
-              <div className="badge badge-success badge-sm font-semibold">
-                +{revenue.growthPercentage}% vs prev quarter
-              </div>
-            </div>
-
-            <RevenueLineChart data={revenue.timeSeries} />
-          </div>
-
-          {/* Breakdown cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {revenue.categoryBreakdown.map((cat) => (
-              <div key={cat.category} className="card bg-base-100 border border-base-300 p-4 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-base-content/70 font-semibold">{cat.category}</span>
-                  <span className="badge badge-sm badge-outline font-mono">{cat.percentage}%</span>
+        {/* Tab 1: Revenue Streams */}
+        {activeTab === 'revenue' && revenue && (
+          <div className="space-y-6">
+            <div className="card bg-base-100 border border-base-300 p-5 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <div>
+                  <h3 className="font-bold text-base">Monthly Revenue Breakdown</h3>
+                  <p className="text-xs text-base-content/60">
+                    Performance across memberships, court rentals, bistro POS, and sports gear.
+                  </p>
                 </div>
-                <div className="text-xl font-bold font-mono mt-2">
-                  ₹{(cat.amountPaise / 100).toLocaleString('en-IN')}
+                <div className="badge badge-success badge-sm font-semibold">
+                  +{revenue.growthPercentage}% vs prev quarter
                 </div>
-                <progress
-                  className="progress progress-primary w-full mt-3 h-2"
-                  value={cat.percentage}
-                  max="100"
-                />
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-
-
-      {/* Tab 3: Member Growth & Churn */}
-      {activeTab === 'members' && (
-        <div className="card bg-base-100 border border-base-300 p-5 shadow-xs space-y-4">
-          <div>
-            <h3 className="font-bold text-base">Member Retention & Acquisition Trend</h3>
-            <p className="text-xs text-base-content/60">
-              Monthly new member intake vs attrition rates with retention benchmark curve.
-            </p>
-          </div>
-          <MemberGrowthLine data={memberGrowth} />
-        </div>
-      )}
-
-      {/* Tab 4: Bar & Bistro Analytics */}
-      {activeTab === 'bar' && barAnalytics && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
-              <div className="text-xs text-base-content/70 font-semibold uppercase">Total Tabs</div>
-              <div className="text-2xl font-black mt-1 font-mono">{barAnalytics.totalTabs}</div>
+              <RevenueLineChart data={revenue.timeSeries} />
             </div>
-            <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
-              <div className="text-xs text-base-content/70 font-semibold uppercase">Open Tabs</div>
-              <div className="text-2xl font-black text-warning mt-1 font-mono">
-                {barAnalytics.openTabsCount}
-              </div>
-            </div>
-            <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
-              <div className="text-xs text-base-content/70 font-semibold uppercase">Average Tab</div>
-              <div className="text-2xl font-black text-primary mt-1 font-mono">
-                ₹{(barAnalytics.averageTabPaise / 100).toLocaleString('en-IN')}
-              </div>
-            </div>
-            <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
-              <div className="text-xs text-base-content/70 font-semibold uppercase">Bistro Revenue</div>
-              <div className="text-2xl font-black text-success mt-1 font-mono">
-                ₹{(barAnalytics.totalRevenuePaise / 100).toLocaleString('en-IN')}
-              </div>
+
+            {/* Breakdown cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {revenue.categoryBreakdown.map((cat) => (
+                <div key={cat.category} className="card bg-base-100 border border-base-300 p-4 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-base-content/70 font-semibold">{cat.category}</span>
+                    <span className="badge badge-sm badge-outline font-mono">{cat.percentage}%</span>
+                  </div>
+                  <div className="text-xl font-bold font-mono mt-2">
+                    ₹{(cat.amountPaise / 100).toLocaleString('en-IN')}
+                  </div>
+                  <progress
+                    className="progress progress-primary w-full mt-3 h-2"
+                    value={cat.percentage}
+                    max="100"
+                  />
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
+
+
+        {/* Tab 3: Member Growth & Churn */}
+        {activeTab === 'members' && (
           <div className="card bg-base-100 border border-base-300 p-5 shadow-xs space-y-4">
-            <h3 className="font-bold text-base">Top Selling Bistro & Lounge Items</h3>
-            <div className="overflow-x-auto">
-              <table className="table table-sm w-full">
-                <thead className="bg-base-200/60 text-xs">
-                  <tr>
-                    <th>Item</th>
-                    <th>Category</th>
-                    <th className="text-center">Units Sold</th>
-                    <th className="text-right">Total Revenue (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedTopSellers.map((item) => (
-                    <tr key={item.id} className="hover:bg-base-200/40">
-                      <td className="font-semibold text-xs flex items-center gap-2">
-                        <FaCircleCheck className="text-success text-xs" /> {item.name}
-                      </td>
-                      <td>
-                        <span className="badge badge-outline badge-xs">{item.category}</span>
-                      </td>
-                      <td className="text-center font-mono font-medium text-xs">{item.unitsSold}</td>
-                      <td className="text-right font-mono font-bold text-xs text-primary">
-                        ₹{(item.revenuePaise / 100).toLocaleString('en-IN')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div>
+              <h3 className="font-bold text-base">Member Retention & Acquisition Trend</h3>
+              <p className="text-xs text-base-content/60">
+                Monthly new member intake vs attrition rates with retention benchmark curve.
+              </p>
             </div>
-            {topSellersTotalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-base-300 text-xs">
-                <span className="text-base-content/60">
-                  Showing {topSellersStartIndex + 1} to {topSellersEndIndex} of {topSellersList.length} items
-                </span>
-                <div className="join">
-                  <button
-                    type="button"
-                    onClick={() => setTopSellersPage(Math.max(1, topSellersPage - 1))}
-                    disabled={topSellersPage <= 1}
-                    className="join-item btn btn-xs btn-outline"
-                  >
-                    «
-                  </button>
-                  <button
-                    type="button"
-                    className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
-                  >
-                    {topSellersPage} / {topSellersTotalPages}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTopSellersPage(Math.min(topSellersTotalPages, topSellersPage + 1))}
-                    disabled={topSellersPage >= topSellersTotalPages}
-                    className="join-item btn btn-xs btn-outline"
-                  >
-                    »
-                  </button>
+            <MemberGrowthLine data={memberGrowth} />
+          </div>
+        )}
+
+        {/* Tab 4: Bar & Bistro Analytics */}
+        {activeTab === 'bar' && barAnalytics && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
+                <div className="text-xs text-base-content/70 font-semibold uppercase">Total Tabs</div>
+                <div className="text-2xl font-black mt-1 font-mono">{barAnalytics.totalTabs}</div>
+              </div>
+              <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
+                <div className="text-xs text-base-content/70 font-semibold uppercase">Open Tabs</div>
+                <div className="text-2xl font-black text-warning mt-1 font-mono">
+                  {barAnalytics.openTabsCount}
                 </div>
               </div>
-            )}
+              <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
+                <div className="text-xs text-base-content/70 font-semibold uppercase">Average Tab</div>
+                <div className="text-2xl font-black text-primary mt-1 font-mono">
+                  ₹{(barAnalytics.averageTabPaise / 100).toLocaleString('en-IN')}
+                </div>
+              </div>
+              <div className="card bg-base-100 border border-base-300 p-4 shadow-xs">
+                <div className="text-xs text-base-content/70 font-semibold uppercase">Bistro Revenue</div>
+                <div className="text-2xl font-black text-success mt-1 font-mono">
+                  ₹{(barAnalytics.totalRevenuePaise / 100).toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 border border-base-300 p-5 shadow-xs space-y-4">
+              <h3 className="font-bold text-base">Top Selling Bistro & Lounge Items</h3>
+              <div className="overflow-x-auto">
+                <table className="table table-sm w-full">
+                  <thead className="bg-base-200/60 text-xs">
+                    <tr>
+                      <th>Item</th>
+                      <th>Category</th>
+                      <th className="text-center">Units Sold</th>
+                      <th className="text-right">Total Revenue (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedTopSellers.map((item) => (
+                      <tr key={item.id} className="hover:bg-base-200/40">
+                        <td className="font-semibold text-xs flex items-center gap-2">
+                          <FaCircleCheck className="text-success text-xs" /> {item.name}
+                        </td>
+                        <td>
+                          <span className="badge badge-outline badge-xs">{item.category}</span>
+                        </td>
+                        <td className="text-center font-mono font-medium text-xs">{item.unitsSold}</td>
+                        <td className="text-right font-mono font-bold text-xs text-primary">
+                          ₹{(item.revenuePaise / 100).toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {topSellersTotalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-base-300 text-xs">
+                  <span className="text-base-content/60">
+                    Showing {topSellersStartIndex + 1} to {topSellersEndIndex} of {topSellersList.length} items
+                  </span>
+                  <div className="join">
+                    <button
+                      type="button"
+                      onClick={() => setTopSellersPage(Math.max(1, topSellersPage - 1))}
+                      disabled={topSellersPage <= 1}
+                      className="join-item btn btn-xs btn-outline"
+                    >
+                      «
+                    </button>
+                    <button
+                      type="button"
+                      className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+                    >
+                      {topSellersPage} / {topSellersTotalPages}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTopSellersPage(Math.min(topSellersTotalPages, topSellersPage + 1))}
+                      disabled={topSellersPage >= topSellersTotalPages}
+                      className="join-item btn btn-xs btn-outline"
+                    >
+                      »
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
 
       {/* Preview Modal for Executive Report */}
