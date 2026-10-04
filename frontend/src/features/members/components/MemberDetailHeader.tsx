@@ -84,7 +84,7 @@ export const MemberDetailHeader = ({
             src={member.photoUrl || member.avatarUrl}
             fallbackText={displayName}
             size="xl"
-            className="ring-2 ring-primary/30"
+            className="rounded-full ring-2 ring-primary/30"
           />
 
           <div className="space-y-1.5">

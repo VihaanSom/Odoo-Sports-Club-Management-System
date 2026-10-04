@@ -70,7 +70,7 @@ export const BookingsTable = ({ bookings, onCancel }: BookingsTableProps) => {
 
                 const priceDisplay = detail
                   ? (detail.amountPaidPaise / 100).toFixed(0)
-                  : legacy
+                  : legacy && legacy.totalPrice != null
                   ? legacy.totalPrice.toString()
                   : '0';
 

@@ -20,6 +20,9 @@ import { formatPaise } from '@/lib/utils';
 import type { OrderType } from '@/types/orders';
 import { OrderItemSelector, type SelectedOrderItem } from './components/OrderItemSelector';
 
+import { useAuthStore } from '@/stores/authStore';
+import { isMemberRole } from '@/lib/permissions';
+
 const newOrderSchema = z.object({
   orderType: z.enum(['in_store', 'online', 'bar'] as const),
   memberId: z.string().optional(),
@@ -32,13 +35,18 @@ type NewOrderFormData = z.infer<typeof newOrderSchema>;
 
 export const NewOrderPage = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isMember = isMemberRole(user?.role);
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedItems, setSelectedItems] = useState<SelectedOrderItem[]>([]);
   const [members, setMembers] = useState<MemberDetail[]>([]);
 
   useEffect(() => {
-    memberService.getAll({ pageSize: 100 }).then(setMembers).catch(() => {});
-  }, []);
+    if (!isMember) {
+      memberService.getAll({ pageSize: 100 }).then(setMembers).catch(() => {});
+    }
+  }, [isMember]);
 
   const {
     register,
@@ -50,7 +58,7 @@ export const NewOrderPage = () => {
     mode: 'onTouched',
     defaultValues: {
       orderType: 'in_store',
-      memberId: '',
+      memberId: isMember && user?.id ? String(user.id) : '',
       paymentMethod: 'card',
       deliveryAddress: '',
       notes: '',
@@ -60,7 +68,9 @@ export const NewOrderPage = () => {
   const orderType = watch('orderType');
   const selectedMemberId = watch('memberId');
 
-  const selectedMember = selectedMemberId
+  const selectedMember = isMember
+    ? null
+    : selectedMemberId
     ? members.find((m) => String(m.id) === String(selectedMemberId))
     : null;
 
@@ -117,12 +127,16 @@ export const NewOrderPage = () => {
     0
   );
 
+  const memberTier = isMember
+    ? user?.tier || 'Gold'
+    : selectedMember?.tier || (selectedMember as any)?.membershipPlan;
+
   const discountRate =
-    selectedMember?.tier === 'Gold' || (selectedMember as any)?.membershipPlan === 'Gold'
+    memberTier === 'Gold'
       ? 0.15
-      : selectedMember?.tier === 'Silver' || (selectedMember as any)?.membershipPlan === 'Silver'
+      : memberTier === 'Silver'
       ? 0.10
-      : selectedMember?.tier === 'Junior' || (selectedMember as any)?.membershipPlan === 'Junior'
+      : memberTier === 'Junior'
       ? 0.05
       : 0;
 
@@ -138,7 +152,7 @@ export const NewOrderPage = () => {
 
     try {
       const order = await orderService.createOrder({
-        memberId: values.memberId ? Number(values.memberId) : null,
+        memberId: isMember && user?.id ? user.id : values.memberId ? Number(values.memberId) : null,
         orderType: values.orderType as OrderType,
         paymentMethod: values.paymentMethod,
         deliveryAddress: values.deliveryAddress || undefined,
@@ -259,27 +273,50 @@ export const NewOrderPage = () => {
               </div>
             </div>
 
-            <div className="form-control">
-              <label className="label py-1">
-                <span className="label-text font-semibold text-xs uppercase tracking-wide">
-                  Customer / Member Account (Optional)
+            {isMember ? (
+              <div className="card bg-base-200/50 border border-base-300 p-4 rounded-xl space-y-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-base-content/60">
+                  Customer Account
                 </span>
-              </label>
-              <select
-                className="select select-bordered w-full text-sm"
-                {...register('memberId')}
-              >
-                <option value="">Walk-in Customer (No Member Perks)</option>
-                {members.map((m) => (
-                  <option key={m.id} value={String(m.id)}>
-                    {m.name || `${m.firstName} ${m.lastName}`.trim()} &bull; {m.tier} ({m.email})
-                  </option>
-                ))}
-              </select>
-              <span className="text-base-content/60 text-xs mt-1">
-                Gold members receive 15% discount; Silver receives 10%; Junior receives 5%.
-              </span>
-            </div>
+                <div className="text-sm font-bold text-base-content">
+                  {user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email}
+                </div>
+                <div className="text-xs text-base-content/60 font-mono">
+                  {user?.email} &bull; Tier: <span className="badge badge-primary badge-xs font-bold">{user?.tier || 'Member'}</span>
+                </div>
+                <div className="text-[11px] text-success font-medium mt-1">
+                  {user?.tier === 'Gold'
+                    ? '15% Gold Member Discount Applied'
+                    : user?.tier === 'Silver'
+                    ? '10% Silver Member Discount Applied'
+                    : user?.tier === 'Junior'
+                    ? '5% Junior Member Discount Applied'
+                    : 'Member perks applied'}
+                </div>
+              </div>
+            ) : (
+              <div className="form-control">
+                <label className="label py-1">
+                  <span className="label-text font-semibold text-xs uppercase tracking-wide">
+                    Customer / Member Account (Optional)
+                  </span>
+                </label>
+                <select
+                  className="select select-bordered w-full text-sm"
+                  {...register('memberId')}
+                >
+                  <option value="">Walk-in Customer (No Member Perks)</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={String(m.id)}>
+                      {m.name || `${m.firstName} ${m.lastName}`.trim()} &bull; {m.tier} ({m.email})
+                    </option>
+                  ))}
+                </select>
+                <span className="text-base-content/60 text-xs mt-1">
+                  Gold members receive 15% discount; Silver receives 10%; Junior receives 5%.
+                </span>
+              </div>
+            )}
 
             {orderType === 'online' && (
               <div className="form-control">

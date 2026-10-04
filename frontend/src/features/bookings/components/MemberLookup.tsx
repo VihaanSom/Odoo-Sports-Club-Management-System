@@ -1,5 +1,6 @@
-import {  useState, useEffect  } from 'react';
+import { useState, useEffect } from 'react';
 import { FaMagnifyingGlass, FaUserCheck, FaUser } from 'react-icons/fa6';
+import { useDebounce } from '@/hooks';
 import { memberService } from '@/services/memberService';
 import type { Member } from '@/types/models';
 
@@ -13,6 +14,7 @@ export const MemberLookup = ({
   onSelectMember,
 }: MemberLookupProps) => {
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 300);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedName, setSelectedName] = useState<string>('');
@@ -26,7 +28,7 @@ export const MemberLookup = ({
         setMembers(safe);
         if (selectedMemberId && safe.length > 0) {
           const match = safe.find((m) => String(m.id) === String(selectedMemberId));
-          if (match) setSelectedName(match.name);
+          if (match && match.name) setSelectedName(match.name);
         }
       } catch {
         setMembers([]);
@@ -38,14 +40,14 @@ export const MemberLookup = ({
   }, [selectedMemberId]);
 
   const safeMembers = Array.isArray(members) ? members : [];
-  const filtered = query.trim()
+  const filtered = debouncedQuery.trim()
     ? safeMembers.filter(
         (m) =>
-          (m.name && m.name.toLowerCase().includes(query.toLowerCase())) ||
-          (m.email && m.email.toLowerCase().includes(query.toLowerCase())) ||
-          (m.phone && m.phone.includes(query))
+          (m.name && m.name.toLowerCase().includes(debouncedQuery.toLowerCase())) ||
+          (m.email && m.email.toLowerCase().includes(debouncedQuery.toLowerCase())) ||
+          (m.phone && m.phone.includes(debouncedQuery))
       )
-    : safeMembers.slice(0, 5);
+    : safeMembers.slice(0, 10);
 
   return (
     <div className="space-y-3">
@@ -92,8 +94,9 @@ export const MemberLookup = ({
                 key={m.id}
                 type="button"
                 onClick={() => {
-                  setSelectedName(m.name);
-                  onSelectMember(numericId, m.name);
+                  const resolvedName = m.name || `Member #${numericId}`;
+                  setSelectedName(resolvedName);
+                  onSelectMember(numericId, resolvedName);
                 }}
                 className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between text-xs ${
                   isSelected

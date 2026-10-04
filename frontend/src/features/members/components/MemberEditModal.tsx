@@ -163,7 +163,7 @@ export const MemberEditModal = ({
             <div className="size-20 rounded-full overflow-hidden border-2 border-dashed border-base-content/25 group-hover:border-primary transition-all bg-base-200/60 flex items-center justify-center shadow-inner">
               {photoPreview || watchedPhotoUrl ? (
                 <img
-                  src={photoPreview || watchedPhotoUrl}
+                  src={photoPreview || watchedPhotoUrl || undefined}
                   alt="Profile"
                   className="size-full object-cover"
                 />

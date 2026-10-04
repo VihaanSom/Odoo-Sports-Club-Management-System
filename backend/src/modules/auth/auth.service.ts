@@ -21,6 +21,7 @@ export interface LoginResult {
     lastName: string;
     role: UserRole;
     tier: string | null;
+    planId?: number | null;
     status: string;
   };
 }

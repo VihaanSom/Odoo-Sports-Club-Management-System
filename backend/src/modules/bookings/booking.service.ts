@@ -423,6 +423,17 @@ export class BookingService {
     const slotStart = new Date(input.slotStart);
     const slotEnd = new Date(input.slotEnd);
 
+    // Enforce: Social play is ONLY permitted on Friday nights (18:00 onwards)
+    const isFriday = slotStart.getUTCDay() === 5;
+    const isNight = slotStart.getUTCHours() >= 18;
+    if (!isFriday || !isNight) {
+      throw new AppError(
+        'Social play group sessions are exclusively available on Friday nights (6:00 PM onwards).',
+        422,
+        'SOCIAL_PLAY_FRIDAY_NIGHTS_ONLY'
+      );
+    }
+
     // Validate all member participants
     const dayStart = new Date(Date.UTC(slotStart.getUTCFullYear(), slotStart.getUTCMonth(), slotStart.getUTCDate(), 0, 0, 0));
     const dayEnd = new Date(Date.UTC(slotStart.getUTCFullYear(), slotStart.getUTCMonth(), slotStart.getUTCDate() + 1, 0, 0, 0));

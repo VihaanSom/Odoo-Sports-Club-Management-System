@@ -10,6 +10,7 @@ import {
 import { Link, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
+import { useDebounce } from '@/hooks';
 import { isMemberRole, canManageBookings } from '@/lib/permissions';
 import { bookingService } from '@/services/bookingService';
 import { courtService } from '@/services/courtService';
@@ -34,10 +35,11 @@ export const BookingsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [searchMember, setSearchMember] = useState<string>('');
+  const debouncedSearch = useDebounce(searchMember, 300);
 
-  // Pagination
+  // Pagination (10 rows per page)
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 10;
 
   // Cancel modal state
   const [cancellingId, setCancellingId] = useState<number | null>(null);
@@ -55,8 +57,8 @@ export const BookingsPage = () => {
       ]);
 
       let result = bookingsRes.data;
-      if (searchMember.trim()) {
-        const q = searchMember.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         result = result.filter(
           (b) =>
             (b.memberName && b.memberName.toLowerCase().includes(q)) ||
@@ -72,7 +74,7 @@ export const BookingsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCourtId, selectedStatus, selectedType, searchMember]);
+  }, [selectedCourtId, selectedStatus, selectedType, debouncedSearch]);
 
   useEffect(() => {
     loadData();

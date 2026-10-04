@@ -1,4 +1,5 @@
 import { FaCalendarCheck } from 'react-icons/fa6';
+import { usePagination } from '@/hooks';
 import { Badge } from '@/components/ui';
 import { formatPaise, formatDate } from '@/lib/utils';
 import type { MemberHistoryBooking } from '@/types/members';
@@ -8,6 +9,17 @@ interface MemberBookingHistoryProps {
 }
 
 export const MemberBookingHistory = ({ bookings }: MemberBookingHistoryProps) => {
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: bookings.length, pageSize: 10 });
+
+  const paginatedBookings = paginateItems(bookings);
+
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="p-4 border-b border-base-300 flex items-center justify-between">
@@ -29,7 +41,7 @@ export const MemberBookingHistory = ({ bookings }: MemberBookingHistoryProps) =>
             </tr>
           </thead>
           <tbody>
-            {bookings.map((b) => (
+            {paginatedBookings.map((b) => (
               <tr key={b.id} className="hover:bg-base-300/30">
                 <td className="font-mono font-bold text-xs">{b.id}</td>
                 <td className="font-semibold">{b.courtName}</td>
@@ -71,6 +83,39 @@ export const MemberBookingHistory = ({ bookings }: MemberBookingHistoryProps) =>
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300">
+          <span className="text-xs text-base-content/60">
+            Showing {startIndex + 1} to {endIndex} of {bookings.length} reservations
+          </span>
+
+          <div className="join">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="join-item btn btn-xs btn-outline"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+            >
+              {page} / {totalPages}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages}
+              className="join-item btn btn-xs btn-outline"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

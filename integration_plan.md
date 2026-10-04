@@ -276,10 +276,10 @@ Each developer owns **distinct feature directories** — no two developers ever 
 
 | # | Bug | Owner | Status |
 |---|-----|-------|--------|
-| 1 | Calendar date picker only | Dev B | ⬜ |
-| 2 | UPI QR + payment price | Dev B | ⬜ |
-| 3 | Member ordering | Dev B | ⬜ |
-| 4a | Membership active plan (name+duration) | Dev B | ⬜ |
+| 1 | Calendar date picker only | Dev B | ✅ |
+| 2 | UPI QR + payment price | Dev B | ✅ |
+| 3 | Member ordering | Dev B | ✅ |
+| 4a | Membership active plan (name+duration) | Dev B | ✅ |
 | 4b | Public plans active plan (name+duration) | Dev A | ⬜ |
 | 5 | Outfit font | Dev A | ⬜ |
 | 6 | Remove notice bar + Free Pass | Dev A | ⬜ |
@@ -289,9 +289,9 @@ Each developer owns **distinct feature directories** — no two developers ever 
 | 10 | Kanban assign to staff | Dev C | ⬜ |
 | 11 | Trial page simplification | Dev A | ⬜ |
 | 12 | Dashboard + Reports overhaul | Dev C | ⬜ |
-| 13 | Pagination + debouncing | Dev B (hooks) + Dev C (apply) | ⬜ |
-| 14 | Member bookings + profile image | Dev B | ⬜ |
-| 15 | Social Play Friday only | Dev B | ⬜ |
+| 13 | Pagination + debouncing | Dev B (hooks + Dev B lists ✅) + Dev C (admin lists) | 🟡 |
+| 14 | Member bookings + profile image | Dev B | ✅ |
+| 15 | Social Play Friday only | Dev B | ✅ |
 | 16 | Remove Rent/Return buttons | Dev C | ⬜ |
 | 17 | Bar discount + name + earnings | Dev C | ⬜ |
 | 18 | Remove invoices | Dev C | ⬜ |

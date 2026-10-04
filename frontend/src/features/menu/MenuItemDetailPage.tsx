@@ -9,6 +9,7 @@ import {
   FaUtensils,
   FaCheck,
   FaBan,
+  FaCartShopping,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
@@ -127,6 +128,11 @@ export const MenuItemDetailPage = () => {
           <Link to="/menu" className="btn btn-outline btn-sm">
             Back
           </Link>
+          {isMember && (
+            <Link to="/orders/new" className="btn btn-primary btn-sm gap-1.5">
+              <FaCartShopping className="size-3" /> Order Food & Drinks
+            </Link>
+          )}
           {canManage && (
             <button
               type="button"

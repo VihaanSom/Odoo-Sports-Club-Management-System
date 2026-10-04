@@ -8,7 +8,7 @@ export const memberIdParamSchema = z.object({
 
 export const listMembersQuerySchema = z.object({
   page: z.coerce.number().int().min(1, 'page must be at least 1').default(1),
-  pageSize: z.coerce.number().int().min(1).max(100, 'pageSize cannot exceed 100').default(20),
+  pageSize: z.coerce.number().int().min(1).max(100, 'pageSize cannot exceed 100').default(10),
   search: z.string().max(100, 'search query cannot exceed 100 characters').optional(),
   tier: z.enum([MembershipTier.Gold, MembershipTier.Silver, MembershipTier.Junior]).optional(),
   status: z.enum([MembershipStatus.active, MembershipStatus.expired]).optional(),

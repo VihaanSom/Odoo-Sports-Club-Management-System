@@ -74,8 +74,8 @@ export const commerceJsxRoutes = (
     <Route path="menu" element={<MenuItemsPage />} />
     <Route path="menu/:id" element={<MenuItemDetailPage />} />
 
-    {/* POS Orders: Admin, Front Desk, Shop */}
-    <Route element={<ProtectedRoute allowedRoles={['admin', 'front_desk', 'shop']} />}>
+    {/* Orders: Admin, Front Desk, Shop, and Member */}
+    <Route element={<ProtectedRoute allowedRoles={['admin', 'front_desk', 'shop', 'member']} />}>
       <Route path="orders" element={<OrdersListPage />} />
       <Route path="orders/new" element={<NewOrderPage />} />
       <Route path="orders/:id" element={<OrderDetailPage />} />

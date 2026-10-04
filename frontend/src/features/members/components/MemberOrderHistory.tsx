@@ -1,4 +1,5 @@
 import { FaReceipt, FaWineGlass } from 'react-icons/fa6';
+import { usePagination } from '@/hooks';
 import { Badge } from '@/components/ui';
 import { formatPaise, formatDate } from '@/lib/utils';
 import type { MemberHistoryOrder, MemberHistoryBarTab } from '@/types/members';
@@ -12,6 +13,17 @@ export const MemberOrderHistory = ({
   orders,
   barTabs,
 }: MemberOrderHistoryProps) => {
+  const {
+    page: orderPage,
+    totalPages: orderTotalPages,
+    startIndex: orderStartIndex,
+    endIndex: orderEndIndex,
+    paginateItems: paginateOrders,
+    setPage: setOrderPage,
+  } = usePagination({ totalItems: orders.length, pageSize: 10 });
+
+  const paginatedOrders = paginateOrders(orders);
+
   return (
     <div className="space-y-6">
       {/* Orders Table */}
@@ -35,7 +47,7 @@ export const MemberOrderHistory = ({
               </tr>
             </thead>
             <tbody>
-              {orders.map((o) => (
+              {paginatedOrders.map((o) => (
                 <tr key={o.id} className="hover:bg-base-300/30">
                   <td className="font-mono font-bold text-xs">{o.orderNumber || `ORD-${o.id}`}</td>
                   <td>
@@ -82,6 +94,39 @@ export const MemberOrderHistory = ({
             </tbody>
           </table>
         </div>
+
+        {orderTotalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300">
+            <span className="text-xs text-base-content/60">
+              Showing {orderStartIndex + 1} to {orderEndIndex} of {orders.length} orders
+            </span>
+
+            <div className="join">
+              <button
+                type="button"
+                onClick={() => setOrderPage(Math.max(1, orderPage - 1))}
+                disabled={orderPage <= 1}
+                className="join-item btn btn-xs btn-outline"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+              >
+                {orderPage} / {orderTotalPages}
+              </button>
+              <button
+                type="button"
+                onClick={() => setOrderPage(Math.min(orderTotalPages, orderPage + 1))}
+                disabled={orderPage >= orderTotalPages}
+                className="join-item btn btn-xs btn-outline"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bar Tabs Table */}

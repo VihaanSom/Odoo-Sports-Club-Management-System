@@ -24,10 +24,10 @@ export const Avatar = ({
   };
 
   return (
-    <div className={cn('avatar', className)}>
+    <div className={cn('avatar rounded-full', className)}>
       <div
         className={cn(
-          'mask mask-circle bg-base-300 flex items-center justify-center font-bold text-base-content/80',
+          'rounded-full overflow-hidden bg-base-300 flex items-center justify-center font-bold text-base-content/80',
           sizeMap[size]
         )}
       >

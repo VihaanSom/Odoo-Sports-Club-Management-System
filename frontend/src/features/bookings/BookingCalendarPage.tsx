@@ -4,7 +4,6 @@ import { FaCalendarDays, FaPlus, FaListUl, FaArrowLeft } from 'react-icons/fa6';
 import { useAuthStore } from '@/stores/authStore';
 import { canManageBookings } from '@/lib/permissions';
 import { CourtAvailabilityMatrix } from './components/CourtAvailabilityMatrix';
-import { TodaysBookingsView } from './components/TodaysBookingsView';
 
 export const BookingCalendarPage = () => {
   const user = useAuthStore((s) => s.user);
@@ -50,9 +49,6 @@ export const BookingCalendarPage = () => {
           </Link>
         </div>
       </div>
-
-      {/* Today's quick snapshot (Staff/Admin only) */}
-      {canManage && <TodaysBookingsView />}
 
       {/* Full interactive availability matrix */}
       <CourtAvailabilityMatrix />

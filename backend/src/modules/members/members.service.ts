@@ -487,20 +487,30 @@ export class MembersService {
       throw new NotFoundError('MEMBER_NOT_FOUND', `Member with ID ${id} not found.`);
     }
 
-    // Compute date boundaries
+    // Compute date boundaries if specified in query
+    const bookingWhere: any = {
+      OR: [
+        { memberId: id },
+        { participants: { some: { memberId: id } } },
+      ],
+    };
+    if (query.from || query.to) {
+      bookingWhere.slotStart = {
+        ...(query.from ? { gte: new Date(`${query.from}T00:00:00.000Z`) } : {}),
+        ...(query.to ? { lte: new Date(`${query.to}T23:59:59.999Z`) } : {}),
+      };
+    }
+
     const fromDate = query.from
       ? new Date(`${query.from}T00:00:00.000Z`)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     const toDate = query.to
       ? new Date(`${query.to}T23:59:59.999Z`)
-      : new Date();
+      : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     const [bookings, orders, barTabs, paymentAggregate] = await Promise.all([
       prisma.booking.findMany({
-        where: {
-          memberId: id,
-          slotStart: { gte: fromDate, lte: toDate },
-        },
+        where: bookingWhere,
         include: { court: true },
         orderBy: { slotStart: 'desc' },
       }),
