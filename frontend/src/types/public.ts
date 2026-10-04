@@ -8,6 +8,7 @@ export interface PublicPlan {
   isPopular: boolean;
   badge?: string;
   description: string;
+  durationMonths?: number;
 }
 
 export interface PublicFacilityInfo {
@@ -60,9 +61,11 @@ export interface PublicTrialPayload {
   fullName: string;
   email: string;
   phone: string;
-  sport: string;
   preferredDate: string;
-  preferredSlot: string;
-  experienceLevel: 'beginner' | 'intermediate' | 'advanced';
-  state: string;
+  date?: string;
+  name?: string;
+  sport?: string;
+  preferredSlot?: string;
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  state?: string;
 }
