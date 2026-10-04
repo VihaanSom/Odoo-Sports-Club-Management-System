@@ -1,581 +1,298 @@
-# 🔗 Frontend ↔ Backend Integration Plan — Zero Merge Conflicts
+# 🏟️ Champions Club — Final Bug-Fix & Integration Plan
 
-**Team**: Dev A, Dev B, Dev C  
-**Current state**: Frontend runs on mock data (`src/mock/` + `try/catch` fallbacks in services). Backend has all 17 modules wired into `api.router.ts`.  
-**Goal**: Rip out mock fallbacks, connect to the real backend, and fix any contract mismatches.
-
----
-
-## 🏗️ Architecture Overview (Current State)
-
-```mermaid
-graph LR
-    subgraph Frontend["frontend/ (Vite + React)"]
-        A["features/"] --> B["services/*Service.ts"]
-        B --> C["apiClient.ts (axios)"]
-        B --> D["mock/ (fallback data)"]
-    end
-    subgraph Backend["backend/ (Express + Prisma)"]
-        E["api.router.ts"] --> F["modules/*/"]
-        F --> G["PostgreSQL (Aiven)"]
-    end
-    C -.->|"Currently fails → catch → mock"| D
-    C -->|"After integration"| E
-```
-
-### Key Integration Pattern in Every Service File
-Every frontend service currently does:
-```ts
-try {
-  const res = await apiClient.get('/endpoint');   // ← real API call
-  return res.data;
-} catch {
-  return mockData;  // ← fallback to mock
-}
-```
-**Integration work** = make the `try` path work correctly, then delete the `catch` mock fallback.
+> **Date:** 2026-10-04  
+> **Status:** Ready for execution  
+> **Developers:** Dev A · Dev B · Dev C  
+> **Deadline:** TBD  
 
 ---
 
-## 🚨 Pre-Integration Setup (ALL DEVS — 30 min)
+## 📋 Bug Classification (19 Items)
 
-Before anyone touches domain code, these shared files must be correct:
+### 🟢 Guest Side (Public / Unauthenticated) — 7 Items
 
-### 1. Vite Proxy (Dev C owns this file)
-Add a proxy to [`vite.config.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/vite.config.ts) so `apiClient` hits the backend:
-```ts
-server: {
-  port: 5173,
-  proxy: {
-    '/api': {
-      target: 'http://localhost:3000',
-      changeOrigin: true,
-    },
-    '/uploads': {
-      target: 'http://localhost:3000',
-      changeOrigin: true,
-    },
-  },
-}
-```
+| # | Bug | Files Affected |
+|---|-----|----------------|
+| 5 | `/public` — Use "Outfit" font for "Champions Club" title | `PublicLandingPage.tsx`, `PublicWebsiteLayout.tsx`, `index.css` |
+| 6 | `/public` — Remove notice bar at top and "Free Pass" button in navbar | `PublicWebsiteLayout.tsx`, `PublicLandingPage.tsx` |
+| 7 | `/public/facilities` — Remove specification from card, remove filters in top right | `PublicFacilitiesPage.tsx` |
+| 8 | `/public/shop` — Remove "Reserve at Club Desk" button | `PublicShopPage.tsx` |
+| 9 | Remove `/public/slots` route entirely | `PublicSlotsPage.tsx`, `routes.tsx (adminPublic)`, `PublicWebsiteLayout.tsx` |
+| 11 | `/public/trial` — Remove sports selection, preferred slot, exp level, state; connect to backend; use same date picker as signup | `PublicTrialPage.tsx`, `leads/public.routes.ts` (backend) |
+| 4b | `/public/plans` — Check both plan name AND duration to show active plan | `PublicPlansPage.tsx` |
 
-### 2. API Client Fix (Dev C owns this file)
-Update [`apiClient.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/apiClient.ts):
-- Change `BASE_URL` to `/api/v1` (currently `/api`)
-- Fix refresh token flow: backend uses **httpOnly cookies**, not `localStorage.getItem('refresh_token')`
-- Add `withCredentials: true` to the axios instance for cookie handling
+### 🔵 Member Side (Authenticated — member role) — 4 Items
 
-### 3. Auth Store Alignment (Dev C owns this file)
-Update [`authStore.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/stores/authStore.ts):
-- Backend returns `{ success, data: { accessToken, user } }` — unwrap correctly
-- Remove `refresh_token` from localStorage (it's a httpOnly cookie now)
+| # | Bug | Files Affected |
+|---|-----|----------------|
+| 3 | Members cannot order food or equipment | `orders.routes.ts`, `orders.service.ts`, backend middleware, `NewOrderPage.tsx` |
+| 4a | `/memberships` — Check both plan name AND duration to show active plan | `MembershipsPage.tsx`, `plans.service.ts` (backend) |
+| 14 | `/members/:id` — Bookings not showing (fetch); remove square border from profile image | `MemberDetailPage.tsx`, `members.service.ts` (backend) |
+| 15 | `/bookings/new` — Social Play only for Friday nights | `BookingWizard.tsx`, `SocialPlayForm.tsx`, `booking.service.ts` (backend) |
 
-### 4. Backend CORS (Dev A owns this file)
-Ensure [`app.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/backend/src/app.ts) has:
-```ts
-cors({ origin: 'http://localhost:5173', credentials: true })
-```
+### 🔴 Admin Side (Authenticated — admin / staff roles) — 8 Items
 
-> [!IMPORTANT]  
-> These 4 setup tasks MUST be done first and merged before parallel work begins. They touch shared infrastructure files that everyone depends on.
+| # | Bug | Files Affected |
+|---|-----|----------------|
+| 1 | `/bookings/calendar` — Only keep date picker (remove extra UI) | `BookingCalendarPage.tsx` |
+| 2 | `/bookings/new` — UPI QR not showing; final payment price missing in UPI/Card/Cash | `BookingPaymentSection.tsx`, `BookingWizard.tsx` |
+| 10 | `/leads` — Kanban board: add "assign lead to staff" feature on card | `LeadKanbanBoard.tsx`, `leads.service.ts`, `leads.controller.ts`, `leads.routes.ts` (backend) |
+| 12 | Dashboard & `/reports` — Use same DB queries; connect bar analytics backend; remove court heatmap; add today/week/month earnings; sharable PDF | `DashboardPage.tsx`, `ReportsHubPage.tsx`, `reports.service.ts`, `reports.controller.ts` (backend) |
+| 13 | Every list — Paginate every 10 rows; every search box — implement debouncing | All list pages, shared components/hooks |
+| 16 | `/equipment` — Admin: remove Rent and Return buttons | `EquipmentPage.tsx`, `EquipmentDetailPage.tsx` |
+| 17 | `/bar` — Member discount; fix user name in table card; add total earnings today | `TabDetailPage.tsx`, `OpenTabsPage.tsx`, `BarTablesPage.tsx`, `tabs.service.ts` (backend) |
+| 18 | Remove `/invoices` entirely | `RenewalInvoicesPage.tsx`, `crm/routes.tsx`, `invoices/` (backend), `App.tsx` sidebar |
+| 19 | `/settings` — Remove Club System & ERP options; keep admin full name & phone editable; fix save | `SettingsPage.tsx`, backend settings/auth endpoint |
 
 ---
 
-## 👥 Developer Assignments — Zero Conflict File Ownership
+## 👷 Developer Work Division (Zero Merge Conflicts)
 
-The key to zero merge conflicts: **each developer owns exclusive files**. Nobody touches another dev's files.
+### Ownership Principle
 
-### File Ownership Map
+Each developer owns **distinct feature directories** — no two developers ever edit the same file.
 
-| Directory / File | Dev A | Dev B | Dev C |
-|---|:---:|:---:|:---:|
-| `frontend/src/services/authService.ts` | ✅ | | |
-| `frontend/src/services/courtService.ts` | ✅ | | |
-| `frontend/src/services/bookingService.ts` | ✅ | | |
-| `frontend/src/services/publicService.ts` | ✅ | | |
-| `frontend/src/services/leadService.ts` | ✅ | | |
-| `frontend/src/services/reportService.ts` | ✅ | | |
-| `frontend/src/services/invoiceService.ts` | ✅ | | |
-| `frontend/src/services/paymentService.ts` | ✅ | | |
-| `frontend/src/features/auth/**` | ✅ | | |
-| `frontend/src/features/bookings/**` | ✅ | | |
-| `frontend/src/features/facilities/**` | ✅ | | |
-| `frontend/src/features/public/**` | ✅ | | |
-| `frontend/src/features/leads/**` | ✅ | | |
-| `frontend/src/features/reports/**` | ✅ | | |
-| `frontend/src/features/invoices/**` | ✅ | | |
-| `frontend/src/features/payments/**` | ✅ | | |
-| `frontend/src/services/memberService.ts` | | ✅ | |
-| `frontend/src/services/equipmentService.ts` | | ✅ | |
-| `frontend/src/services/orderService.ts` | | ✅ | |
-| `frontend/src/services/menuService.ts` | | ✅ | |
-| `frontend/src/services/barService.ts` | | ✅ | |
-| `frontend/src/services/staffService.ts` | | ✅ | |
-| `frontend/src/features/members/**` | | ✅ | |
-| `frontend/src/features/equipment/**` | | ✅ | |
-| `frontend/src/features/orders/**` | | ✅ | |
-| `frontend/src/features/menu/**` | | ✅ | |
-| `frontend/src/features/bar/**` | | ✅ | |
-| `frontend/src/features/staff/**` | | ✅ | |
-| `frontend/src/features/memberships/**` | | ✅ | |
-| `frontend/src/features/commerce/**` | | ✅ | |
-| `frontend/vite.config.ts` | | | ✅ |
-| `frontend/src/services/apiClient.ts` | | | ✅ |
-| `frontend/src/stores/**` | | | ✅ |
-| `frontend/src/types/**` | | | ✅ |
-| `frontend/src/components/**` | | | ✅ |
-| `frontend/src/features/dashboard/**` | | | ✅ |
-| `frontend/src/features/settings/**` | | | ✅ |
-| `frontend/src/features/crm/**` | | | ✅ |
-| `frontend/src/features/adminPublic/**` | | | ✅ |
-| `frontend/src/App.tsx` | | | ✅ |
-| `frontend/src/mock/**` | | | ✅ (final cleanup) |
-| `backend/**` | 🔒 | 🔒 | |
-
-> [!NOTE]
-> Backend is **already built**. Dev A & B do NOT touch backend code during integration (unless a bug is found). Their job is purely on the **frontend service/feature files** they own.
+| Scope | Dev A (Guest + Public) | Dev B (Member + Bookings) | Dev C (Admin + Commerce) |
+|-------|----------------------|--------------------------|--------------------------|
+| **Frontend dirs** | `features/public/*`, `features/adminPublic/routes.tsx` (public section only) | `features/bookings/*`, `features/members/*`, `features/memberships/*` | `features/leads/*`, `features/bar/*`, `features/equipment/*`, `features/reports/*`, `features/dashboard/*`, `features/invoices/*`, `features/settings/*`, `features/crm/routes.tsx` |
+| **Backend dirs** | `modules/leads/public.routes.ts` | `modules/bookings/*`, `modules/members/*`, `modules/plans/*`, `modules/orders/*` | `modules/leads/*` (non-public), `modules/bar/*`, `modules/reports/*`, `modules/equipment/*`, `modules/invoices/*`, `modules/staff/*` |
+| **Shared** | `index.css` (font import only) | `src/hooks/` (new shared hooks) | `App.tsx`, `routes.tsx` files (cleanup) |
 
 ---
 
-## 📋 Dev A — Auth, Bookings, Public Portal, Reports (8 services, ~8 features)
-
-Dev A handles the modules they originally built on the backend, so they understand the exact response shapes.
-
-### Phase 1: Auth Integration (Priority — everything else depends on this)
-
-#### File: [`authService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/authService.ts)
-
-**Current problems:**
-- Mock fallback creates fake `User` objects with string IDs like `'USR-ADMIN'` — backend uses integer IDs
-- `signup` calls `/auth/signup` — backend has `POST /api/v1/public/register` (PU-07) instead
-- `requestPasswordReset`, `verifyOtp`, `resetPassword` — these endpoints don't exist in the backend API contract. Keep them as client-side mock for now
-- Refresh uses `localStorage` — backend uses httpOnly cookie
-
-**Tasks:**
-1. Fix `login()` — unwrap `response.data.data.accessToken` and `response.data.data.user`
-2. Fix `signup()` → point to `/public/register` and match PU-07's request body shape
-3. Fix `logout()` → add `withCredentials: true`
-4. Fix `getCurrentUser()` → unwrap `response.data.data`
-5. Remove all mock fallback `catch` blocks — replace with proper error throwing
-6. Delete all `OTP_STORAGE_KEY`, `REGISTERED_USERS_KEY` localStorage mock logic
-
-**Contract mismatch to fix:**
-```diff
-// Frontend User type expects:
--  id: string       (e.g., 'USR-ADMIN')
-+  id: number       (e.g., 42)
-
-// Login response shape:
--  { user, token }
-+  { success: true, data: { accessToken, expiresIn, user: { id, email, firstName, lastName, role, tier, status } } }
-```
-
-#### File: `features/auth/LoginPage.tsx`, `SignupPage.tsx`, `ForgotPasswordPage.tsx`
-- Update `LoginPage` to use the corrected `authService.login()` return shape
-- Update `SignupPage` to POST to `/public/register` with `{ firstName, lastName, email, password, phone, dateOfBirth, tier, planId, address }`
-- `ForgotPasswordPage` — keep as mock-only (no backend endpoint exists)
+## 📝 Detailed Task Breakdown
 
 ---
 
-### Phase 2: Courts & Bookings
+### DEV A — Guest / Public Portal (Bugs: 5, 6, 7, 8, 9, 11, 4b)
 
-#### File: [`courtService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/courtService.ts)
+**Bug #5 — Outfit font for "Champions Club" title**
+- **File:** `frontend/src/index.css`
+  - Add Google Font import: `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&display=swap');`
+- **File:** `frontend/src/features/public/PublicLandingPage.tsx`
+  - Apply `fontFamily: "'Outfit', sans-serif"` to the "Champions Club" title
+- **File:** `frontend/src/features/public/PublicWebsiteLayout.tsx`
+  - Apply same font to navbar brand "Champions Club" text
 
-**Tasks:**
-1. `getAll()` → `GET /courts` — unwrap `response.data.data`
-2. `getAvailability()` → `GET /courts/availability?date=YYYY-MM-DD&courtId=X`
-3. Remove mock fallbacks
+**Bug #6 — Remove notice bar & Free Pass button**
+- **File:** `frontend/src/features/public/PublicWebsiteLayout.tsx`
+  - Delete the top notice/announcement bar component/JSX
+  - Remove "Free Pass" button from the navbar
+- **File:** `frontend/src/features/public/PublicLandingPage.tsx`
+  - Remove any "Free Pass" CTA if duplicated here
 
-#### File: [`bookingService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/bookingService.ts)
+**Bug #7 — `/public/facilities` cleanup**
+- **File:** `frontend/src/features/public/PublicFacilitiesPage.tsx`
+  - Remove "Specification" section from facility cards
+  - Remove filter controls in the top-right corner
 
-**Tasks:**
-1. `getAll()` → `GET /bookings` — fix pagination unwrap (`data.data` + `data.pagination`)
-2. `create()` → `POST /bookings` — match BK-02 body: `{ courtId, date, slotStart, slotEnd, bookingType }`
-3. `getById()` → `GET /bookings/:id`
-4. `cancel()` → `PUT /bookings/:id/cancel`
-5. `createSocial()` → `POST /bookings/social` — match BK-05 body
-6. `getToday()` → `GET /bookings/today`
-7. Remove all mock fallbacks
+**Bug #8 — `/public/shop` remove button**
+- **File:** `frontend/src/features/public/PublicShopPage.tsx`
+  - Remove "Reserve at Club Desk" button from shop items
 
-**Key contract issues:**
-- Frontend booking IDs are strings (`'BK-1001'`), backend uses integers
-- Frontend uses `facilityName`, backend uses `courtName`
-- Frontend `totalPrice` is in rupees, backend `amount_paise` is in paise
+**Bug #9 — Remove `/public/slots`**
+- **File:** `frontend/src/features/public/PublicSlotsPage.tsx`
+  - Delete this file entirely
+- **File:** `frontend/src/features/adminPublic/routes.tsx`
+  - Remove the `<Route path="slots" .../>` from both `publicJsxRoutes` and `adminPublicRoutes`
+  - Remove the `import PublicSlotsPage` statement
+- **File:** `frontend/src/features/public/PublicWebsiteLayout.tsx`
+  - Remove "Slots" link from public navbar
 
-#### Files: `features/bookings/*.tsx`, `features/facilities/*.tsx`
-- Update all components to use integer IDs
-- Fix price display: divide `amountPaise` by 100 for display (`₹{(amountPaise / 100).toFixed(2)}`)
+**Bug #11 — `/public/trial` simplification + backend**
+- **File:** `frontend/src/features/public/PublicTrialPage.tsx`
+  - Remove fields: sports selection, preferred slot, experience level, state
+  - Keep only: name, email, phone, date (using the same date picker component as signup page)
+  - Connect form submission to `POST /api/leads/public/trial` backend endpoint
+- **File (backend):** `backend/src/modules/leads/public.routes.ts`
+  - Ensure the trial endpoint accepts simplified payload and creates a lead
 
----
-
-### Phase 3: Public Portal & Leads
-
-#### File: [`publicService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/publicService.ts)
-
-**Tasks:**
-1. `getPlans()` → `GET /public/plans`
-2. `getCourts()` → `GET /public/courts`
-3. `getEquipment()` → `GET /public/equipment`
-4. `getSlots()` → `GET /public/slots?date=YYYY-MM-DD`
-5. `submitEnquiry()` → `POST /public/leads`
-6. `requestTrial()` → `POST /public/trial`
-7. `register()` → `POST /public/register`
-8. Remove mock fallbacks
-
-#### File: [`leadService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/leadService.ts)
-
-**Tasks:**
-1. `getAll()` → `GET /leads` with pagination
-2. `getById()` → `GET /leads/:id`
-3. `update()` → `PUT /leads/:id` (status change)
-4. Remove mock fallbacks
+**Bug #4b — `/public/plans` active plan logic**
+- **File:** `frontend/src/features/public/PublicPlansPage.tsx`
+  - When showing "Active" badge on plans, match by BOTH `planName` AND `duration` (not just name)
 
 ---
 
-### Phase 4: Reports, Invoices, Payments
+### DEV B — Member Side + Bookings (Bugs: 3, 4a, 14, 15, 1, 2, 13-hooks)
 
-#### File: [`reportService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/reportService.ts)
+**Bug #1 — `/bookings/calendar` date picker only**
+- **File:** `frontend/src/features/bookings/BookingCalendarPage.tsx`
+  - Remove all extra calendar UI (weekly/monthly views, legend, etc.)
+  - Keep ONLY the date picker control
 
-**Tasks:**
-1. Wire up all 6 report endpoints: `GET /reports/revenue`, `/reports/courts`, `/reports/members`, `/reports/inventory`, `/reports/bar`, `/reports/staff`
-2. Each returns a different shape — map to the frontend `ReportData` types
-3. Remove mock fallbacks
+**Bug #2 — `/bookings/new` payment display**
+- **File:** `frontend/src/features/bookings/components/BookingPaymentSection.tsx`
+  - Fix UPI QR code rendering — ensure the QR image/component is displayed when UPI is selected
+  - Show the **final total price** for all payment methods: UPI, Card, and Cash
+- **File:** `frontend/src/features/bookings/components/BookingWizard.tsx`
+  - Ensure the calculated total is passed to the payment section correctly
 
-#### File: [`invoiceService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/invoiceService.ts)
+**Bug #3 — Member ordering food/equipment**
+- **File (backend):** `backend/src/modules/orders/orders.routes.ts`
+  - Allow `member` role to access `POST /api/orders`
+- **File (backend):** `backend/src/modules/orders/orders.service.ts`
+  - When a member creates an order, auto-populate `memberId` from the authenticated user
 
-**Tasks:**
-1. `getDueMembers()` → `GET /invoices/members`
-2. `generate()` → `POST /invoices/:memberId`
-3. Remove mock fallbacks
+**Bug #4a — `/memberships` active plan by name + duration**
+- **File:** `frontend/src/features/memberships/MembershipsPage.tsx`
+  - Fix active plan detection: compare BOTH `planName` AND `duration` to identify the currently active plan
+- **File (backend):** `backend/src/modules/plans/` (if needed)
+  - Ensure backend returns both fields for comparison
 
-#### File: [`paymentService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/paymentService.ts)
+**Bug #14 — `/members/:id` bookings + profile image**
+- **File:** `frontend/src/features/members/MemberDetailPage.tsx`
+  - Fetch bookings for this member from `GET /api/bookings?memberId=:id` and display them
+  - Remove square border from the profile image — use `border-radius: 50%` (circular)
+- **File (backend):** `backend/src/modules/members/`
+  - Ensure member detail endpoint includes or supports fetching related bookings
 
-**Tasks:**
-1. `getAll()` → `GET /payments` with pagination
-2. Remove mock fallbacks
+**Bug #15 — Social Play: Friday nights only**
+- **File:** `frontend/src/features/bookings/components/BookingWizard.tsx`
+  - Only show the "Social Play" option when the selected booking date is a **Friday**
+  - If Social Play is toggled on and date changes to non-Friday, auto-disable it
+- **File:** `frontend/src/features/bookings/components/SocialPlayForm.tsx`
+  - Add evening-only time slot restriction for social play bookings
+- **File (backend):** `backend/src/modules/bookings/booking.service.ts`
+  - Add server-side validation: reject social play bookings on non-Friday dates
 
----
-
-## 📋 Dev B — Members, Equipment, Orders, Bar, Staff, Menu (6 services, ~8 features)
-
-Dev B handles the modules they originally built on the backend.
-
-### Phase 1: Members & Memberships
-
-#### File: [`memberService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/memberService.ts)
-
-**This is the biggest file (458 lines)** — most of it is mock data. After integration it should be ~80 lines.
-
-**Tasks:**
-1. Delete the entire `localMembers` array, `defaultAddresses`, `defaultLedgers` (lines 21–178)
-2. Delete all mock imports (`mockMembers`, `mockBookings`, `mockOrders`, `mockBarTabs`)
-3. Fix every method:
-   - `getAll()` → unwrap `response.data.data` (paginated) + `response.data.pagination`
-   - `create()` → match ME-02 body shape (camelCase `firstName`, `lastName`, `planId`, etc.)
-   - `getById()` → unwrap `response.data.data`
-   - `update()` → match ME-04 body, unwrap response
-   - `renew()` → `POST /members/:id/renew` with `{ durationMonths, paymentMethod, amountPaise, referenceNo }`
-   - `getHistory()` → `GET /members/:id/history`
-   - `getAddress()` → `GET /members/:id/address`
-   - `updateAddress()` → `PUT /members/:id/address`
-   - `deleteAddress()` → `DELETE /members/:id/address`
-4. Delete `getLedger()` — not in the API contract (history covers it)
-
-**Key contract issues:**
-- Frontend `MemberDetail.id` is `string` (`'MEM-001'`), backend is `number` (`1`)
-- Frontend `name` is a single field, backend returns `firstName` + `lastName` separately
-- Frontend `membershipPlan` field → backend uses `tier`
-- Frontend `joinedDate` → backend `membershipStart`
-
-#### Files: `features/members/MembersPage.tsx`, `MemberDetailPage.tsx`, `components/*`
-- Fix all ID references from strings to numbers
-- Fix member name display: use `${member.firstName} ${member.lastName}` or backend's computed field
-- Fix membership tier badge mapping
-
-#### File: `features/memberships/MembershipsPage.tsx`
-- Wire to `GET /membership-plans` for admin plan management
-- `POST /membership-plans`, `PUT /membership-plans/:id`
+**Bug #13 (partial) — Create shared hooks**
+- **File (new):** `frontend/src/hooks/usePagination.ts` — pagination hook (page size = 10)
+- **File (new):** `frontend/src/hooks/useDebounce.ts` — debounce hook (300ms delay)
+- Apply to: `BookingsPage.tsx`, `MembersPage.tsx`, `MembershipsPage.tsx`
 
 ---
 
-### Phase 2: Equipment & Orders (Shop)
+### DEV C — Admin Side + Commerce + Cleanup (Bugs: 10, 12, 13-apply, 16, 17, 18, 19)
 
-#### File: [`equipmentService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/equipmentService.ts)
+**Bug #10 — `/leads` Kanban: assign lead to staff**
+- **File:** `frontend/src/features/leads/components/LeadKanbanBoard.tsx`
+  - Add a staff dropdown/select on each Kanban card
+  - On selection, call `PATCH /api/leads/:id` with `{ assignedTo: staffId }`
+- **File (backend):** `backend/src/modules/leads/leads.service.ts`
+  - Add `assignedTo` field support in update logic
+- **File (backend):** `backend/src/modules/leads/leads.controller.ts`
+  - Handle the `assignedTo` field in PATCH endpoint
 
-**Tasks:**
-1. `getAll()` → `GET /equipment` — paginated, unwrap `data.data`
-2. `create()` → `POST /equipment`
-3. `getById()` → `GET /equipment/:id`
-4. `update()` → `PUT /equipment/:id`
-5. Remove mock fallbacks
+**Bug #12 — Dashboard & Reports overhaul**
+- **File:** `frontend/src/features/dashboard/DashboardPage.tsx`
+  - Use the same backend queries as Reports for consistent data
+  - Remove court heatmap section
+  - Add earnings widgets: Today, This Week, This Month
+- **File:** `frontend/src/features/reports/ReportsHubPage.tsx`
+  - Connect bar analytics charts to real backend queries
+  - Remove court heatmap
+  - Add earnings: Today, This Week, This Month
+  - Add "Download PDF" button using browser-side PDF generation (e.g., `jspdf` + `html2canvas`)
+- **File (backend):** `backend/src/modules/reports/reports.service.ts`
+  - Create unified query functions for both dashboard and reports
+  - Add `/api/reports/earnings` endpoint with `period` param (today/week/month)
+  - Add `/api/reports/bar-analytics` endpoint with real DB queries
 
-#### File: [`orderService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/orderService.ts)
+**Bug #13 (partial) — Apply pagination + debouncing to admin lists**
+- Import and use the shared hooks (created by Dev B in `src/hooks/`)
+- Apply to: `LeadsListPage.tsx`, `EquipmentPage.tsx`, `OpenTabsPage.tsx`, `BarTablesPage.tsx`, `StaffListPage.tsx`, `PaymentsPage.tsx`
 
-**Tasks:**
-1. `getAll()` → `GET /orders` — paginated
-2. `create()` → `POST /orders` — match OR-02 body
-3. `getById()` → `GET /orders/:id`
-4. `updateStatus()` → `PUT /orders/:id/status`
-5. Remove mock fallbacks
+**Bug #16 — `/equipment` remove Rent/Return buttons (admin)**
+- **File:** `frontend/src/features/equipment/EquipmentPage.tsx`
+  - Remove "Rent" and "Return" action buttons from the equipment list
+- **File:** `frontend/src/features/equipment/EquipmentDetailPage.tsx`
+  - Remove "Rent" and "Return" action buttons from the equipment detail view
 
-**Key contract issue:**
-- Frontend `totalPrice` in rupees → backend `totalPaise` / `amountPaise` in paise
+**Bug #17 — `/bar` member discount + name fix + today earnings**
+- **File:** `frontend/src/features/bar/TabDetailPage.tsx`
+  - Fix: display user/member name on the tab card (currently not showing)
+  - Apply member discount logic when tab belongs to a member
+- **File:** `frontend/src/features/bar/OpenTabsPage.tsx`
+  - Fix user name display in the tabs list cards
+- **File:** `frontend/src/features/bar/BarTablesPage.tsx`
+  - Add "Total Earnings Today" widget at the top
+- **File (backend):** `backend/src/modules/bar/tabs/`
+  - Add member discount calculation in tab total
+  - Add `GET /api/bar/earnings/today` endpoint
 
----
+**Bug #18 — Remove `/invoices`**
+- **File:** `frontend/src/features/crm/routes.tsx`
+  - Remove the invoice route and import
+- **File:** `frontend/src/features/invoices/RenewalInvoicesPage.tsx`
+  - Delete or mark for deletion
+- **Backend:** Remove `/api/invoices` routes from `api.router.ts` if registered
+- **Sidebar/Navigation:** Remove "Invoices" link from the app shell sidebar
 
-### Phase 3: Menu & Bar POS
-
-#### File: [`menuService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/menuService.ts)
-
-**Tasks:**
-1. `getAll()` → `GET /menu-items`
-2. `create()` → `POST /menu-items`
-3. `getById()` → `GET /menu-items/:id`
-4. `update()` → `PUT /menu-items/:id`
-5. Remove mock fallbacks
-
-#### File: [`barService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/barService.ts)
-
-**Tasks:**
-1. `getTables()` → `GET /bar/tables`
-2. `createTable()` → `POST /bar/tables`
-3. `updateTable()` → `PUT /bar/tables/:id`
-4. `getTabs()` → `GET /bar/tabs`
-5. `getTab()` → `GET /bar/tabs/:id`
-6. `openTab()` → `POST /bar/tabs`
-7. `addItems()` → `POST /bar/tabs/:id/items`
-8. `settleTab()` → `PUT /bar/tabs/:id/settle`
-9. Remove mock fallbacks
-
-#### Files: `features/bar/*.tsx`
-- Fix tab total display (paise → rupees)
-- Fix table/tab ID types
-
----
-
-### Phase 4: Staff & HR
-
-#### File: [`staffService.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/staffService.ts)
-
-**Tasks:**
-1. `getAll()` → `GET /staff`
-2. `create()` → `POST /staff`
-3. `getById()` → `GET /staff/:id`
-4. `update()` → `PUT /staff/:id`
-5. `startShift()` → `POST /staff/:id/shifts`
-6. `endShift()` → `PUT /staff/:id/shifts/:shiftId`
-7. `submitLeave()` → `POST /leave`
-8. `getLeave()` → `GET /staff/:id/leave`
-9. `approveLeave()` → `PUT /leave/:id`
-10. Remove mock fallbacks
+**Bug #19 — `/settings` cleanup**
+- **File:** `frontend/src/features/settings/SettingsPage.tsx`
+  - Remove "Club System" section
+  - Remove "ERP" option/section
+  - In the Administrator section:
+    - Make "Full Name" field editable (remove `disabled`/`readOnly`)
+    - Make "Contact Phone Number" field editable
+  - Fix "Save Preferences" button to actually call `PATCH /api/auth/profile` or equivalent
+- **Backend:** Ensure the profile update endpoint accepts `fullName` and `phone`
 
 ---
 
-## 📋 Dev C — Shared Infrastructure, Types, Stores, Dashboard, Shared Components
+## 🔄 Execution Order (3-Phase)
 
-Dev C handles the "glue" — the shared infrastructure that Dev A and Dev B depend on, plus the dashboard and settings that aggregate data from multiple services.
+### Phase 1 — Quick UI Removals & Fixes (Day 1)
+*All 3 devs work in parallel — no file conflicts*
 
-### Phase 1: Infrastructure (DO THIS FIRST — Day 1)
+| Dev A | Dev B | Dev C |
+|-------|-------|-------|
+| #6 Remove notice bar + Free Pass | #1 Calendar date picker only | #16 Remove Rent/Return buttons |
+| #7 Facilities card cleanup | #2 Payment display fix | #18 Remove invoices |
+| #8 Shop button removal | #14 Profile image border fix | #19 Settings cleanup |
+| #9 Remove /public/slots | | |
 
-#### File: [`vite.config.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/vite.config.ts)
-- Add proxy config (see Pre-Integration Setup above)
+### Phase 2 — Logic Fixes & Backend Connections (Day 2)
 
-#### File: [`apiClient.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/services/apiClient.ts)
-- Fix `BASE_URL` → `/api/v1`
-- Add `withCredentials: true`
-- Fix refresh flow to use cookie-based refresh (no body, just `POST /auth/refresh` with credentials)
-- Fix the response interceptor to handle the `{ success, data, error }` envelope pattern
+| Dev A | Dev B | Dev C |
+|-------|-------|-------|
+| #5 Outfit font | #4a Memberships active plan | #10 Kanban assign to staff |
+| #4b Plans active plan | #3 Member ordering | #17 Bar discount + name + earnings |
+| #11 Trial page simplification | #15 Social Play Friday only | |
 
-#### File: [`authStore.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/stores/authStore.ts)
-- Remove `refresh_token` from localStorage handling
-- Fix `login()` to accept the unwrapped API response shape
+### Phase 3 — Complex Features & Polish (Day 3)
 
----
-
-### Phase 2: Type Alignment (Critical for Dev A & B)
-
-#### Files: All `frontend/src/types/*.ts`
-
-> [!WARNING]
-> Dev C MUST finish type fixes BEFORE Dev A and Dev B start their service file edits. Otherwise they'll be coding against wrong types.
-
-**Key type changes needed across files:**
-
-| File | Change |
-|------|--------|
-| [`auth.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/auth.ts) | `User.id`: `string` → `number`. Add `firstName`, `lastName`. Fix `role` enum values |
-| [`members.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/members.ts) | `MemberDetail.id`: `string` → `number`. Replace `name` with `firstName`+`lastName`. `membershipPlan` → `tier`. `joinedDate` → `membershipStart` |
-| [`bookings.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/bookings.ts) | IDs: `string` → `number`. `facilityName` → `courtName`. Prices in paise |
-| [`courts.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/courts.ts) | IDs: `string` → `number` |
-| [`equipment.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/equipment.ts) | IDs: `string` → `number`. Prices in paise |
-| [`orders.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/orders.ts) | IDs: `string` → `number`. Prices in paise |
-| [`menu.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/menu.ts) | IDs: `string` → `number`. Prices in paise |
-| [`bar.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/bar.ts) | IDs: `string` → `number`. Prices in paise |
-| [`staff.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/staff.ts) | IDs: `string` → `number` |
-| [`leads.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/leads.ts) | IDs: `string` → `number` |
-| [`payments.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/payments.ts) | IDs: `string` → `number`. Amounts in paise |
-| [`invoices.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/invoices.ts) | IDs: `string` → `number` |
-| [`reports.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/reports.ts) | Amounts in paise |
-| [`api.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/api.ts) | Add `ApiResponse<T> = { success: boolean; data: T; error?: { code: string; message: string } }` |
-| [`public.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/types/public.ts) | IDs: `string` → `number`. Match PU-07 register shape |
-
-**Add a shared helper** in [`utils.ts`](file:///c:/Users/vihaa/Desktop/College/Diploma/Sport-Club-Management-System/frontend/src/lib/utils.ts):
-```ts
-/** Convert paise to rupee display string */
-export const formatPaise = (paise: number): string => `₹${(paise / 100).toFixed(2)}`;
-
-/** Unwrap the standard { success, data } API envelope */
-export const unwrap = <T>(response: { data: { success: boolean; data: T } }): T => response.data.data;
-```
+| Dev A | Dev B | Dev C |
+|-------|-------|-------|
+| Final testing of public pages | #13 Create shared hooks + apply to member/booking lists | #12 Dashboard + Reports overhaul |
+| | #14 Fetch member bookings (backend) | #13 Apply pagination/debounce to admin lists |
+| | | PDF export for reports |
 
 ---
 
-### Phase 3: Shared UI Components
+## ⚠️ Coordination Points
 
-#### Files: `frontend/src/components/ui/*.tsx`
-- Add a generic `ApiErrorAlert` component for displaying backend error responses
-- Add a `PriceDisplay` component that auto-converts paise → rupees
-- Update `Skeleton` / `GlobalLoader` to work with React Query loading states
+1. **Shared Hooks (Bug #13):** Dev B creates `usePagination` and `useDebounce` hooks in `src/hooks/`. Dev C waits until these are pushed before applying them to admin list pages. Alternatively, Dev C can create separate utility functions in their own files if there's a time crunch.
 
-#### Files: `frontend/src/components/layout/*`
-- Update `AppShell` to fetch user from `GET /auth/me` on mount (instead of trusting localStorage)
-- Add a `ProtectedRoute` wrapper that redirects to `/login` if not authenticated
+2. **Sidebar Navigation (Bug #18):** Dev C removes the "Invoices" link. If the sidebar component is in `components/layout/`, coordinate with Dev B to avoid editing the same file. Fallback: Dev C owns sidebar changes exclusively.
 
----
+3. **Backend API Router:** Dev C owns `backend/src/routes/api.router.ts` changes (removing invoice routes). Dev B's backend changes are in separate module files.
 
-### Phase 4: Dashboard & Settings
-
-#### File: `features/dashboard/DashboardPage.tsx`
-- This page aggregates data from multiple services (members count, bookings today, revenue, etc.)
-- Wire to the real report endpoints after Dev A finishes report service integration
-- Use React Query's `useQueries` for parallel fetching
-
-#### File: `features/settings/SettingsPage.tsx`
-- Wire profile update to `PUT /members/:id` (for member self-edit) or `PUT /staff/:id` (for staff)
-
-#### File: `features/crm/**` and `features/adminPublic/**`
-- These are UI shells — wire them to the services once Dev A/B finish
+4. **Database Schema:** If `assignedTo` for leads (Bug #10) needs a Prisma migration, Dev C creates and runs it. No other dev touches `schema.prisma` during this sprint.
 
 ---
 
-### Phase 5: Mock Cleanup (LAST — after everything works)
+## ✅ Completion Checklist
 
-#### File: `frontend/src/mock/**`
-- Delete all 17 mock data files
-- Delete `frontend/src/mock/index.ts`
-- Remove all `import from '@/mock/*'` across the codebase (Dev A & B should have already removed them from their owned files)
-
----
-
-## ⏱️ Execution Timeline
-
-```mermaid
-gantt
-    title Integration Sprint (3 Developers)
-    dateFormat HH:mm
-    axisFormat %H:%M
-
-    section Dev C (Infrastructure)
-    Vite proxy + apiClient fix          :c1, 00:00, 1h
-    Type alignment (all types/*.ts)     :c2, after c1, 2h
-    Auth store + ProtectedRoute         :c3, after c1, 1h
-    Shared UI (ApiError, PriceDisplay)  :c4, after c2, 1h
-    Dashboard wiring                    :c5, after c4, 2h
-    Mock cleanup                        :c6, after c5, 1h
-
-    section Dev A (Auth + Bookings + Public)
-    authService.ts + LoginPage          :a1, after c2, 2h
-    courtService + bookingService       :a2, after a1, 2h
-    publicService + leadService         :a3, after a2, 2h
-    reportService + invoiceService      :a4, after a3, 1h
-    paymentService                      :a5, after a4, 30min
-
-    section Dev B (Members + Shop + Bar + Staff)
-    memberService.ts (big rewrite)      :b1, after c2, 2h
-    Members pages + Memberships         :b2, after b1, 1h
-    equipmentService + orderService     :b3, after b2, 2h
-    menuService + barService            :b4, after b3, 2h
-    staffService + HR pages             :b5, after b4, 1h
-```
-
-> [!TIP]
-> **Dev C finishes types first (Phase 2) and pushes**. Dev A & B pull that commit before starting their work. This is the critical dependency.
-
----
-
-## 🔒 Git Branch Strategy (No Conflicts)
-
-```
-main
- └── integration/setup       ← Dev C: vite proxy, apiClient, types, authStore
-      ├── integration/dev-a   ← Dev A: auth, bookings, public, reports services + features
-      ├── integration/dev-b   ← Dev B: members, equipment, orders, bar, staff services + features
-      └── integration/dev-c   ← Dev C: dashboard, settings, shared components, mock cleanup
-```
-
-**Merge order:**
-1. `integration/setup` → `main` (Dev C's infrastructure)
-2. `integration/dev-a` → `main` (rebased on setup)
-3. `integration/dev-b` → `main` (rebased on setup)
-4. `integration/dev-c` → `main` (rebased on dev-a + dev-b, includes mock cleanup)
-
-> [!CAUTION]
-> **Never** have two devs edit the same file. The ownership table above is the law. If you need a change in someone else's file, tell them on Slack and they'll do it.
-
----
-
-## 🧪 Testing Checklist
-
-Each dev tests their own modules end-to-end before merging:
-
-### Dev A
-- [ ] Login with valid member credentials → redirects to dashboard
-- [ ] Login with valid staff credentials → shows admin sidebar
-- [ ] Invalid credentials → shows error toast
-- [ ] Token refresh works (wait 15 min or manually expire)
-- [ ] Court list loads from DB
-- [ ] Slot availability shows correct data for a given date
-- [ ] Create booking → appears in list
-- [ ] Cancel booking → status updates
-- [ ] Public portal loads plans, courts, slots without auth
-- [ ] Submit enquiry from public portal → appears in leads list
-- [ ] Reports pages render charts with real data
-- [ ] Invoice generation works
-
-### Dev B
-- [ ] Member list loads with pagination
-- [ ] Search, tier filter, status filter work
-- [ ] Create member with address → appears in list
-- [ ] Member detail page shows summary counts from DB
-- [ ] Renew membership → end date extends
-- [ ] Member history shows real bookings/orders/tabs
-- [ ] Equipment CRUD works
-- [ ] Create order → stock decrements
-- [ ] Order status transitions (pending → confirmed → fulfilled)
-- [ ] Menu items CRUD works
-- [ ] Open bar tab → add items → settle
-- [ ] Staff CRUD works
-- [ ] Shift clock-in/out works
-- [ ] Leave request flow works
-
-### Dev C
-- [ ] Unauthenticated user → redirected to `/login`
-- [ ] Dashboard shows real aggregate data
-- [ ] All price displays show ₹ (not raw paise)
-- [ ] Error responses show meaningful error messages
-- [ ] No mock data references remain in codebase
-- [ ] `npm run build` succeeds with zero TypeScript errors
-
----
-
-## 📍 Common Gotchas to Watch For
-
-| Gotcha | Solution |
-|--------|----------|
-| Backend returns `{ success: true, data: {...} }` but frontend reads `response.data` directly | Always do `response.data.data` or use the `unwrap()` helper |
-| Backend uses `snake_case` in DB but API contract shows `camelCase` | The API contract is the source of truth — backend serializes to camelCase |
-| Frontend IDs are strings, backend IDs are integers | Update types first, then fix all `===` comparisons |
-| Prices are in paise (integer), UI shows rupees | Use `formatPaise()` helper everywhere |
-| `photoUrl` / `imageUrl` — backend serves from `/uploads/` | Vite proxy handles this; just use the relative path |
-| Backend pagination: `{ data: [...], pagination: { page, pageSize, total, totalPages } }` | Update list components to handle pagination object |
-| `Date` strings — backend returns ISO 8601 UTC | Use `date-fns` for formatting; don't do string manipulation |
+| # | Bug | Owner | Status |
+|---|-----|-------|--------|
+| 1 | Calendar date picker only | Dev B | ⬜ |
+| 2 | UPI QR + payment price | Dev B | ⬜ |
+| 3 | Member ordering | Dev B | ⬜ |
+| 4a | Membership active plan (name+duration) | Dev B | ⬜ |
+| 4b | Public plans active plan (name+duration) | Dev A | ⬜ |
+| 5 | Outfit font | Dev A | ⬜ |
+| 6 | Remove notice bar + Free Pass | Dev A | ⬜ |
+| 7 | Facilities card cleanup | Dev A | ⬜ |
+| 8 | Shop button removal | Dev A | ⬜ |
+| 9 | Remove /public/slots | Dev A | ⬜ |
+| 10 | Kanban assign to staff | Dev C | ⬜ |
+| 11 | Trial page simplification | Dev A | ⬜ |
+| 12 | Dashboard + Reports overhaul | Dev C | ⬜ |
+| 13 | Pagination + debouncing | Dev B (hooks) + Dev C (apply) | ⬜ |
+| 14 | Member bookings + profile image | Dev B | ⬜ |
+| 15 | Social Play Friday only | Dev B | ⬜ |
+| 16 | Remove Rent/Return buttons | Dev C | ⬜ |
+| 17 | Bar discount + name + earnings | Dev C | ⬜ |
+| 18 | Remove invoices | Dev C | ⬜ |
+| 19 | Settings cleanup + save fix | Dev C | ⬜ |
