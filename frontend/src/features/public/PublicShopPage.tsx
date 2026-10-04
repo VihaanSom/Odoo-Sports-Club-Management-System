@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { FaBagShopping, FaCartShopping } from 'react-icons/fa6';
-import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/Button';
+import { FaBagShopping } from 'react-icons/fa6';
 import { publicService } from '@/services/publicService';
 import type { PublicShopItem } from '@/types/public';
 
@@ -29,10 +27,6 @@ export const PublicShopPage = () => {
   const filtered = selectedCategory === 'all'
     ? items
     : items.filter((i) => i.category.toLowerCase() === selectedCategory.toLowerCase());
-
-  const handleReserve = (itemName: string) => {
-    toast.success(`Reservation inquiry for "${itemName}" placed. Visit club desk for checkout.`);
-  };
 
   return (
     <motion.div
@@ -128,18 +122,6 @@ export const PublicShopPage = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-5 pt-0">
-                <Button
-                  size="xs"
-                  variant="primary"
-                  className="w-full"
-                  leftIcon={<FaCartShopping />}
-                  onClick={() => handleReserve(item.name)}
-                >
-                  Reserve at Club Desk
-                </Button>
               </div>
             </div>
           ))}

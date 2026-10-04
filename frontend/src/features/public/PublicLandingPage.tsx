@@ -47,6 +47,7 @@ export const PublicLandingPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-4xl sm:text-6xl font-black tracking-tight max-w-4xl mx-auto text-base-content leading-tight"
+          style={{ fontFamily: "'Outfit', sans-serif" }}
         >
           The Pinnacle of <span className="text-primary underline decoration-amber-500 underline-offset-8">Athletic Excellence</span> in Ahmedabad.
         </motion.h1>
@@ -68,7 +69,7 @@ export const PublicLandingPage = () => {
         >
           <Link to="/public/trial">
             <Button size="md" variant="primary" rightIcon={<FaArrowRight />}>
-              Claim Free Pass
+              Book Trial
             </Button>
           </Link>
           <Link to="/public/plans">

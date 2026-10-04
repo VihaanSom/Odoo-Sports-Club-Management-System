@@ -1,22 +1,18 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'motion/react';
 import { FaTrophy, FaTicket, FaCheck } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/Button';
+import { Button, DatePicker } from '@/components/ui';
 import { publicService } from '@/services/publicService';
 
 const trialSchema = z.object({
   fullName: z.string().min(2, 'Name required (min 2 chars)'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Valid 10-digit phone required'),
-  sport: z.string().min(1, 'Select sport'),
-  preferredDate: z.string().min(1, 'Select preferred date'),
-  preferredSlot: z.string().min(1, 'Select time slot'),
-  experienceLevel: z.enum(['beginner', 'intermediate', 'advanced']),
-  state: z.string().min(1, 'Select state'),
+  date: z.string().min(1, 'Please select a trial date'),
 });
 
 type TrialFormData = z.infer<typeof trialSchema>;
@@ -25,13 +21,14 @@ export const PublicTrialPage = () => {
   const [passData, setPassData] = useState<{
     passCode: string;
     fullName: string;
-    sport: string;
+    phone: string;
     date: string;
   } | null>(null);
 
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TrialFormData>({
@@ -41,24 +38,25 @@ export const PublicTrialPage = () => {
       fullName: '',
       email: '',
       phone: '',
-      sport: 'Tennis',
-      preferredDate: '2026-10-05',
-      preferredSlot: '07:00 - 08:30 (Morning Slot)',
-      experienceLevel: 'intermediate',
-      state: 'Gujarat',
+      date: new Date().toISOString().split('T')[0],
     },
   });
 
   const onSubmit = async (data: TrialFormData) => {
     try {
-      const res = await publicService.submitTrialBooking(data);
+      const res = await publicService.submitTrialBooking({
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        preferredDate: data.date,
+      });
       setPassData({
         passCode: res.passCode,
         fullName: data.fullName,
-        sport: data.sport,
-        date: data.preferredDate,
+        phone: data.phone,
+        date: data.date,
       });
-      toast.success('1-Day Pass issued successfully');
+      toast.success(res.message || '1-Day Pass issued successfully');
       reset();
     } catch {
       toast.error('Pass registration failed');
@@ -114,10 +112,10 @@ export const PublicTrialPage = () => {
 
             <div className="p-3 bg-base-200/60 rounded-lg">
               <span className="text-base-content/60 block text-[10px] uppercase font-bold">
-                Sport Access
+                Contact Phone
               </span>
-              <span className="text-base font-bold text-primary mt-1 block">
-                {passData.sport}
+              <span className="text-base font-bold text-primary mt-1 block font-mono">
+                {passData.phone}
               </span>
             </div>
 
@@ -212,77 +210,22 @@ export const PublicTrialPage = () => {
 
               <div>
                 <label className="label">
-                  <span className="label-text font-medium text-xs">Sport Selection *</span>
-                </label>
-                <select
-                  className="select select-bordered w-full select-sm text-xs"
-                  {...register('sport')}
-                >
-                  <option value="Tennis">Tennis (Center Clay)</option>
-                  <option value="Badminton">Badminton (BWF Arena)</option>
-                  <option value="Squash">Glass Squash</option>
-                  <option value="Swimming">Olympic 50m Pool</option>
-                  <option value="Gym">Strength & Conditioning Gym</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="label">
                   <span className="label-text font-medium text-xs">Preferred Date *</span>
                 </label>
-                <input
-                  type="date"
-                  className={`input input-bordered w-full input-sm text-xs ${errors.preferredDate ? 'input-error' : ''}`}
-                  {...register('preferredDate')}
+                <Controller
+                  name="date"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      size="sm"
+                      placeholder="Select visit date"
+                      minDate={new Date().toISOString().split('T')[0]}
+                      error={errors.date?.message}
+                    />
+                  )}
                 />
-                {errors.preferredDate && (
-                  <span className="text-xs text-error mt-1">{errors.preferredDate.message}</span>
-                )}
-              </div>
-
-              <div>
-                <label className="label">
-                  <span className="label-text font-medium text-xs">Preferred Slot *</span>
-                </label>
-                <select
-                  className="select select-bordered w-full select-sm text-xs"
-                  {...register('preferredSlot')}
-                >
-                  <option value="06:30 - 08:00 (Early Morning)">06:30 - 08:00 (Early Morning)</option>
-                  <option value="08:00 - 09:30 (Morning)">08:00 - 09:30 (Morning)</option>
-                  <option value="17:00 - 18:30 (Evening)">17:00 - 18:30 (Evening)</option>
-                  <option value="19:00 - 20:30 (Night Prime)">19:00 - 20:30 (Night Prime)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="label">
-                  <span className="label-text font-medium text-xs">Experience Level *</span>
-                </label>
-                <select
-                  className="select select-bordered w-full select-sm text-xs"
-                  {...register('experienceLevel')}
-                >
-                  <option value="beginner">Beginner (Recreational)</option>
-                  <option value="intermediate">Intermediate (Club Player)</option>
-                  <option value="advanced">Advanced (Competitive / Tournament)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="label">
-                  <span className="label-text font-medium text-xs">State *</span>
-                </label>
-                <select
-                  className="select select-bordered w-full select-sm text-xs"
-                  {...register('state')}
-                >
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Rajasthan">Rajasthan</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Other">Other State</option>
-                </select>
               </div>
             </div>
 
@@ -294,7 +237,7 @@ export const PublicTrialPage = () => {
                 leftIcon={<FaTicket />}
                 isLoading={isSubmitting}
               >
-                Submit
+                Submit Request
               </Button>
             </div>
           </form>
