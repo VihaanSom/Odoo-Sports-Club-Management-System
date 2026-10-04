@@ -26,4 +26,12 @@ router.get('/me', authenticate, (req, res, next) =>
   authController.getMe(req, res, next)
 );
 
+// AU-05 / Bug #19: Update user profile (accepts fullName and phone)
+router.patch('/profile', authenticate, (req, res, next) =>
+  authController.updateProfile(req, res, next)
+);
+router.patch('/me', authenticate, (req, res, next) =>
+  authController.updateProfile(req, res, next)
+);
+
 export default router;

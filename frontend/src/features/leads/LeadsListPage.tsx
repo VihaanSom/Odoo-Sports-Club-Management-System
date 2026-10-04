@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa6';
 import { Button, Skeleton } from '@/components/ui';
 import { SearchBar, FilterToolbar } from '@/components/shared';
+import { useDebounce, usePagination } from '@/hooks';
 import { leadService } from '@/services/leadService';
 import type { Lead, LeadStatus, CreateLeadPayload } from '@/types/leads';
 import {
@@ -23,15 +24,26 @@ export const LeadsListPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'board' | 'table'>('board');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCaptureModalOpen, setIsCaptureModalOpen] = useState(false);
+
+  const {
+    page,
+    totalPages,
+    setPage,
+    startIndex,
+    endIndex,
+    paginateItems,
+  } = usePagination({ totalItems: leads.length, pageSize: 10 });
+  const paginatedLeads = paginateItems(leads);
 
   const fetchLeads = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await leadService.getAll({
         status: statusFilter !== 'all' ? statusFilter : undefined,
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
       });
       setLeads(data);
     } catch {
@@ -39,7 +51,7 @@ export const LeadsListPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, debouncedSearch]);
 
   useEffect(() => {
     fetchLeads();
@@ -72,6 +84,12 @@ export const LeadsListPage = () => {
     } catch {
       toast.error('Failed to create lead');
     }
+  };
+
+  const handleAssignLead = async (id: number | string, staffId: number | null) => {
+    setLeads((prev) =>
+      prev.map((l) => (String(l.id) === String(id) ? { ...l, assignedTo: staffId ?? undefined } : l))
+    );
   };
 
   const statusOptions = [
@@ -203,9 +221,43 @@ export const LeadsListPage = () => {
         <LeadKanbanBoard
           leads={leads}
           onTransitionStage={handleTransitionStage}
+          onAssignLead={handleAssignLead}
         />
       ) : (
-        <LeadsTable leads={leads} />
+        <div className="space-y-3">
+          <LeadsTable leads={paginatedLeads} />
+          {leads.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-base-100 border border-base-300 rounded-xl">
+              <span className="text-xs text-base-content/60">
+                Showing {startIndex + 1} to {endIndex} of {leads.length} leads
+              </span>
+              <div className="join">
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page <= 1}
+                  className="join-item btn btn-xs sm:btn-sm btn-outline"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className="join-item btn btn-xs sm:btn-sm btn-outline no-animation pointer-events-none font-mono"
+                >
+                  {page} / {totalPages}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page >= totalPages}
+                  className="join-item btn btn-xs sm:btn-sm btn-outline"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Capture Lead Modal */}

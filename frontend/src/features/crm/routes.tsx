@@ -9,9 +9,6 @@ import MemberDetailPage from '../members/MemberDetailPage';
 import LeadsListPage from '../leads/LeadsListPage';
 import LeadDetailPage from '../leads/LeadDetailPage';
 
-// Invoices Pages
-import RenewalInvoicesPage from '../invoices/RenewalInvoicesPage';
-
 export const crmRoutes: RouteObject[] = [
   {
     path: 'members/:id',
@@ -25,10 +22,6 @@ export const crmRoutes: RouteObject[] = [
     path: 'leads/:id',
     element: <LeadDetailPage />,
   },
-  {
-    path: 'invoices',
-    element: <RenewalInvoicesPage />,
-  },
 ];
 
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -40,7 +33,6 @@ export const crmJsxRoutes = (
       <Route path="members/:id" element={<MemberDetailPage />} />
       <Route path="leads" element={<LeadsListPage />} />
       <Route path="leads/:id" element={<LeadDetailPage />} />
-      <Route path="invoices" element={<RenewalInvoicesPage />} />
     </Route>
   </React.Fragment>
 );

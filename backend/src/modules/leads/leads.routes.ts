@@ -36,8 +36,16 @@ router.get(
   (req, res, next) => leadsController.getLeadById(req, res, next)
 );
 
-// LD-03: Update lead status & staff assignment
+// LD-03: Update lead status & staff assignment (PUT / PATCH)
 router.put(
+  '/:id',
+  authenticate,
+  requireRoles('admin', 'front_desk'),
+  validateParams(leadIdParamSchema),
+  validateBody(updateLeadSchema),
+  (req, res, next) => leadsController.updateLead(req, res, next)
+);
+router.patch(
   '/:id',
   authenticate,
   requireRoles('admin', 'front_desk'),

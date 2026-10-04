@@ -302,7 +302,7 @@ Each developer owns **distinct feature directories** — no two developers ever 
 | 13 | Pagination + debouncing | Dev B (hooks + Dev B lists ✅) + Dev C (admin lists) | 🟡 |
 | 14 | Member bookings + profile image | Dev B | ✅ |
 | 15 | Social Play Friday only | Dev B | ✅ |
-| 16 | Remove Rent/Return buttons | Dev C | ⬜ |
-| 17 | Bar discount + name + earnings | Dev C | ⬜ |
-| 18 | Remove invoices | Dev C | ⬜ |
-| 19 | Settings cleanup + save fix | Dev C | ⬜ |
+| 16 | Remove Rent/Return buttons | Dev C | ✅ |
+| 17 | Bar discount + name + earnings | Dev C | ✅ |
+| 18 | Remove invoices | Dev C | ✅ |
+| 19 | Settings cleanup + save fix | Dev C | ✅ |

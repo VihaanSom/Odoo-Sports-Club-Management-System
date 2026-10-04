@@ -2,50 +2,53 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   FaChartLine,
-  FaCalendarDays,
   FaUsers,
   FaWineGlass,
   FaReceipt,
   FaCircleCheck,
+  FaFilePdf,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { reportService } from '@/services/reportService';
+import { formatPaise } from '@/lib/utils';
 import { RevenueLineChart } from './components/RevenueLineChart';
-import { CourtHeatmap } from './components/CourtHeatmap';
 import { MemberGrowthLine } from './components/MemberGrowthLine';
 import type {
   RevenueSummary,
-  CourtHeatmapPoint,
   MemberGrowthPoint,
   BarAnalyticsSummary,
   ClubSummaryKPIs,
+  OverallEarningsResponse,
 } from '@/types/reports';
 
 export const ReportsHubPage = () => {
-  const [activeTab, setActiveTab] = useState<'revenue' | 'occupancy' | 'members' | 'bar'>('revenue');
+  const [activeTab, setActiveTab] = useState<'revenue' | 'members' | 'bar'>('revenue');
   const [kpis, setKpis] = useState<ClubSummaryKPIs | null>(null);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
-  const [heatmap, setHeatmap] = useState<CourtHeatmapPoint[]>([]);
+  const [earnings, setEarnings] = useState<OverallEarningsResponse | null>(null);
   const [memberGrowth, setMemberGrowth] = useState<MemberGrowthPoint[]>([]);
   const [barAnalytics, setBarAnalytics] = useState<BarAnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     const fetchAllReports = async () => {
       setLoading(true);
       try {
-        const [kpiRes, revRes, heatRes, growthRes, barRes] = await Promise.all([
+        const [kpiRes, revRes, growthRes, barRes, earnRes] = await Promise.all([
           reportService.getClubSummaryKPIs(),
           reportService.getRevenueSummary(),
-          reportService.getCourtHeatmap(),
           reportService.getMemberGrowth(),
           reportService.getBarAnalytics(),
+          reportService.getEarnings(),
         ]);
         setKpis(kpiRes);
         setRevenue(revRes);
-        setHeatmap(heatRes);
         setMemberGrowth(growthRes);
         setBarAnalytics(barRes);
+        setEarnings(earnRes);
       } catch {
         toast.error('Failed to load analytics');
       } finally {
@@ -55,6 +58,45 @@ export const ReportsHubPage = () => {
 
     fetchAllReports();
   }, []);
+
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById('reports-hub-content');
+    if (!element) {
+      window.print();
+      return;
+    }
+    setDownloadingPdf(true);
+    toast.loading('Generating executive PDF report...', { id: 'pdf-toast' });
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`champions-club-analytics-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('PDF report downloaded successfully', { id: 'pdf-toast' });
+    } catch (err) {
+      console.error('PDF generation error, fallback to window.print():', err);
+      window.print();
+      toast.dismiss('pdf-toast');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -72,17 +114,82 @@ export const ReportsHubPage = () => {
       transition={{ duration: 0.35 }}
       className="space-y-6"
     >
-      {/* Title */}
+      {/* Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
             <FaChartLine className="size-7 text-primary" /> Club Analytics & Reports
           </h1>
           <p className="text-sm text-base-content/70 mt-1">
-            Real-time financial intelligence, court occupancy heatmap, member retention, and bar POS metrics.
+            Real-time financial intelligence, member retention, and bar POS metrics.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={handleDownloadPdf}
+          disabled={downloadingPdf}
+          className="btn btn-outline btn-sm gap-2 font-semibold shadow-xs"
+        >
+          <FaFilePdf className="size-4 text-error" />
+          <span>{downloadingPdf ? 'Exporting...' : 'Download PDF'}</span>
+        </button>
       </div>
+
+      <div id="reports-hub-content" className="space-y-6">
+        {/* Earnings Widgets: Today, This Week, This Month */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="card bg-base-100 border border-base-300 p-4 shadow-xs rounded-2xl">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                Earnings Today
+              </span>
+              <span className="badge badge-xs badge-success">Today</span>
+            </div>
+            <div className="text-2xl font-black text-success mt-2 font-mono">
+              {formatPaise(earnings?.today.totalPaise ?? 0)}
+            </div>
+            <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+              <span>Courts: {formatPaise(earnings?.today.courtsPaise ?? 0)}</span>
+              <span>·</span>
+              <span>Bar: {formatPaise(earnings?.today.barPaise ?? 0)}</span>
+            </div>
+          </div>
+
+          <div className="card bg-base-100 border border-base-300 p-4 shadow-xs rounded-2xl">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                Earnings This Week
+              </span>
+              <span className="badge badge-xs badge-primary">This Week</span>
+            </div>
+            <div className="text-2xl font-black text-primary mt-2 font-mono">
+              {formatPaise(earnings?.thisWeek.totalPaise ?? 0)}
+            </div>
+            <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+              <span>Courts: {formatPaise(earnings?.thisWeek.courtsPaise ?? 0)}</span>
+              <span>·</span>
+              <span>Bar: {formatPaise(earnings?.thisWeek.barPaise ?? 0)}</span>
+            </div>
+          </div>
+
+          <div className="card bg-base-100 border border-base-300 p-4 shadow-xs rounded-2xl">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                Earnings This Month
+              </span>
+              <span className="badge badge-xs badge-secondary">This Month</span>
+            </div>
+            <div className="text-2xl font-black text-secondary mt-2 font-mono">
+              {formatPaise(earnings?.thisMonth.totalPaise ?? 0)}
+            </div>
+            <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+              <span>Courts: {formatPaise(earnings?.thisMonth.courtsPaise ?? 0)}</span>
+              <span>·</span>
+              <span>Subs: {formatPaise(earnings?.thisMonth.membershipsPaise ?? 0)}</span>
+            </div>
+          </div>
+        </div>
 
       {/* Top Level KPIs */}
       {kpis && (
@@ -144,13 +251,6 @@ export const ReportsHubPage = () => {
         </button>
         <button
           type="button"
-          className={`tab gap-2 text-xs font-semibold ${activeTab === 'occupancy' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('occupancy')}
-        >
-          <FaCalendarDays /> Court Occupancy Heatmap
-        </button>
-        <button
-          type="button"
           className={`tab gap-2 text-xs font-semibold ${activeTab === 'members' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('members')}
         >
@@ -206,18 +306,7 @@ export const ReportsHubPage = () => {
         </div>
       )}
 
-      {/* Tab 2: Court Occupancy Heatmap */}
-      {activeTab === 'occupancy' && (
-        <div className="card bg-base-100 border border-base-300 p-5 shadow-xs space-y-4">
-          <div>
-            <h3 className="font-bold text-base">Weekly Court Occupancy Matrix</h3>
-            <p className="text-xs text-base-content/60">
-              Aggregated utilization across 12 tennis, badminton, squash, and swimming facilities.
-            </p>
-          </div>
-          <CourtHeatmap data={heatmap} />
-        </div>
-      )}
+
 
       {/* Tab 3: Member Growth & Churn */}
       {activeTab === 'members' && (
@@ -293,6 +382,7 @@ export const ReportsHubPage = () => {
           </div>
         </div>
       )}
+      </div>
     </motion.div>
   );
 };

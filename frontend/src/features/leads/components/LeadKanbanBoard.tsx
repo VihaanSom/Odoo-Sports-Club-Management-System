@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   FaUserTie,
   FaPhone,
@@ -11,10 +12,14 @@ import {
 import { Badge } from '@/components/ui';
 import { formatDate, cn } from '@/lib/utils';
 import type { Lead, LeadStatus } from '@/types/leads';
+import type { StaffMember } from '@/types/staff';
+import { staffService } from '@/services/staffService';
+import { leadService } from '@/services/leadService';
 
 interface LeadKanbanBoardProps {
   leads: Lead[];
   onTransitionStage: (id: number | string, newStatus: LeadStatus) => Promise<void>;
+  onAssignLead?: (id: number | string, staffId: number | null) => Promise<void>;
 }
 
 interface ColumnDef {
@@ -54,10 +59,42 @@ const columns: ColumnDef[] = [
 export const LeadKanbanBoard = ({
   leads,
   onTransitionStage,
+  onAssignLead,
 }: LeadKanbanBoardProps) => {
   const navigate = useNavigate();
   const [draggedLeadId, setDraggedLeadId] = useState<string | number | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<LeadStatus | null>(null);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    staffService
+      .getStaffMembers({ limit: 100 })
+      .then((res) => {
+        if (isMounted) setStaffMembers(res.data);
+      })
+      .catch(() => {
+        // Fallback silently if offline or error
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleAssignStaff = async (leadId: number | string, staffId: number | null) => {
+    try {
+      await leadService.assignLead(leadId, staffId);
+      if (onAssignLead) {
+        await onAssignLead(leadId, staffId);
+      }
+      const staffName = staffId
+        ? staffMembers.find((s) => String(s.id) === String(staffId))?.name || `Staff #${staffId}`
+        : 'Unassigned';
+      toast.success(staffId ? `Assigned to ${staffName}` : 'Lead marked unassigned');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to assign staff');
+    }
+  };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, leadId: string | number) => {
     e.dataTransfer.setData('text/plain', String(leadId));
@@ -187,10 +224,26 @@ export const LeadKanbanBoard = ({
                         {lead.phone && <FaPhone className="size-2.5 text-base-content/40" />}
                         {lead.phone || lead.email || 'No contact'}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <FaUserTie className="size-2.5 text-base-content/40" />
-                        {lead.assignedStaffName?.split(' ')[0] || 'Unassigned'}
-                      </span>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <FaUserTie className="size-2.5 text-base-content/40 shrink-0" />
+                        <select
+                          value={lead.assignedTo ?? ''}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            const val = e.target.value;
+                            handleAssignStaff(lead.id, val ? Number(val) : null);
+                          }}
+                          className="select select-ghost select-xs text-[10px] h-5 min-h-5 px-1 py-0 border border-base-300 rounded font-medium bg-base-100 hover:border-primary/50 focus:border-primary max-w-[110px]"
+                          title="Assign lead to staff"
+                        >
+                          <option value="">Unassigned</option>
+                          {staffMembers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.role})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     {/* Quick Stage Progression Buttons */}

@@ -6,8 +6,47 @@ import {
   InventoryReportQuery,
   BarReportQuery,
   StaffReportQuery,
+  EarningsQuery,
+  BarAnalyticsQuery,
 } from './reports.schema';
 import { MembershipTier } from '@prisma/client';
+
+export interface EarningsPeriodData {
+  totalPaise: number;
+  totalRupees: number;
+  courtsPaise: number;
+  shopPaise: number;
+  barPaise: number;
+  membershipsPaise: number;
+}
+
+export interface OverallEarningsResponse {
+  today: EarningsPeriodData;
+  thisWeek: EarningsPeriodData;
+  thisMonth: EarningsPeriodData;
+  currentPeriod: string;
+  selectedPeriodData: EarningsPeriodData;
+}
+
+export interface BarAnalyticsResponse {
+  totalTabs: number;
+  openTabsCount: number;
+  settledTabsCount: number;
+  averageTabPaise: number;
+  totalRevenuePaise: number;
+  topSellers: Array<{
+    id: string;
+    name: string;
+    category: string;
+    unitsSold: number;
+    revenuePaise: number;
+  }>;
+  hourlyActivity: Array<{
+    hour: string;
+    revenuePaise: number;
+    tabCount: number;
+  }>;
+}
 
 export class ReportsService {
   /**
@@ -611,6 +650,197 @@ export class ReportsService {
         leaveBalanceDays,
       };
     });
+  }
+
+  /**
+   * Helper: Query aggregated revenue across all streams for a specific date window
+   */
+  async queryRevenueForRange(fromDate: Date, toDate: Date): Promise<EarningsPeriodData> {
+    const [bookings, orders, barPayments, memberPayments] = await Promise.all([
+      prisma.booking.findMany({
+        where: {
+          status: 'confirmed',
+          createdAt: { gte: fromDate, lte: toDate },
+        },
+        select: { amountPaid: true },
+      }),
+      prisma.order.findMany({
+        where: {
+          status: { in: ['confirmed', 'fulfilled'] },
+          orderType: { in: ['in_store', 'online'] },
+          createdAt: { gte: fromDate, lte: toDate },
+        },
+        select: { totalAmount: true },
+      }),
+      prisma.payment.findMany({
+        where: {
+          barTabId: { not: null },
+          paidAt: { gte: fromDate, lte: toDate },
+        },
+        select: { amount: true },
+      }),
+      prisma.payment.findMany({
+        where: {
+          memberId: { not: null },
+          bookingId: null,
+          orderId: null,
+          barTabId: null,
+          paidAt: { gte: fromDate, lte: toDate },
+        },
+        select: { amount: true },
+      }),
+    ]);
+
+    const courtsPaise = bookings.reduce((sum, b) => sum + Math.round(Number(b.amountPaid) * 100), 0);
+    const shopPaise = orders.reduce((sum, o) => sum + Math.round(Number(o.totalAmount) * 100), 0);
+    const barPaise = barPayments.reduce((sum, p) => sum + Math.round(Number(p.amount) * 100), 0);
+    const membershipsPaise = memberPayments.reduce((sum, p) => sum + Math.round(Number(p.amount) * 100), 0);
+    const totalPaise = courtsPaise + shopPaise + barPaise + membershipsPaise;
+
+    return {
+      totalPaise,
+      totalRupees: totalPaise / 100,
+      courtsPaise,
+      shopPaise,
+      barPaise,
+      membershipsPaise,
+    };
+  }
+
+  /**
+   * Unified earnings query: Today, This Week, This Month (GET /api/v1/reports/earnings)
+   */
+  async getEarnings(query: EarningsQuery): Promise<OverallEarningsResponse> {
+    const now = new Date();
+
+    // 1. Today range
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    // 2. This week range (Monday through Sunday)
+    const dayOfWeek = (now.getDay() + 6) % 7; // Monday = 0
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+
+    // 3. This month range
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const [today, thisWeek, thisMonth] = await Promise.all([
+      this.queryRevenueForRange(startOfToday, endOfToday),
+      this.queryRevenueForRange(startOfWeek, endOfWeek),
+      this.queryRevenueForRange(startOfMonth, endOfMonth),
+    ]);
+
+    const period = query.period || 'today';
+    const selectedPeriodData =
+      period === 'week' ? thisWeek : period === 'month' ? thisMonth : today;
+
+    return {
+      today,
+      thisWeek,
+      thisMonth,
+      currentPeriod: period,
+      selectedPeriodData,
+    };
+  }
+
+  /**
+   * Unified bar analytics query (GET /api/v1/reports/bar-analytics)
+   */
+  async getBarAnalytics(query?: BarAnalyticsQuery): Promise<BarAnalyticsResponse> {
+    const { fromDate, toDate } = this.parseDateRange(query?.from, query?.to);
+
+    const [tabs, menuItems] = await Promise.all([
+      prisma.barTab.findMany({
+        where: {
+          openedAt: { gte: fromDate, lte: toDate },
+        },
+        include: {
+          table: true,
+          items: {
+            include: { menuItem: true },
+          },
+          payments: true,
+        },
+      }),
+      prisma.menuItem.findMany({
+        where: { isAvailable: true },
+        select: { id: true, name: true, category: true },
+      }),
+    ]);
+
+    let totalRevenuePaise = 0;
+    let settledTabsCount = 0;
+    let openTabsCount = 0;
+    const totalTabs = tabs.length;
+
+    const itemMap = new Map<number, { id: string; name: string; category: string; unitsSold: number; revenuePaise: number }>();
+
+    const hourBuckets = new Map<string, { revenuePaise: number; tabCount: number }>();
+    const defaultHours = ['12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+    for (const h of defaultHours) {
+      hourBuckets.set(h, { revenuePaise: 0, tabCount: 0 });
+    }
+
+    for (const tab of tabs) {
+      if (tab.status === 'settled') {
+        settledTabsCount++;
+        for (const p of tab.payments) {
+          totalRevenuePaise += Math.round(Number(p.amount) * 100);
+        }
+      } else if (tab.status === 'open') {
+        openTabsCount++;
+      }
+
+      const tabHour = new Date(tab.openedAt).getUTCHours();
+      const closestHour = defaultHours.reduce((prev, curr) => {
+        const prevHour = parseInt(prev.split(':')[0], 10);
+        const currHour = parseInt(curr.split(':')[0], 10);
+        return Math.abs(currHour - tabHour) < Math.abs(prevHour - tabHour) ? curr : prev;
+      }, '18:00');
+
+      const hData = hourBuckets.get(closestHour)!;
+      hData.tabCount++;
+      for (const p of tab.payments) {
+        hData.revenuePaise += Math.round(Number(p.amount) * 100);
+      }
+
+      for (const it of tab.items) {
+        const existing = itemMap.get(it.menuItemId) || {
+          id: String(it.menuItemId),
+          name: it.menuItem?.name || `Item #${it.menuItemId}`,
+          category: it.menuItem?.category || 'Bistro & Lounge',
+          unitsSold: 0,
+          revenuePaise: 0,
+        };
+        existing.unitsSold += it.qty;
+        existing.revenuePaise += Math.round(Number(it.subtotal) * 100);
+        itemMap.set(it.menuItemId, existing);
+      }
+    }
+
+    const topSellers = Array.from(itemMap.values())
+      .sort((a, b) => b.revenuePaise - a.revenuePaise)
+      .slice(0, 10);
+
+    const hourlyActivity = defaultHours.map((hour) => ({
+      hour,
+      revenuePaise: hourBuckets.get(hour)?.revenuePaise || 0,
+      tabCount: hourBuckets.get(hour)?.tabCount || 0,
+    }));
+
+    const averageTabPaise = settledTabsCount > 0 ? Math.round(totalRevenuePaise / settledTabsCount) : 0;
+
+    return {
+      totalTabs,
+      openTabsCount,
+      settledTabsCount,
+      averageTabPaise,
+      totalRevenuePaise,
+      topSellers,
+      hourlyActivity,
+    };
   }
 }
 

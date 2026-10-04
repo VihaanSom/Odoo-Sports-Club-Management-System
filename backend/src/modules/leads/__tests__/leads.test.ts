@@ -629,5 +629,52 @@ describe('Public Portal & Leads Module (Contracts PU-01 to PU-07 & LD-01 to LD-0
         (prisma.lead as any).update = origUpdate;
       }
     });
+
+    it('should succeed with 200 on PATCH /api/v1/leads/:id with assignedTo only (Bug #10)', async () => {
+      const origLeadFind = prisma.lead.findUnique;
+      const origStaffFind = prisma.staff.findUnique;
+      const origUpdate = prisma.lead.update;
+
+      (prisma.lead as any).findUnique = async () => ({
+        id: 11,
+        name: 'John Connor',
+        status: 'new',
+        assignedTo: null,
+      });
+      (prisma.staff as any).findUnique = async () => ({
+        id: 7,
+        firstName: 'Alex',
+        lastName: 'Coach',
+        isActive: true,
+      });
+      (prisma.lead as any).update = async ({ data }: any) => ({
+        id: 11,
+        name: 'John Connor',
+        email: 'john@example.com',
+        phone: '+919876543211',
+        message: 'Trial',
+        status: 'new',
+        assignedTo: data.assignedTo,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        staff: { id: 7, firstName: 'Alex', lastName: 'Coach' },
+      });
+
+      try {
+        const res = await request(app)
+          .patch('/api/v1/leads/11')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ assignedTo: 7 });
+
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.body.success, true);
+        assert.strictEqual(res.body.data.assignedTo, 7);
+        assert.strictEqual(res.body.data.assignedStaffName, 'Alex Coach');
+      } finally {
+        (prisma.lead as any).findUnique = origLeadFind;
+        (prisma.staff as any).findUnique = origStaffFind;
+        (prisma.lead as any).update = origUpdate;
+      }
+    });
   });
 });

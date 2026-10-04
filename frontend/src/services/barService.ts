@@ -9,6 +9,7 @@ import type {
   SettleBarTabPayload,
   CreateBarTablePayload,
   UpdateBarTablePayload,
+  BarTodayEarnings,
 } from '@/types/bar';
 
 /**
@@ -85,9 +86,12 @@ export function normalizeBarTable(raw: any): BarTable {
       openedAt: raw.currentTab.openedAt,
       items: [],
       itemCount: raw.currentTab.itemCount,
-      subtotalPaise: raw.currentTab.runningTotalPaise,
-      discountPaise: 0,
-      totalPaise: raw.currentTab.runningTotalPaise,
+      memberId: raw.currentTab.memberId ? Number(raw.currentTab.memberId) : null,
+      memberName: raw.currentTab.memberName ?? null,
+      memberTier: raw.currentTab.memberTier ?? null,
+      subtotalPaise: raw.currentTab.subtotalPaise ?? raw.currentTab.runningTotalPaise,
+      discountPaise: raw.currentTab.discountPaise ?? 0,
+      totalPaise: raw.currentTab.totalPaise ?? raw.currentTab.runningTotalPaise,
       openedBy: 0,
     };
   } else if (raw.activeTab) {
@@ -212,6 +216,12 @@ export const barService = {
     );
     const rawData = response.data?.data || response.data;
     return normalizeBarTab(rawData);
+  },
+
+  // TB-07: Get today's total bar earnings & count
+  getTodayEarnings: async (): Promise<BarTodayEarnings> => {
+    const response = await apiClient.get<ApiResponse<BarTodayEarnings>>('/bar/earnings/today');
+    return response.data?.data || (response.data as unknown as BarTodayEarnings);
   },
 };
 

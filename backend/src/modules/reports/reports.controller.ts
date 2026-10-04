@@ -74,6 +74,30 @@ export class ReportsController {
       next(error);
     }
   }
+
+  /**
+   * RP-07: GET /api/v1/reports/earnings?period=today|week|month
+   */
+  async getEarnings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportsService.getEarnings(req.query as any);
+      sendSuccess(res, data, 'Earnings retrieved successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * RP-08: GET /api/v1/reports/bar-analytics
+   */
+  async getBarAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await reportsService.getBarAnalytics(req.query as any);
+      sendSuccess(res, data, 'Bar analytics retrieved successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const reportsController = new ReportsController();

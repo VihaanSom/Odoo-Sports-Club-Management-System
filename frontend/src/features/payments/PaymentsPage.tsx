@@ -10,6 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { PaymentsTable } from './components/PaymentsTable';
 import { paymentService } from '@/services/paymentService';
+import { useDebounce, usePagination } from '@/hooks';
 import type {
   PaymentRecord,
   PaymentCategory,
@@ -37,10 +38,21 @@ export const PaymentsPage = () => {
   const [stats, setStats] = useState<PaymentSummaryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+
+  const {
+    page,
+    totalPages,
+    setPage,
+    startIndex,
+    endIndex,
+    paginateItems,
+  } = usePagination({ totalItems: payments.length, pageSize: 10 });
+  const paginatedPayments = paginateItems(payments);
 
   const {
     register,
@@ -65,7 +77,7 @@ export const PaymentsPage = () => {
     setLoading(true);
     try {
       const res = await paymentService.getPayments({
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
         category: categoryFilter !== 'all' ? (categoryFilter as PaymentCategory) : undefined,
         method: methodFilter !== 'all' ? (methodFilter as LedgerPaymentMethod) : undefined,
         status: statusFilter !== 'all' ? (statusFilter as PaymentStatusType) : undefined,
@@ -81,7 +93,8 @@ export const PaymentsPage = () => {
 
   useEffect(() => {
     loadPayments();
-  }, [searchQuery, categoryFilter, methodFilter, statusFilter]);
+    setPage(1);
+  }, [debouncedSearch, categoryFilter, methodFilter, statusFilter]);
 
   const handleRefund = async (payload: RefundPaymentPayload) => {
     try {
@@ -234,7 +247,37 @@ export const PaymentsPage = () => {
       </div>
 
       {/* Unified Ledger Table */}
-      <PaymentsTable payments={payments} onRefund={handleRefund} isLoading={loading} />
+      <div className="space-y-4">
+        <PaymentsTable payments={paginatedPayments} onRefund={handleRefund} isLoading={loading} />
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border border-base-300 bg-base-100 rounded-xl">
+            <span className="text-xs text-base-content/60">
+              Showing {startIndex}–{endIndex} of {payments.length} transactions
+            </span>
+            <div className="join">
+              <button
+                className="join-item btn btn-xs"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                «
+              </button>
+              <button className="join-item btn btn-xs btn-active">
+                Page {page} of {totalPages}
+              </button>
+              <button
+                className="join-item btn btn-xs"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Record Payment Modal */}
       <Modal

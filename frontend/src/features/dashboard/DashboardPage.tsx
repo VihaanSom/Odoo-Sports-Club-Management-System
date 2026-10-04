@@ -8,12 +8,13 @@ import {
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 import { reportService } from '@/services/reportService';
+import { formatPaise } from '@/lib/utils';
 import type {
   ClubSummaryKPIs,
   RevenueSummary,
-  CourtHeatmapPoint,
   MemberGrowthPoint,
   BarAnalyticsSummary,
+  OverallEarningsResponse,
 } from '@/types/reports';
 import { useAuthStore } from '@/stores/authStore';
 import { isMemberRole } from '@/lib/permissions';
@@ -23,7 +24,6 @@ import {
   RecentBookingsTable,
   RevenueChart,
   MemberGrowthChart,
-  CourtUtilizationChart,
   BarEarningsSummary,
   UpcomingRenewals,
   RecentLeadsWidget,
@@ -38,33 +38,33 @@ export const DashboardPage = () => {
 
   const [kpis, setKpis] = useState<ClubSummaryKPIs | null>(null);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
-  const [heatmap, setHeatmap] = useState<CourtHeatmapPoint[]>([]);
+  const [earnings, setEarnings] = useState<OverallEarningsResponse | null>(null);
   const [memberGrowth, setMemberGrowth] = useState<MemberGrowthPoint[]>([]);
   const [barAnalytics, setBarAnalytics] = useState<BarAnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Tab state for Analytics Hub (Revenue / Utilization / Member Growth / Bistro)
-  const [analyticsTab, setAnalyticsTab] = useState<'revenue' | 'utilization' | 'members' | 'bar'>('revenue');
+  // Tab state for Analytics Hub (Revenue / Member Growth / Bistro)
+  const [analyticsTab, setAnalyticsTab] = useState<'revenue' | 'members' | 'bar'>('revenue');
 
   // Tab state for Operations Watchlist (Renewals / Leads / Alerts / Equipment)
   const [activeOpsTab, setActiveOpsTab] = useState<'renewals' | 'leads' | 'stock' | 'equipment'>('renewals');
 
   const fetchDashboardData = useCallback(async (showToast = false) => {
     try {
-      const [kpiRes, revRes, heatRes, growthRes, barRes] = await Promise.all([
+      const [kpiRes, revRes, growthRes, barRes, earnRes] = await Promise.all([
         reportService.getClubSummaryKPIs(),
         reportService.getRevenueSummary(),
-        reportService.getCourtHeatmap(),
         reportService.getMemberGrowth(),
         reportService.getBarAnalytics(),
+        reportService.getEarnings(),
       ]);
 
       setKpis(kpiRes);
       setRevenue(revRes);
-      setHeatmap(heatRes);
       setMemberGrowth(growthRes);
       setBarAnalytics(barRes);
+      setEarnings(earnRes);
 
       if (showToast) {
         toast.success('Dashboard metrics updated');
@@ -140,6 +140,60 @@ export const DashboardPage = () => {
       {/* Primary KPI Metrics (4 Clean Cards) */}
       <KpiStatsGrid kpis={kpis} loading={loading} />
 
+      {/* Earnings Overview Widgets: Today / This Week / This Month */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+              Earnings Today
+            </span>
+            <span className="badge badge-xs badge-success">Today</span>
+          </div>
+          <div className="text-2xl font-black text-success mt-2 font-mono">
+            {formatPaise(earnings?.today.totalPaise ?? 0)}
+          </div>
+          <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+            <span>Courts: {formatPaise(earnings?.today.courtsPaise ?? 0)}</span>
+            <span>·</span>
+            <span>Bar: {formatPaise(earnings?.today.barPaise ?? 0)}</span>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+              Earnings This Week
+            </span>
+            <span className="badge badge-xs badge-primary">This Week</span>
+          </div>
+          <div className="text-2xl font-black text-primary mt-2 font-mono">
+            {formatPaise(earnings?.thisWeek.totalPaise ?? 0)}
+          </div>
+          <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+            <span>Courts: {formatPaise(earnings?.thisWeek.courtsPaise ?? 0)}</span>
+            <span>·</span>
+            <span>Bar: {formatPaise(earnings?.thisWeek.barPaise ?? 0)}</span>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 border border-base-200/80 p-4 shadow-xs rounded-2xl">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+              Earnings This Month
+            </span>
+            <span className="badge badge-xs badge-secondary">This Month</span>
+          </div>
+          <div className="text-2xl font-black text-secondary mt-2 font-mono">
+            {formatPaise(earnings?.thisMonth.totalPaise ?? 0)}
+          </div>
+          <div className="text-[11px] text-base-content/50 mt-1 flex items-center gap-2">
+            <span>Courts: {formatPaise(earnings?.thisMonth.courtsPaise ?? 0)}</span>
+            <span>·</span>
+            <span>Subs: {formatPaise(earnings?.thisMonth.membershipsPaise ?? 0)}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content Layout (2 Columns) */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         {/* Primary Left Column: Analytics + Recent Bookings */}
@@ -161,17 +215,6 @@ export const DashboardPage = () => {
                   }`}
                 >
                   Revenue
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAnalyticsTab('utilization')}
-                  className={`tab tab-xs sm:tab-sm transition-all rounded-lg ${
-                    analyticsTab === 'utilization'
-                      ? 'tab-active bg-base-100 text-base-content shadow-xs font-semibold'
-                      : 'text-base-content/70'
-                  }`}
-                >
-                  Court Heatmap
                 </button>
                 <button
                   type="button"
@@ -200,7 +243,6 @@ export const DashboardPage = () => {
 
             <div>
               {analyticsTab === 'revenue' && <RevenueChart data={revenue} loading={loading} />}
-              {analyticsTab === 'utilization' && <CourtUtilizationChart data={heatmap} loading={loading} />}
               {analyticsTab === 'members' && <MemberGrowthChart data={memberGrowth} loading={loading} />}
               {analyticsTab === 'bar' && <BarEarningsSummary data={barAnalytics} />}
             </div>

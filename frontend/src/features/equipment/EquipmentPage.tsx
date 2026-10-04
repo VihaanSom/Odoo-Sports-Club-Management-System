@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { FaTrophy, FaBoxesStacked, FaPlus, FaCartShopping } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui';
+import { SearchBar } from '@/components/shared';
+import { useDebounce, usePagination } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { canManageEquipment, isMemberRole } from '@/lib/permissions';
 import type { Equipment } from '@/types';
@@ -20,6 +22,8 @@ export const EquipmentPage = () => {
   const [items, setItems] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categories = ['All', 'Racket', 'Ball', 'Shoe', 'Accessory', 'Apparel'];
@@ -40,29 +44,28 @@ export const EquipmentPage = () => {
     fetchEquipment();
   }, [fetchEquipment]);
 
-  const filtered = items.filter(
-    (item) => selectedCategory === 'All' || item.category.toLowerCase() === selectedCategory.toLowerCase()
-  );
+  const filtered = items.filter((item) => {
+    const matchesCat =
+      selectedCategory === 'All' ||
+      item.category.toLowerCase() === selectedCategory.toLowerCase();
+    const query = debouncedSearch.toLowerCase().trim();
+    const matchesSearch =
+      !query ||
+      item.name.toLowerCase().includes(query) ||
+      (item.brand && item.brand.toLowerCase().includes(query)) ||
+      (item.description && item.description.toLowerCase().includes(query));
+    return matchesCat && matchesSearch;
+  });
 
-  const handleRent = async (id: string | number, name: string) => {
-    try {
-      await equipmentService.rentItem(id);
-      toast.success(`Issued 1x ${name} to member.`);
-      await fetchEquipment();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to issue equipment');
-    }
-  };
-
-  const handleReturn = async (id: string | number, name: string) => {
-    try {
-      await equipmentService.returnItem(id);
-      toast.success(`Returned 1x ${name} to club stock.`);
-      await fetchEquipment();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to return equipment');
-    }
-  };
+  const {
+    page,
+    totalPages,
+    setPage,
+    startIndex,
+    endIndex,
+    paginateItems,
+  } = usePagination({ totalItems: filtered.length, pageSize: 10 });
+  const paginatedItems = paginateItems(filtered);
 
   const handleCreateEquipment = async (
     payload: CreateEquipmentPayload | UpdateEquipmentPayload
@@ -126,23 +129,63 @@ export const EquipmentPage = () => {
         </div>
       </div>
 
-      <EquipmentCategoryTabs
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-      />
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <EquipmentCategoryTabs
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+        <div className="w-full sm:max-w-xs">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search equipment by name, brand..."
+          />
+        </div>
+      </div>
 
       {loading ? (
         <div className="py-20 flex justify-center items-center">
           <span className="loading loading-spinner loading-md text-primary" />
         </div>
       ) : (
-        <EquipmentTable
-          items={filtered}
-          canManage={canManage}
-          onRent={handleRent}
-          onReturn={handleReturn}
-        />
+        <div className="space-y-3">
+          <EquipmentTable
+            items={paginatedItems}
+            canManage={canManage}
+          />
+          {filtered.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-base-100 border border-base-300 rounded-xl">
+              <span className="text-xs text-base-content/60">
+                Showing {startIndex + 1} to {endIndex} of {filtered.length} equipment items
+              </span>
+              <div className="join">
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page <= 1}
+                  className="join-item btn btn-xs sm:btn-sm btn-outline"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className="join-item btn btn-xs sm:btn-sm btn-outline no-animation pointer-events-none font-mono"
+                >
+                  {page} / {totalPages}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page >= totalPages}
+                  className="join-item btn btn-xs sm:btn-sm btn-outline"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {canManage && (

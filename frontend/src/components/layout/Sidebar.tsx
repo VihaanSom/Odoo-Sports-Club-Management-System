@@ -13,7 +13,6 @@ import {
   FaGear,
   FaLayerGroup,
   FaUserTie,
-  FaFileInvoiceDollar,
   FaUserGroup,
   FaMoneyBillTransfer,
   FaChartLine,
@@ -29,7 +28,6 @@ import {
   canAccessBarPOS,
   canAccessOrdersPOS,
   canAccessCRMLeads,
-  canAccessInvoices,
   canAccessStaffHR,
   canAccessPayments,
   canAccessReports,
@@ -160,12 +158,6 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
           path: '/leads',
           icon: <FaUserTie className="size-4" />,
           visible: canAccessCRMLeads(role),
-        },
-        {
-          label: 'Renewal Invoices',
-          path: '/invoices',
-          icon: <FaFileInvoiceDollar className="size-4" />,
-          visible: canAccessInvoices(role),
         },
         {
           label: 'Staff & Shifts',

@@ -43,6 +43,10 @@ export interface TabDetailResponse {
   settledAt: string | null;
   notes: string | null;
   items: TabItemResponse[];
+  subtotalPaise: number;
+  discountPaise: number;
+  discountPct: number;
+  totalPaise: number;
   runningTotalPaise: number;
 }
 
@@ -71,6 +75,13 @@ export interface SettledTabResponse {
   };
 }
 
+export interface TodayEarningsResponse {
+  totalPaise: number;
+  totalRupees: number;
+  settledTabsCount: number;
+  date: string;
+}
+
 export function formatTabDetail(tab: any): TabDetailResponse {
   const items: TabItemResponse[] = (tab.items || []).map((it: any) => ({
     id: it.id,
@@ -81,7 +92,18 @@ export function formatTabDetail(tab: any): TabDetailResponse {
     subtotalPaise: Math.round(Number(it.subtotal) * 100),
   }));
 
-  const runningTotalPaise = items.reduce((acc, it) => acc + it.subtotalPaise, 0);
+  const subtotalPaise = items.reduce((acc, it) => acc + it.subtotalPaise, 0);
+
+  // Compute member tier discount: Gold: 15%, Silver: 10%, Junior: 5%, non-member: 0%
+  let discountPct = 0;
+  if (tab.member) {
+    if (tab.member.tier === MembershipTier.Gold) discountPct = 0.15;
+    else if (tab.member.tier === MembershipTier.Silver) discountPct = 0.10;
+    else if (tab.member.tier === MembershipTier.Junior) discountPct = 0.05;
+  }
+
+  const discountPaise = Math.round(subtotalPaise * discountPct);
+  const totalPaise = Math.max(0, subtotalPaise - discountPaise);
 
   return {
     id: tab.id,
@@ -93,11 +115,15 @@ export function formatTabDetail(tab: any): TabDetailResponse {
     openedBy: tab.openedBy,
     openedByName: tab.staff ? `${tab.staff.firstName} ${tab.staff.lastName}`.trim() : `Staff #${tab.openedBy}`,
     status: tab.status,
-    openedAt: tab.openedAt.toISOString(),
-    settledAt: tab.settledAt ? tab.settledAt.toISOString() : null,
+    openedAt: tab.openedAt ? (typeof tab.openedAt.toISOString === 'function' ? tab.openedAt.toISOString() : String(tab.openedAt)) : new Date().toISOString(),
+    settledAt: tab.settledAt ? (typeof tab.settledAt.toISOString === 'function' ? tab.settledAt.toISOString() : String(tab.settledAt)) : null,
     notes: tab.notes || null,
     items,
-    runningTotalPaise,
+    subtotalPaise,
+    discountPaise,
+    discountPct: Math.round(discountPct * 100),
+    totalPaise,
+    runningTotalPaise: totalPaise,
   };
 }
 
@@ -528,6 +554,39 @@ export class BarTabsService {
     });
 
     return formatTabDetail(updatedTab);
+  }
+
+  /**
+   * TB-07: Get today's total bar earnings & settled count
+   */
+  async getTodayEarnings(): Promise<TodayEarningsResponse> {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    const payments = await prisma.payment.findMany({
+      where: {
+        barTabId: { not: null },
+        paidAt: { gte: startOfToday, lte: endOfToday },
+      },
+      select: {
+        amount: true,
+        barTabId: true,
+      },
+    });
+
+    const totalPaise = payments.reduce(
+      (acc, p) => acc + Math.round(Number(p.amount) * 100),
+      0
+    );
+    const settledTabsCount = new Set(payments.map((p) => p.barTabId)).size;
+
+    return {
+      totalPaise,
+      totalRupees: totalPaise / 100,
+      settledTabsCount,
+      date: now.toISOString().split('T')[0],
+    };
   }
 }
 

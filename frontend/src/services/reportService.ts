@@ -6,6 +6,7 @@ import type {
   BarAnalyticsSummary,
   StaffUtilizationSummary,
   ClubSummaryKPIs,
+  OverallEarningsResponse,
 } from '@/types/reports';
 
 // Backend response contracts
@@ -308,40 +309,51 @@ export const reportService = {
     return (response.data as any).data || response.data;
   },
 
-  // RP-05: Bar Analytics summary mapping for UI
-  getBarAnalytics: async (date?: string): Promise<BarAnalyticsSummary> => {
-    const barData = await reportService.getBarReport(date);
+  // RP-08: Unified Bar Analytics (GET /reports/bar-analytics)
+  getBarAnalytics: async (params?: { from?: string; to?: string; period?: string }): Promise<BarAnalyticsSummary> => {
+    try {
+      const response = await apiClient.get<{ success: boolean; data: BarAnalyticsSummary }>('/reports/bar-analytics', {
+        params,
+      });
+      return (response.data as any).data || response.data;
+    } catch {
+      const barData = await reportService.getBarReport();
+      const totalRevenuePaise = barData.totalEarningsPaise || 0;
+      const totalTabs = barData.totalTabs || 0;
+      const openTabsCount = barData.openTabsCount || 0;
+      const settledCount = barData.settledTabsCount || 0;
+      const averageTabPaise = settledCount > 0 ? Math.round(totalRevenuePaise / settledCount) : 0;
+      const topSellers = (barData.topSellingItems || []).map((item, idx) => ({
+        id: String(idx + 1),
+        name: item.name,
+        category: 'Bistro & Lounge',
+        unitsSold: item.qty,
+        revenuePaise: item.revenuePaise,
+      }));
+      const hours = ['12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+      const fractions = [0.1, 0.15, 0.2, 0.3, 0.15, 0.1];
+      const hourlyActivity = hours.map((hour, i) => ({
+        hour,
+        revenuePaise: Math.round(totalRevenuePaise * fractions[i]),
+        tabCount: Math.round(totalTabs * fractions[i]),
+      }));
+      return {
+        totalTabs,
+        openTabsCount,
+        averageTabPaise,
+        totalRevenuePaise,
+        topSellers,
+        hourlyActivity,
+      };
+    }
+  },
 
-    const totalRevenuePaise = barData.totalEarningsPaise || 0;
-    const totalTabs = barData.totalTabs || 0;
-    const openTabsCount = barData.openTabsCount || 0;
-    const settledCount = barData.settledTabsCount || 0;
-    const averageTabPaise = settledCount > 0 ? Math.round(totalRevenuePaise / settledCount) : 0;
-
-    const topSellers = (barData.topSellingItems || []).map((item, idx) => ({
-      id: String(idx + 1),
-      name: item.name,
-      category: 'Bistro & Lounge',
-      unitsSold: item.qty,
-      revenuePaise: item.revenuePaise,
-    }));
-
-    const hours = ['12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
-    const fractions = [0.1, 0.15, 0.2, 0.3, 0.15, 0.1];
-    const hourlyActivity = hours.map((hour, i) => ({
-      hour,
-      revenuePaise: Math.round(totalRevenuePaise * fractions[i]),
-      tabCount: Math.round(totalTabs * fractions[i]),
-    }));
-
-    return {
-      totalTabs,
-      openTabsCount,
-      averageTabPaise,
-      totalRevenuePaise,
-      topSellers,
-      hourlyActivity,
-    };
+  // RP-07: Unified Earnings (Today / Week / Month) (GET /reports/earnings)
+  getEarnings: async (period: 'today' | 'week' | 'month' | 'all' = 'today'): Promise<OverallEarningsResponse> => {
+    const response = await apiClient.get<{ success: boolean; data: OverallEarningsResponse }>('/reports/earnings', {
+      params: { period },
+    });
+    return (response.data as any).data || response.data;
   },
 
   // Raw RP-06: Staff Report (GET /reports/staff)

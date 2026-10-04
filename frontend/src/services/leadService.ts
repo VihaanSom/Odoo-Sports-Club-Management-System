@@ -89,18 +89,19 @@ export const leadService = {
     };
   },
 
-  // LD-03: Update lead status & staff assignment (PUT /leads/:id)
+  // LD-03: Update lead status & staff assignment (PATCH /leads/:id)
   updateStatus: async (id: number | string, payload: UpdateLeadPayload): Promise<Lead> => {
     const numericId = typeof id === 'string' ? parseInt(id.replace(/\D/g, ''), 10) || id : id;
-    const body: Record<string, any> = {
-      status: payload.status,
-    };
+    const body: Record<string, any> = {};
 
+    if (payload.status !== undefined) {
+      body.status = payload.status;
+    }
     if (payload.assignedTo !== undefined) {
       body.assignedTo = payload.assignedTo;
     }
 
-    const response = await apiClient.put<{ success: boolean; data: BackendLeadItem }>(`/leads/${numericId}`, body);
+    const response = await apiClient.patch<{ success: boolean; data: BackendLeadItem }>(`/leads/${numericId}`, body);
     const data: BackendLeadItem = (response.data as any).data || response.data;
 
     return {
@@ -115,6 +116,11 @@ export const leadService = {
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     };
+  },
+
+  // Assign lead to staff (Bug #10): PATCH /leads/:id with { assignedTo: staffId }
+  assignLead: async (id: number | string, staffId: number | null): Promise<Lead> => {
+    return leadService.updateStatus(id, { assignedTo: staffId });
   },
 
   // Alias for update

@@ -151,43 +151,41 @@ export class LeadsService {
       }
     }
 
-    // State machine verification (§9.4)
-    // new -> contacted, converted, lost
-    // contacted -> converted, lost
-    // converted -> terminal (forbidden)
-    // lost -> terminal (forbidden)
-    if (lead.status === 'converted' && input.status !== 'converted') {
-      throw new UnprocessableError(
-        "Cannot transition lead from terminal status 'converted'",
-        'INVALID_STATE_TRANSITION'
-      );
-    }
+    // State machine verification (§9.4) - only when status change is requested
+    if (input.status !== undefined) {
+      if (lead.status === 'converted' && input.status !== 'converted') {
+        throw new UnprocessableError(
+          "Cannot transition lead from terminal status 'converted'",
+          'INVALID_STATE_TRANSITION'
+        );
+      }
 
-    if (lead.status === 'lost' && input.status !== 'lost') {
-      throw new UnprocessableError(
-        "Cannot transition lead from terminal status 'lost'",
-        'INVALID_STATE_TRANSITION'
-      );
-    }
+      if (lead.status === 'lost' && input.status !== 'lost') {
+        throw new UnprocessableError(
+          "Cannot transition lead from terminal status 'lost'",
+          'INVALID_STATE_TRANSITION'
+        );
+      }
 
-    const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-      new: ['new', 'contacted', 'converted', 'lost'],
-      contacted: ['contacted', 'converted', 'lost'],
-      converted: ['converted'],
-      lost: ['lost'],
-    };
+      const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+        new: ['new', 'contacted', 'converted', 'lost'],
+        contacted: ['contacted', 'converted', 'lost'],
+        converted: ['converted'],
+        lost: ['lost'],
+      };
 
-    if (!ALLOWED_TRANSITIONS[lead.status]?.includes(input.status)) {
-      throw new UnprocessableError(
-        `Invalid status transition from '${lead.status}' to '${input.status}'`,
-        'INVALID_STATE_TRANSITION'
-      );
+      if (!ALLOWED_TRANSITIONS[lead.status]?.includes(input.status)) {
+        throw new UnprocessableError(
+          `Invalid status transition from '${lead.status}' to '${input.status}'`,
+          'INVALID_STATE_TRANSITION'
+        );
+      }
     }
 
     const updated = await prisma.lead.update({
       where: { id },
       data: {
-        status: input.status,
+        ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.assignedTo !== undefined ? { assignedTo: input.assignedTo } : {}),
       },
       include: {
