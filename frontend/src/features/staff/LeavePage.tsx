@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { usePagination } from '@/hooks';
 import { LeaveApprovalModal } from './components/LeaveApprovalModal';
 import { staffService } from '@/services/staffService';
 import type {
@@ -35,6 +36,16 @@ export const LeavePage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedForReview, setSelectedForReview] = useState<LeaveRequest | null>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: leaves.length, pageSize: 10 });
+  const paginatedLeaves = paginateItems(leaves);
 
   const {
     control,
@@ -219,7 +230,7 @@ export const LeavePage = () => {
                 </td>
               </tr>
             ) : (
-              leaves.map((l) => (
+              paginatedLeaves.map((l) => (
                 <tr key={l.id} className="hover:bg-base-200/40">
                   <td className="font-mono text-xs font-semibold">{l.id}</td>
                   <td>
@@ -270,6 +281,37 @@ export const LeavePage = () => {
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+            <span className="text-base-content/60">
+              Showing {startIndex + 1} to {endIndex} of {leaves.length} leaves
+            </span>
+            <div className="join">
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+                className="join-item btn btn-xs btn-outline"
+              >
+                «
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+              >
+                {page} / {totalPages}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages}
+                className="join-item btn btn-xs btn-outline"
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Review Modal */}

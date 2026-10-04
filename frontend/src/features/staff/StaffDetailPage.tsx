@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { FaArrowLeft, FaPen, FaClock, FaCalendarDay } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
+import { usePagination } from '@/hooks';
 import { staffService } from '@/services/staffService';
 import { StaffFormModal } from './components/StaffFormModal';
 import type { StaffMember, Shift, LeaveRequest, CreateStaffPayload } from '@/types/staff';
@@ -16,6 +17,16 @@ export const StaffDetailPage = () => {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: shifts.length, pageSize: 10 });
+  const paginatedShifts = paginateItems(shifts);
 
   const loadData = async () => {
     if (!id) return;
@@ -198,7 +209,7 @@ export const StaffDetailPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {shifts.map((s) => (
+                    {paginatedShifts.map((s) => (
                       <tr key={s.id}>
                         <td className="font-mono text-[11px] font-semibold">{s.id}</td>
                         <td className="text-xs">{s.date}</td>
@@ -249,6 +260,37 @@ export const StaffDetailPage = () => {
                     ))}
                   </tbody>
                 </table>
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+                    <span className="text-base-content/60">
+                      Showing {startIndex + 1} to {endIndex} of {shifts.length} shifts
+                    </span>
+                    <div className="join">
+                      <button
+                        type="button"
+                        onClick={() => setPage(Math.max(1, page - 1))}
+                        disabled={page <= 1}
+                        className="join-item btn btn-xs btn-outline"
+                      >
+                        «
+                      </button>
+                      <button
+                        type="button"
+                        className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+                      >
+                        {page} / {totalPages}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage(Math.min(totalPages, page + 1))}
+                        disabled={page >= totalPages}
+                        className="join-item btn btn-xs btn-outline"
+                      >
+                        »
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

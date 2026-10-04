@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { canManageMenu, isMemberRole } from '@/lib/permissions';
 import { menuService } from '@/services/menuService';
+import { useDebounce } from '@/hooks';
 import type { MenuItem, CreateMenuItemPayload, UpdateMenuItemPayload } from '@/types/menu';
 import { MenuItemsTable, MenuItemFormModal } from './components';
 
@@ -27,6 +28,7 @@ export const MenuItemsPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +39,7 @@ export const MenuItemsPage = () => {
     try {
       const data = await menuService.getMenuItems({
         category: selectedCategory === 'all' ? undefined : selectedCategory,
-        search: searchQuery || undefined,
+        search: debouncedSearch.trim() || undefined,
       });
       setItems(data);
     } catch {
@@ -45,7 +47,7 @@ export const MenuItemsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, debouncedSearch]);
 
   useEffect(() => {
     fetchItems();

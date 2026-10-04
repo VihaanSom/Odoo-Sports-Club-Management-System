@@ -13,6 +13,7 @@ import {
   FaLocationDot,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
+import { usePagination } from '@/hooks';
 import { orderService } from '@/services/orderService';
 import { formatPaise } from '@/lib/utils';
 import type { Order, OrderStatus } from '@/types/orders';
@@ -24,6 +25,17 @@ export const OrderDetailPage = () => {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const orderItems = order?.items || [];
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: orderItems.length, pageSize: 10 });
+  const paginatedOrderItems = paginateItems(orderItems);
 
   const fetchOrder = useCallback(async () => {
     if (!id) return;
@@ -186,7 +198,7 @@ export const OrderDetailPage = () => {
               </tr>
             </thead>
             <tbody>
-              {(order.items || []).map((item) => (
+              {paginatedOrderItems.map((item) => (
                 <tr key={item.id} className="hover">
                   <td>
                     <div className="flex items-center gap-3">
@@ -229,6 +241,38 @@ export const OrderDetailPage = () => {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+            <span className="text-base-content/60">
+              Showing {startIndex + 1} to {endIndex} of {orderItems.length} items
+            </span>
+            <div className="join">
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+                className="join-item btn btn-xs btn-outline"
+              >
+                «
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+              >
+                {page} / {totalPages}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages}
+                className="join-item btn btn-xs btn-outline"
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Totals Summary */}
         <div className="p-4 bg-base-200/40 border-t border-base-300 flex justify-end">

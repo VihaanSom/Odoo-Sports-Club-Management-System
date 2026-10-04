@@ -24,6 +24,17 @@ export const MemberOrderHistory = ({
 
   const paginatedOrders = paginateOrders(orders);
 
+  const {
+    page: barPage,
+    totalPages: barTotalPages,
+    startIndex: barStartIndex,
+    endIndex: barEndIndex,
+    paginateItems: paginateBarTabs,
+    setPage: setBarPage,
+  } = usePagination({ totalItems: barTabs.length, pageSize: 10 });
+
+  const paginatedBarTabs = paginateBarTabs(barTabs);
+
   return (
     <div className="space-y-6">
       {/* Orders Table */}
@@ -149,7 +160,7 @@ export const MemberOrderHistory = ({
               </tr>
             </thead>
             <tbody>
-              {barTabs.map((t) => (
+              {paginatedBarTabs.map((t) => (
                 <tr key={t.id} className="hover:bg-base-300/30">
                   <td className="font-mono font-bold text-xs">{`TAB-${t.id}`}</td>
                   <td className="font-semibold">{t.tableNo}</td>
@@ -181,6 +192,39 @@ export const MemberOrderHistory = ({
             </tbody>
           </table>
         </div>
+
+        {barTotalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300">
+            <span className="text-xs text-base-content/60">
+              Showing {barStartIndex + 1} to {barEndIndex} of {barTabs.length} bar tabs
+            </span>
+
+            <div className="join">
+              <button
+                type="button"
+                onClick={() => setBarPage(Math.max(1, barPage - 1))}
+                disabled={barPage <= 1}
+                className="join-item btn btn-xs btn-outline"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+              >
+                {barPage} / {barTotalPages}
+              </button>
+              <button
+                type="button"
+                onClick={() => setBarPage(Math.min(barTotalPages, barPage + 1))}
+                disabled={barPage >= barTotalPages}
+                className="join-item btn btn-xs btn-outline"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

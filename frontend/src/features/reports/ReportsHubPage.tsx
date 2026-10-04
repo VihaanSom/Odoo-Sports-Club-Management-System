@@ -7,14 +7,16 @@ import {
   FaReceipt,
   FaCircleCheck,
   FaFilePdf,
+  FaEye,
 } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { usePagination } from '@/hooks';
 import { reportService } from '@/services/reportService';
 import { formatPaise } from '@/lib/utils';
 import { RevenueLineChart } from './components/RevenueLineChart';
 import { MemberGrowthLine } from './components/MemberGrowthLine';
+import { ReportPreviewModal } from './components/ReportPreviewModal';
+import { generateExecutiveReportPdf } from './utils/generateExecutiveReportPdf';
 import type {
   RevenueSummary,
   MemberGrowthPoint,
@@ -32,6 +34,18 @@ export const ReportsHubPage = () => {
   const [barAnalytics, setBarAnalytics] = useState<BarAnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+
+  const topSellersList = barAnalytics?.topSellers || [];
+  const {
+    page: topSellersPage,
+    totalPages: topSellersTotalPages,
+    startIndex: topSellersStartIndex,
+    endIndex: topSellersEndIndex,
+    paginateItems: paginateTopSellers,
+    setPage: setTopSellersPage,
+  } = usePagination({ totalItems: topSellersList.length, pageSize: 10 });
+  const paginatedTopSellers = paginateTopSellers(topSellersList);
 
   useEffect(() => {
     const fetchAllReports = async () => {
@@ -59,40 +73,23 @@ export const ReportsHubPage = () => {
     fetchAllReports();
   }, []);
 
-  const handleDownloadPdf = async () => {
-    const element = document.getElementById('reports-hub-content');
-    if (!element) {
-      window.print();
-      return;
-    }
+  const handleDownloadPdf = () => {
     setDownloadingPdf(true);
-    toast.loading('Generating executive PDF report...', { id: 'pdf-toast' });
+    const toastId = toast.loading('Generating executive vector PDF...', { id: 'pdf-toast' });
+
     try {
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      const pdf = generateExecutiveReportPdf({
+        kpis,
+        revenue,
+        earnings,
+        barAnalytics,
+      });
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`champions-club-analytics-${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success('PDF report downloaded successfully', { id: 'pdf-toast' });
+      pdf.save(`champions-club-executive-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('Executive 1-Page PDF downloaded successfully', { id: toastId });
     } catch (err) {
-      console.error('PDF generation error, fallback to window.print():', err);
-      window.print();
-      toast.dismiss('pdf-toast');
+      console.error('PDF generation error:', err);
+      toast.error('Failed to generate PDF. Please try again.', { id: toastId });
     } finally {
       setDownloadingPdf(false);
     }
@@ -125,15 +122,26 @@ export const ReportsHubPage = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleDownloadPdf}
-          disabled={downloadingPdf}
-          className="btn btn-outline btn-sm gap-2 font-semibold shadow-xs"
-        >
-          <FaFilePdf className="size-4 text-error" />
-          <span>{downloadingPdf ? 'Exporting...' : 'Download PDF'}</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setPreviewModalOpen(true)}
+            className="btn btn-outline btn-sm gap-2 font-semibold shadow-xs"
+          >
+            <FaEye className="size-4" />
+            <span>Preview Report</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="btn btn-primary btn-sm gap-2 font-semibold shadow-xs"
+          >
+            <FaFilePdf className="size-4 text-primary-content" />
+            <span>{downloadingPdf ? 'Exporting...' : 'Download PDF'}</span>
+          </button>
+        </div>
       </div>
 
       <div id="reports-hub-content" className="space-y-6">
@@ -362,7 +370,7 @@ export const ReportsHubPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {barAnalytics.topSellers.map((item) => (
+                  {paginatedTopSellers.map((item) => (
                     <tr key={item.id} className="hover:bg-base-200/40">
                       <td className="font-semibold text-xs flex items-center gap-2">
                         <FaCircleCheck className="text-success text-xs" /> {item.name}
@@ -379,10 +387,53 @@ export const ReportsHubPage = () => {
                 </tbody>
               </table>
             </div>
+            {topSellersTotalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-base-300 text-xs">
+                <span className="text-base-content/60">
+                  Showing {topSellersStartIndex + 1} to {topSellersEndIndex} of {topSellersList.length} items
+                </span>
+                <div className="join">
+                  <button
+                    type="button"
+                    onClick={() => setTopSellersPage(Math.max(1, topSellersPage - 1))}
+                    disabled={topSellersPage <= 1}
+                    className="join-item btn btn-xs btn-outline"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+                  >
+                    {topSellersPage} / {topSellersTotalPages}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTopSellersPage(Math.min(topSellersTotalPages, topSellersPage + 1))}
+                    disabled={topSellersPage >= topSellersTotalPages}
+                    className="join-item btn btn-xs btn-outline"
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
       </div>
+
+      {/* Preview Modal for Executive Report */}
+      <ReportPreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        onDownload={handleDownloadPdf}
+        downloading={downloadingPdf}
+        kpis={kpis}
+        revenue={revenue}
+        earnings={earnings}
+        barAnalytics={barAnalytics}
+      />
     </motion.div>
   );
 };

@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { usePagination } from '@/hooks';
 import { courtService } from '@/services/courtService';
 import type { Court, CreateCourtPayload, UpdateCourtPayload } from '@/types/courts';
 import { CourtFormModal, CourtHoursEditor } from './components';
@@ -21,6 +22,16 @@ export const CourtManagementPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourt, setEditingCourt] = useState<Court | null>(null);
   const [editingHoursCourtId, setEditingHoursCourtId] = useState<number | null>(null);
+
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: courts.length, pageSize: 10 });
+  const paginatedCourts = paginateItems(courts);
 
   const fetchCourts = useCallback(async () => {
     setLoading(true);
@@ -130,7 +141,7 @@ export const CourtManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {courts.map((court) => (
+                {paginatedCourts.map((court) => (
                   <tr key={court.id} className="hover:bg-base-300/30">
                     <td className="font-mono text-xs font-bold text-base-content/60">
                       #{court.id}
@@ -203,6 +214,37 @@ export const CourtManagementPage = () => {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+              <span className="text-base-content/60">
+                Showing {startIndex + 1} to {endIndex} of {courts.length} courts
+              </span>
+              <div className="join">
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page <= 1}
+                  className="join-item btn btn-xs btn-outline"
+                >
+                  «
+                </button>
+                <button
+                  type="button"
+                  className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+                >
+                  {page} / {totalPages}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page >= totalPages}
+                  className="join-item btn btn-xs btn-outline"
+                >
+                  »
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

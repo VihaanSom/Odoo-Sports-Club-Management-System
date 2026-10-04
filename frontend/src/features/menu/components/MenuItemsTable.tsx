@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FaPenToSquare, FaFolderOpen, FaTriangleExclamation } from 'react-icons/fa6';
 import { formatPaise } from '@/lib/utils';
+import { usePagination } from '@/hooks';
 import type { MenuItem } from '@/types/menu';
 
 interface MenuItemsTableProps {
@@ -16,6 +17,16 @@ export const MenuItemsTable = ({
   onEdit,
   onToggleAvailability,
 }: MenuItemsTableProps) => {
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: items.length, pageSize: 10 });
+  const paginatedItems = paginateItems(items);
+
   if (items.length === 0) {
     return (
       <div className="text-center py-16 bg-base-100 border border-base-300 rounded-2xl">
@@ -39,7 +50,7 @@ export const MenuItemsTable = ({
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => {
+            {paginatedItems.map((item) => {
               const isLowStock = item.stockQty <= item.lowStockThreshold;
 
               return (
@@ -138,6 +149,37 @@ export const MenuItemsTable = ({
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+          <span className="text-base-content/60">
+            Showing {startIndex + 1} to {endIndex} of {items.length} items
+          </span>
+          <div className="join">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="join-item btn btn-xs btn-outline"
+            >
+              «
+            </button>
+            <button
+              type="button"
+              className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+            >
+              {page} / {totalPages}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages}
+              className="join-item btn btn-xs btn-outline"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

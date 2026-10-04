@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { FaClock, FaTrophy, FaEye } from 'react-icons/fa6';
 import { Badge } from '@/components/ui';
+import { usePagination } from '@/hooks';
 import { formatPaise, formatDate } from '@/lib/utils';
 import type { RenewalDueMember, MemberInvoice } from '@/types/invoices';
 import { GenerateInvoiceButton } from './GenerateInvoiceButton';
@@ -18,6 +19,16 @@ export const RenewalDueTable = ({
 }: RenewalDueTableProps) => {
   const navigate = useNavigate();
 
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: renewalDues.length, pageSize: 10 });
+  const paginatedDues = paginateItems(renewalDues);
+
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="overflow-x-auto">
@@ -34,7 +45,7 @@ export const RenewalDueTable = ({
             </tr>
           </thead>
           <tbody>
-            {renewalDues.map((item) => {
+            {paginatedDues.map((item) => {
               const isExpired = item.daysRemaining <= 0;
               const isUrgent = item.daysRemaining > 0 && item.daysRemaining <= 7;
 
@@ -134,6 +145,37 @@ export const RenewalDueTable = ({
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+          <span className="text-base-content/60">
+            Showing {startIndex + 1} to {endIndex} of {renewalDues.length} renewals
+          </span>
+          <div className="join">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="join-item btn btn-xs btn-outline"
+            >
+              «
+            </button>
+            <button
+              type="button"
+              className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+            >
+              {page} / {totalPages}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages}
+              className="join-item btn btn-xs btn-outline"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

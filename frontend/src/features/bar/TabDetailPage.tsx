@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa6';
 
 import toast from 'react-hot-toast';
+import { usePagination } from '@/hooks';
 import { barService } from '@/services/barService';
 import { formatPaise } from '@/lib/utils';
 import type { BarTab } from '@/types/bar';
@@ -28,6 +29,17 @@ export const TabDetailPage = () => {
 
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [isSettleModalOpen, setIsSettleModalOpen] = useState(false);
+
+  const tabItems = tab?.items || [];
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: tabItems.length, pageSize: 10 });
+  const paginatedTabItems = paginateItems(tabItems);
 
   const fetchTab = useCallback(async () => {
     if (!id) return;
@@ -246,7 +258,7 @@ export const TabDetailPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {(tab.items || []).map((item) => (
+                {paginatedTabItems.map((item) => (
                   <tr key={item.id} className="hover">
                     <td className="font-semibold text-sm">{item.name}</td>
                     <td className="text-center">
@@ -297,6 +309,37 @@ export const TabDetailPage = () => {
                 ))}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+                <span className="text-base-content/60">
+                  Showing {startIndex + 1} to {endIndex} of {tabItems.length} items
+                </span>
+                <div className="join">
+                  <button
+                    type="button"
+                    onClick={() => setPage(Math.max(1, page - 1))}
+                    disabled={page <= 1}
+                    className="join-item btn btn-xs btn-outline"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+                  >
+                    {page} / {totalPages}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage(Math.min(totalPages, page + 1))}
+                    disabled={page >= totalPages}
+                    className="join-item btn btn-xs btn-outline"
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

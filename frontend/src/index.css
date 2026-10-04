@@ -56,3 +56,28 @@ html, body {
   transform: rotate(-90deg) !important;
 }
 
+/* Print Stylesheet Overrides */
+@media print {
+  aside,
+  header,
+  nav,
+  .btn,
+  .tabs,
+  #react-hot-toast,
+  [data-hot-toast],
+  .toaster {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+}
+
+

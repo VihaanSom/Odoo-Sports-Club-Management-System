@@ -11,6 +11,7 @@ import {
 import { equipmentService } from '@/services/equipmentService';
 import { menuService } from '@/services/menuService';
 import { formatPaise } from '@/lib/utils';
+import { useDebounce } from '@/hooks';
 import type { EquipmentItem } from '@/types/equipment';
 import type { MenuItem } from '@/types/menu';
 
@@ -44,6 +45,7 @@ export const OrderItemSelector = ({
 }: OrderItemSelectorProps) => {
   const [activeCatalog, setActiveCatalog] = useState<'menu' | 'equipment'>('equipment');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [equipmentList, setEquipmentList] = useState<EquipmentItem[]>([]);
   const [menuList, setMenuList] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,11 +64,11 @@ export const OrderItemSelector = ({
   }, []);
 
   const filteredEquipment = equipmentList.filter((e) =>
-    searchQuery ? e.name.toLowerCase().includes(searchQuery.toLowerCase()) : true
+    debouncedSearch ? e.name.toLowerCase().includes(debouncedSearch.toLowerCase()) : true
   );
 
   const filteredMenu = menuList.filter((m) =>
-    searchQuery ? m.name.toLowerCase().includes(searchQuery.toLowerCase()) : true
+    debouncedSearch ? m.name.toLowerCase().includes(debouncedSearch.toLowerCase()) : true
   );
 
   return (

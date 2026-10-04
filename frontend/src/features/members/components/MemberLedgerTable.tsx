@@ -1,5 +1,6 @@
 import { FaBookBookmark } from 'react-icons/fa6';
 import { formatPaise, formatDate } from '@/lib/utils';
+import { usePagination } from '@/hooks';
 import type { MemberLedgerEntry } from '@/types/members';
 
 interface MemberLedgerTableProps {
@@ -7,6 +8,16 @@ interface MemberLedgerTableProps {
 }
 
 export const MemberLedgerTable = ({ ledger }: MemberLedgerTableProps) => {
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: ledger.length, pageSize: 10 });
+  const paginatedLedger = paginateItems(ledger);
+
   return (
     <div className="card bg-base-200/50 border border-base-300 shadow-xs overflow-hidden">
       <div className="p-4 border-b border-base-300 flex items-center justify-between">
@@ -28,7 +39,7 @@ export const MemberLedgerTable = ({ ledger }: MemberLedgerTableProps) => {
             </tr>
           </thead>
           <tbody>
-            {ledger.map((entry) => (
+            {paginatedLedger.map((entry) => (
               <tr key={entry.id} className="hover:bg-base-300/30">
                 <td className="font-mono font-bold text-xs">{entry.id}</td>
                 <td className="font-mono text-xs text-base-content/70">{formatDate(entry.date)}</td>
@@ -69,6 +80,37 @@ export const MemberLedgerTable = ({ ledger }: MemberLedgerTableProps) => {
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+          <span className="text-base-content/60">
+            Showing {startIndex + 1} to {endIndex} of {ledger.length} entries
+          </span>
+          <div className="join">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="join-item btn btn-xs btn-outline"
+            >
+              «
+            </button>
+            <button
+              type="button"
+              className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+            >
+              {page} / {totalPages}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages}
+              className="join-item btn btn-xs btn-outline"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

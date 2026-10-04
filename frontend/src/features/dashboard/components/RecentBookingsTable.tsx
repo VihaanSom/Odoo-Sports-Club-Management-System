@@ -11,10 +11,21 @@ import {
 import { bookingService } from '@/services/bookingService';
 import type { BookingDetail } from '@/types/bookings';
 import { Skeleton } from '@/components/ui';
+import { usePagination } from '@/hooks';
 
 export const RecentBookingsTable = () => {
   const [bookings, setBookings] = useState<BookingDetail[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: bookings.length, pageSize: 10 });
+  const paginatedBookings = paginateItems(bookings);
 
   useEffect(() => {
     let isMounted = true;
@@ -22,7 +33,7 @@ export const RecentBookingsTable = () => {
       try {
         const res = await bookingService.getBookings();
         if (isMounted && res.data) {
-          setBookings(res.data.slice(0, 6));
+          setBookings(res.data);
         }
       } catch {
         // Fallback handled inside bookingService
@@ -175,7 +186,7 @@ export const RecentBookingsTable = () => {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b) => (
+                {paginatedBookings.map((b) => (
                   <tr key={b.id} className="hover:bg-base-300/40">
                     <td className="font-mono font-bold text-primary">
                       #BK-{b.id}
@@ -214,6 +225,36 @@ export const RecentBookingsTable = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 pt-3 border-t border-base-200 text-xs">
+            <span className="text-base-content/60">
+              Showing {startIndex + 1} to {endIndex} of {bookings.length} reservations
+            </span>
+            <div className="join">
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                «
+              </button>
+              <button type="button" className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono">
+                {page} / {totalPages}
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                »
+              </button>
+            </div>
           </div>
         )}
       </div>

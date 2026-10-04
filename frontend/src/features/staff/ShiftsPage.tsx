@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { usePagination } from '@/hooks';
 import { staffService } from '@/services/staffService';
 import type { Shift, StaffMember, AssignShiftPayload } from '@/types/staff';
 
@@ -42,6 +43,16 @@ export const ShiftsPage = () => {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+
+  const {
+    page,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginateItems,
+    setPage,
+  } = usePagination({ totalItems: shifts.length, pageSize: 10 });
+  const paginatedShifts = paginateItems(shifts);
 
   const {
     control,
@@ -252,7 +263,7 @@ export const ShiftsPage = () => {
                 </td>
               </tr>
             ) : (
-              shifts.map((s) => (
+              paginatedShifts.map((s) => (
                 <tr key={s.id} className="hover:bg-base-200/40">
                   <td className="font-mono text-xs font-semibold">{s.id}</td>
                   <td>
@@ -333,6 +344,37 @@ export const ShiftsPage = () => {
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-base-300 text-xs">
+            <span className="text-base-content/60">
+              Showing {startIndex + 1} to {endIndex} of {shifts.length} shifts
+            </span>
+            <div className="join">
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+                className="join-item btn btn-xs btn-outline"
+              >
+                «
+              </button>
+              <button
+                type="button"
+                className="join-item btn btn-xs btn-outline no-animation pointer-events-none font-mono"
+              >
+                {page} / {totalPages}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages}
+                className="join-item btn btn-xs btn-outline"
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Assign Shift Modal */}
