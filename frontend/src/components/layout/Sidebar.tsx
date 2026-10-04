@@ -154,7 +154,7 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
           visible: role === 'admin' || role === 'front_desk',
         },
         {
-          label: 'CRM Leads',
+          label: 'Inquiries & Leads',
           path: '/leads',
           icon: <FaUserTie className="size-4" />,
           visible: canAccessCRMLeads(role),

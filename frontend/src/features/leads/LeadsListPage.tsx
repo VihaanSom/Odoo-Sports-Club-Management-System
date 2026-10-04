@@ -117,7 +117,7 @@ export const LeadsListPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3 text-base-content">
-            <FaTrophy className="size-7 text-amber-500" /> CRM Leads & Prospects
+            <FaTrophy className="size-7 text-amber-500" /> Inquiries & Leads
           </h1>
           <p className="text-sm text-base-content/70 mt-1">
             Track enquiries, court trials, and membership conversion pipeline.

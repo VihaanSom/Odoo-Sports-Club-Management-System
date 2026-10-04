@@ -4,7 +4,7 @@ import {
   FaTriangleExclamation,
 } from 'react-icons/fa6';
 
-import { Badge, ProgressBar } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { formatPaise } from '@/lib/utils';
 import type { Equipment } from '@/types';
 
@@ -26,7 +26,7 @@ export const EquipmentTable = ({
             <tr className="bg-base-300/40">
               <th>Equipment Name</th>
               <th>Category</th>
-              <th>Availability</th>
+              <th>Stock</th>
               <th>Condition</th>
               <th>Price / Rate</th>
               <th className="text-right">Actions</th>
@@ -34,9 +34,7 @@ export const EquipmentTable = ({
           </thead>
           <tbody>
             {items.map((item) => {
-              const qtyAvail = item.quantityAvailable ?? item.stockQty ?? 0;
-              const qtyTotal = item.quantityTotal ?? item.stockQty ?? 1;
-              const percent = qtyTotal > 0 ? Math.round((qtyAvail / qtyTotal) * 100) : 0;
+              const stock = item.stockQty ?? item.quantityAvailable ?? 0;
               const itemId = String(item.id);
 
               return (
@@ -58,13 +56,19 @@ export const EquipmentTable = ({
                     </Badge>
                   </td>
                   <td>
-                    <div className="w-36">
-                      <ProgressBar
-                        value={qtyAvail}
-                        max={qtyTotal}
-                        variant={percent > 50 ? 'success' : percent > 20 ? 'warning' : 'error'}
-                        showLabel
-                      />
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-semibold text-base-content">
+                        {stock}
+                      </span>
+                      {stock === 0 ? (
+                        <Badge size="xs" variant="error">
+                          Out of stock
+                        </Badge>
+                      ) : stock <= 5 ? (
+                        <Badge size="xs" variant="warning" className="gap-1">
+                          <FaTriangleExclamation className="size-2.5" /> Low
+                        </Badge>
+                      ) : null}
                     </div>
                   </td>
                   <td>
