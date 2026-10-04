@@ -107,10 +107,11 @@ export const publicService = {
 
         plans.push({
           id: String(plan.id),
-          name: `${tierGroup.tier} Annual Membership`,
+          name: `${tierGroup.tier} ${plan.durationMonths === 12 ? 'Annual' : `${plan.durationMonths}-Month`} Membership`,
           tier: tierGroup.tier,
           pricePaise: plan.pricePaise,
           billingPeriod: plan.durationMonths === 12 ? 'year' : `${plan.durationMonths}m`,
+          durationMonths: plan.durationMonths,
           features: [
             plan.courtRatePaise === 0
               ? 'Complimentary court bookings'
@@ -292,29 +293,32 @@ export const publicService = {
   },
 
   // PU-06: Trial Page adapter
-  submitTrialBooking: async (payload: PublicTrialPayload): Promise<{ success: boolean; passCode: string }> => {
-    let preferredTime = '07:00';
-    if (payload.preferredSlot) {
-      const match = payload.preferredSlot.match(/(\d{2}:\d{2})/);
-      if (match) {
-        preferredTime = match[1];
-      }
-    }
-
-    const sport = payload.sport?.toLowerCase() === 'cricket' ? 'cricket' : 'tennis';
-
-    const result = await publicService.requestTrial({
-      name: payload.fullName,
+  submitTrialBooking: async (payload: PublicTrialPayload): Promise<{ success: boolean; passCode: string; message?: string }> => {
+    const body = {
+      name: payload.fullName || payload.name,
+      fullName: payload.fullName || payload.name,
       email: payload.email,
       phone: payload.phone || undefined,
-      sport,
-      preferredDate: payload.preferredDate,
-      preferredTime,
-    });
+      date: payload.preferredDate || payload.date,
+      preferredDate: payload.preferredDate || payload.date,
+    };
 
+    const response = await apiClient.post<{
+      success: boolean;
+      data: {
+        leadId: number;
+        bookingId: number | null;
+        passCode?: string;
+        message?: string;
+      };
+    }>('/public/trial', body);
+
+    const data = (response.data as any).data || response.data;
+    const passCode = data.passCode || (data.bookingId ? `CHAMP-PASS-${data.bookingId}` : `CHAMP-PASS-${data.leadId}`);
     return {
       success: true,
-      passCode: result.passCode,
+      passCode,
+      message: data.message,
     };
   },
 

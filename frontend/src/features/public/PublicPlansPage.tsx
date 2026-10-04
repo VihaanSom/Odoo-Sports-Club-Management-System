@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { FaCheck, FaTrophy, FaArrowRight, FaQuestion } from 'react-icons/fa6';
 import { Button } from '@/components/ui/Button';
+import { useAuthStore } from '@/stores/authStore';
 import { publicService } from '@/services/publicService';
 import type { PublicPlan } from '@/types/public';
 
 export const PublicPlansPage = () => {
   const [plans, setPlans] = useState<PublicPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -22,6 +24,39 @@ export const PublicPlansPage = () => {
     };
     fetchPlans();
   }, []);
+
+  const checkIsActivePlan = (plan: PublicPlan) => {
+    if (!user || user.role !== 'member') return false;
+
+    // Determine plan duration in months
+    const planDuration =
+      plan.durationMonths ??
+      (plan.billingPeriod === 'year' ? 12 : parseInt(plan.billingPeriod, 10) || 12);
+
+    // Determine user's active duration
+    let userDuration = (user as any).durationMonths ?? (user as any).duration;
+    if (!userDuration && user.membershipStart && user.membershipEnd) {
+      const start = new Date(user.membershipStart);
+      const end = new Date(user.membershipEnd);
+      const diff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30.4375));
+      if (diff > 0) userDuration = diff;
+    }
+
+    // Direct planId match
+    if (user.planId && String(user.planId) === String(plan.id)) {
+      return true;
+    }
+
+    // Match BOTH plan name/tier AND duration
+    const userPlanName = ((user as any).planName || user.tier || '').toLowerCase();
+    const pName = (plan.name || '').toLowerCase();
+    const pTier = (plan.tier || '').toLowerCase();
+
+    const nameMatch = userPlanName ? pName.includes(userPlanName) || pTier === userPlanName : false;
+    const durationMatch = userDuration ? Math.abs(planDuration - userDuration) <= 1 : true;
+
+    return Boolean(nameMatch && durationMatch);
+  };
 
   return (
     <motion.div
@@ -51,71 +86,95 @@ export const PublicPlansPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((p) => (
-            <div
-              key={p.id}
-              className={`card bg-base-100 border p-6 shadow-xs flex flex-col justify-between relative ${
-                p.isPopular
-                  ? 'border-primary ring-2 ring-primary/20 shadow-md'
-                  : 'border-base-300'
-              }`}
-            >
-              {p.isPopular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="badge badge-primary font-bold text-xs uppercase px-3 py-2 shadow-xs">
-                    Most Popular
-                  </span>
-                </div>
-              )}
+          {plans.map((p) => {
+            const isActive = checkIsActivePlan(p);
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs uppercase font-mono tracking-widest text-base-content/60 font-semibold">
-                    {p.tier} Tier
-                  </span>
-                  {p.badge && !p.isPopular && (
-                    <span className="badge badge-outline badge-xs">{p.badge}</span>
+            return (
+              <div
+                key={p.id}
+                className={`card bg-base-100 border p-6 shadow-xs flex flex-col justify-between relative ${
+                  isActive
+                    ? 'border-success ring-2 ring-success/30 shadow-md bg-success/5'
+                    : p.isPopular
+                    ? 'border-primary ring-2 ring-primary/20 shadow-md'
+                    : 'border-base-300'
+                }`}
+              >
+                {isActive ? (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="badge badge-success font-bold text-xs uppercase px-3 py-2 shadow-xs">
+                      Active Plan
+                    </span>
+                  </div>
+                ) : p.isPopular ? (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="badge badge-primary font-bold text-xs uppercase px-3 py-2 shadow-xs">
+                      Most Popular
+                    </span>
+                  </div>
+                ) : null}
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs uppercase font-mono tracking-widest text-base-content/60 font-semibold">
+                      {p.tier} Tier
+                    </span>
+                    {isActive ? (
+                      <span className="badge badge-success badge-xs font-bold">Your Active Plan</span>
+                    ) : p.badge && !p.isPopular ? (
+                      <span className="badge badge-outline badge-xs">{p.badge}</span>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold">{p.name}</h3>
+                    <div className="mt-3 font-mono">
+                      <span className="text-3xl font-black">
+                        ₹{(p.pricePaise / 100).toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-xs text-base-content/60"> / {p.billingPeriod}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-base-content/70">{p.description}</p>
+
+                  <div className="divider my-1" />
+
+                  <ul className="space-y-2.5 text-xs">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2">
+                        <FaCheck className="size-3 text-success shrink-0 mt-0.5" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="pt-6">
+                  {isActive ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-success text-success pointer-events-none font-bold"
+                    >
+                      Active Plan (Current)
+                    </Button>
+                  ) : (
+                    <Link to="/public/trial">
+                      <Button
+                        size="sm"
+                        variant={p.isPopular ? 'primary' : 'outline'}
+                        className="w-full"
+                        rightIcon={<FaArrowRight />}
+                      >
+                        Select Plan
+                      </Button>
+                    </Link>
                   )}
                 </div>
-
-                <div>
-                  <h3 className="text-xl font-bold">{p.name}</h3>
-                  <div className="mt-3 font-mono">
-                    <span className="text-3xl font-black">
-                      ₹{(p.pricePaise / 100).toLocaleString('en-IN')}
-                    </span>
-                    <span className="text-xs text-base-content/60"> / {p.billingPeriod}</span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-base-content/70">{p.description}</p>
-
-                <div className="divider my-1" />
-
-                <ul className="space-y-2.5 text-xs">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <FaCheck className="size-3 text-success shrink-0 mt-0.5" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
-
-              <div className="pt-6">
-                <Link to="/public/trial">
-                  <Button
-                    size="sm"
-                    variant={p.isPopular ? 'primary' : 'outline'}
-                    className="w-full"
-                    rightIcon={<FaArrowRight />}
-                  >
-                    Select Plan
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

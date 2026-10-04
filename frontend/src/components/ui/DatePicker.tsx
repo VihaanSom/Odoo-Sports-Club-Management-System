@@ -16,6 +16,9 @@ export interface DatePickerProps {
   maxDate?: string;
   disabled?: boolean;
   className?: string;
+  inputClassName?: string;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+  showDateInLabel?: boolean;
   id?: string;
 }
 
@@ -30,6 +33,9 @@ export const DatePicker = ({
   maxDate,
   disabled = false,
   className,
+  inputClassName,
+  size = 'md',
+  showDateInLabel = false,
   id,
 }: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -209,13 +215,13 @@ export const DatePicker = ({
   }, [isOpen, isoValue, minDate, maxDate]);
 
   return (
-    <div ref={containerRef} className={cn('fieldset w-full relative', className)}>
+    <div ref={containerRef} className={cn(label ? 'fieldset w-full relative' : 'w-full relative', className)}>
       {label && (
         <label className="fieldset-label font-medium text-xs text-base-content/80 flex items-center justify-between">
           <span>
-            {label} {required && <span className="text-error">*</span>}
+            {label} {!label.includes('*') && required && <span className="text-error">*</span>}
           </span>
-          {value && (
+          {showDateInLabel && value && (
             <span className="text-[11px] font-mono text-base-content/50">
               {displayValue}
             </span>
@@ -239,7 +245,15 @@ export const DatePicker = ({
           value={displayValue || ''}
           placeholder={placeholder}
           className={cn(
-            'input input-bordered w-full text-sm pl-3 pr-10 cursor-pointer bg-base-100 select-none font-medium',
+            'input input-bordered w-full pl-3 pr-10 cursor-pointer bg-base-100 select-none font-medium',
+            size === 'sm'
+              ? 'input-sm text-xs'
+              : size === 'xs'
+              ? 'input-xs text-xs'
+              : size === 'lg'
+              ? 'input-lg text-base'
+              : 'text-sm',
+            inputClassName,
             error && 'input-error',
             disabled && 'opacity-50 cursor-not-allowed'
           )}

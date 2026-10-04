@@ -20,7 +20,6 @@ import PublicLandingPage from '../public/PublicLandingPage';
 import PublicPlansPage from '../public/PublicPlansPage';
 import PublicFacilitiesPage from '../public/PublicFacilitiesPage';
 import PublicShopPage from '../public/PublicShopPage';
-import PublicSlotsPage from '../public/PublicSlotsPage';
 import PublicContactPage from '../public/PublicContactPage';
 import PublicTrialPage from '../public/PublicTrialPage';
 
@@ -77,10 +76,6 @@ export const adminPublicRoutes: RouteObject[] = [
         element: <PublicShopPage />,
       },
       {
-        path: 'slots',
-        element: <PublicSlotsPage />,
-      },
-      {
         path: 'contact',
         element: <PublicContactPage />,
       },
@@ -115,7 +110,6 @@ export const publicJsxRoutes = (
     <Route path="plans" element={<PublicPlansPage />} />
     <Route path="facilities" element={<PublicFacilitiesPage />} />
     <Route path="shop" element={<PublicShopPage />} />
-    <Route path="slots" element={<PublicSlotsPage />} />
     <Route path="contact" element={<PublicContactPage />} />
     <Route path="trial" element={<PublicTrialPage />} />
   </Route>

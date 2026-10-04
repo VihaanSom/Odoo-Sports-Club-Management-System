@@ -280,14 +280,14 @@ Each developer owns **distinct feature directories** — no two developers ever 
 | 2 | UPI QR + payment price | Dev B | ⬜ |
 | 3 | Member ordering | Dev B | ⬜ |
 | 4a | Membership active plan (name+duration) | Dev B | ⬜ |
-| 4b | Public plans active plan (name+duration) | Dev A | ⬜ |
-| 5 | Outfit font | Dev A | ⬜ |
-| 6 | Remove notice bar + Free Pass | Dev A | ⬜ |
-| 7 | Facilities card cleanup | Dev A | ⬜ |
-| 8 | Shop button removal | Dev A | ⬜ |
-| 9 | Remove /public/slots | Dev A | ⬜ |
+| 4b | Public plans active plan (name+duration) | Dev A | ✅ |
+| 5 | Outfit font | Dev A | ✅ |
+| 6 | Remove notice bar + Free Pass | Dev A | ✅ |
+| 7 | Facilities card cleanup | Dev A | ✅ |
+| 8 | Shop button removal | Dev A | ✅ |
+| 9 | Remove /public/slots | Dev A | ✅ |
 | 10 | Kanban assign to staff | Dev C | ⬜ |
-| 11 | Trial page simplification | Dev A | ⬜ |
+| 11 | Trial page simplification | Dev A | ✅ |
 | 12 | Dashboard + Reports overhaul | Dev C | ⬜ |
 | 13 | Pagination + debouncing | Dev B (hooks) + Dev C (apply) | ⬜ |
 | 14 | Member bookings + profile image | Dev B | ⬜ |
